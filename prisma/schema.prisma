@@ -1,13 +1,13 @@
-// Local: provider = "sqlite"  + DATABASE_URL="file:./dev.db"
-// Production (Neon): provider = "postgresql" + pooled DATABASE_URL
+// Production Postgres (Supabase). Use pooled URL for the app, direct URL for migrations.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 /// Glide user — Clerk id is the primary key.
