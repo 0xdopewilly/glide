@@ -18,16 +18,13 @@ const ACTIONS = [
 
 export function ActionGrid() {
   return (
-    <nav
-      aria-label="Quick actions"
-      className="mt-6 grid grid-cols-4 gap-2 px-1"
-    >
+    <nav aria-label="Quick actions" className="mt-8 grid grid-cols-4 gap-3">
       {ACTIONS.map(({ href, label, icon: Icon }) => (
         <ActionLink
           key={href}
           href={href}
           label={label}
-          icon={<Icon className="h-[22px] w-[22px]" strokeWidth={2} />}
+          icon={<Icon className="h-[21px] w-[21px]" strokeWidth={2} />}
         />
       ))}
     </nav>
@@ -46,18 +43,12 @@ function ActionLink({
   return (
     <Link
       href={href}
-      className="group flex flex-col items-center gap-2 transition-transform active:scale-95"
+      className="group flex flex-col items-center gap-2.5 transition-transform active:scale-95"
     >
-      <span
-        className="flex h-14 w-14 items-center justify-center rounded-full text-white shadow-md transition-all group-hover:brightness-110 sm:h-[3.75rem] sm:w-[3.75rem]"
-        style={{ background: "var(--glide-accent)" }}
-      >
+      <span className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full bg-neutral-100 text-neutral-900 ring-1 ring-black/[0.04] transition-colors group-hover:bg-neutral-200 dark:bg-[#1c1c1e] dark:text-white dark:ring-white/10 dark:group-hover:bg-[#2a2a2e] sm:h-14 sm:w-14">
         {icon}
       </span>
-      <span
-        className="text-xs font-medium tracking-tight"
-        style={{ color: "var(--glide-muted)" }}
-      >
+      <span className="text-[11px] font-semibold tracking-tight text-neutral-500 dark:text-white/55">
         {label}
       </span>
     </Link>

@@ -23,8 +23,7 @@ export function UserAvatar({
 
   const inner = (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full font-semibold tracking-tight text-white ${sizeClass}`}
-      style={{ background: "var(--glide-accent)" }}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-neutral-200 font-semibold tracking-tight text-neutral-800 dark:bg-[#2c2c2e] dark:text-white ${sizeClass}`}
     >
       {initial}
     </span>

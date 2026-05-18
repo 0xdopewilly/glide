@@ -13,11 +13,11 @@ export default function HomePage() {
     useWallet();
 
   return (
-    <>
+  <>
       <AppHeader showLogo />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
         {error ? (
-          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
+          <div className="mt-3 rounded-2xl bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-300">
             <span className="truncate">{error}</span>
             <button type="button" onClick={clearError} className="ml-2 underline">
               Dismiss
@@ -32,13 +32,14 @@ export default function HomePage() {
         />
         <ActionGrid />
 
-        <section className="mt-8 flex-1 pb-4">
+        <section className="mt-10 flex-1 pb-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold tracking-tight">Recent</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500 dark:text-white/50">
+              Recent
+            </h2>
             <Link
               href="/activity"
-              className="text-sm font-semibold"
-              style={{ color: "var(--glide-accent)" }}
+              className="text-sm font-semibold text-neutral-950 transition-colors hover:opacity-70 dark:text-white"
             >
               See all
             </Link>

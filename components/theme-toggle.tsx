@@ -13,12 +13,7 @@ export function ThemeToggle() {
         const isDark = document.documentElement.classList.contains("dark");
         setTheme(isDark ? "light" : "dark");
       }}
-      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-transform active:scale-95"
-      style={{
-        background: "var(--glide-surface-elevated)",
-        borderColor: "var(--glide-border)",
-        color: "var(--glide-text)",
-      }}
+      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-700 transition-transform active:scale-95 dark:bg-[#1c1c1e] dark:text-white/80"
       aria-label="Toggle light or dark mode"
       suppressHydrationWarning
     >

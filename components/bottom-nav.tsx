@@ -15,7 +15,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="shrink-0 border-t border-[var(--glide-border)] bg-[color-mix(in_srgb,var(--glide-shell)_80%,transparent)] px-6 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl"
+      className="mx-4 mb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0 rounded-full bg-neutral-100/95 px-2 py-2 backdrop-blur-xl dark:bg-[#1c1c1e]/95 dark:ring-1 dark:ring-white/10"
       aria-label="Main"
     >
       <ul className="flex items-center justify-around">
@@ -27,19 +27,16 @@ export function BottomNav() {
               <Link
                 href={href}
                 prefetch
-                className="flex flex-col items-center gap-1 px-4 py-2"
-                style={{
-                  color: active ? "var(--glide-text)" : "var(--glide-muted)",
-                }}
+                className={`flex flex-col items-center gap-0.5 rounded-full px-5 py-2 transition-colors ${
+                  active
+                    ? "bg-white text-neutral-950 shadow-sm dark:bg-white dark:text-[#0a0a0a]"
+                    : "text-neutral-500 dark:text-white/45"
+                }`}
               >
                 <Icon
-                  className={`h-6 w-6 ${active ? "stroke-[2.5]" : "stroke-2"}`}
-                  style={active ? { color: "var(--glide-accent)" } : undefined}
+                  className={`h-5 w-5 ${active ? "stroke-[2.5]" : "stroke-2"}`}
                 />
-                <span
-                  className="text-[10px] font-medium tracking-tight"
-                  style={active ? { color: "var(--glide-accent)" } : undefined}
-                >
+                <span className="text-[10px] font-semibold tracking-tight">
                   {label}
                 </span>
               </Link>

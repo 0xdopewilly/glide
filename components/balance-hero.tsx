@@ -1,5 +1,6 @@
 "use client";
 
+import { GlidePillButton } from "@/components/glide-pill-button";
 import { formatUsd } from "@/lib/format";
 import { Plus } from "lucide-react";
 
@@ -13,35 +14,29 @@ export function BalanceHero({
   loading?: boolean;
 }) {
   return (
-    <section className="flex flex-col items-center px-2 pb-2 pt-6 text-center">
-      <p
-        className="text-[11px] font-semibold uppercase tracking-[0.18em]"
-        style={{ color: "var(--glide-muted)" }}
-        translate="no"
-      >
-        USDC
-      </p>
+    <section className="flex flex-col items-start px-0 pb-2 pt-4 text-left">
+      <span className="inline-flex rounded-full bg-neutral-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-600 dark:bg-[#1c1c1e] dark:text-white/80">
+        USDC · Arc testnet
+      </span>
       <h1
-        className={`mt-2 text-[3.25rem] font-semibold leading-none tracking-tight sm:text-[3.5rem] ${
+        className={`mt-4 text-[3.25rem] font-bold leading-[1.05] tracking-[-0.035em] text-neutral-950 dark:text-white sm:text-[3.5rem] ${
           loading ? "opacity-50" : ""
         }`}
       >
         ${formatUsd(balance)}
       </h1>
-      <button
+      <p className="mt-2 text-[15px] leading-relaxed text-neutral-500 dark:text-white/45">
+        Your balance on Glide
+      </p>
+      <GlidePillButton
         type="button"
         onClick={onAddCash}
         disabled={loading}
-        className="mt-5 inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-semibold tracking-tight transition-all active:scale-[0.98] disabled:opacity-50"
-        style={{
-          background: "var(--glide-surface-elevated)",
-          borderColor: "var(--glide-border)",
-          color: "var(--glide-text)",
-        }}
+        className="mt-6"
+        icon={<Plus className="h-4 w-4" strokeWidth={2.5} />}
       >
-        <Plus className="h-4 w-4" strokeWidth={2.5} />
         Add Cash
-      </button>
+      </GlidePillButton>
     </section>
   );
 }
