@@ -1,5 +1,7 @@
 # Deploy Glide to Vercel
 
+**Production URL:** [https://glide-arc.vercel.app](https://glide-arc.vercel.app)
+
 ## Arc Testnet (reference)
 
 | Resource | URL |
@@ -52,14 +54,14 @@ URL-encode special characters in database passwords (`@` → `%40`).
 
 In Clerk → **Configure → Domains**, add your Vercel URL:
 
-- `https://your-app.vercel.app`
+- `https://glide-arc.vercel.app`
 - Custom domain if you add one
 
 ## 5. Deploy
 
 Click **Deploy**. After build:
 
-- `https://your-app.vercel.app/api/health/db` → `{ "ok": true }`
+- `https://glide-arc.vercel.app/api/health/db` → `{ "ok": true }`
 - Sign up → wallet + activity should work on Arc testnet
 
 ## 6. Optional: custom domain
