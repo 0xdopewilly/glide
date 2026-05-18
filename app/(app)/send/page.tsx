@@ -6,10 +6,11 @@ import { NumericKeypad } from "@/components/numeric-keypad";
 import { UserAvatar } from "@/components/user-avatar";
 import { GlideButton } from "@/components/glide-button";
 import { shortenAddress } from "@/lib/format";
+import { isValidWalletAddress } from "@/lib/validation";
 import { useWallet } from "@/context/wallet-context";
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 type Step = "amount" | "review" | "success";
 
@@ -20,12 +21,13 @@ function formatAmountDisplay(raw: string) {
 
 export default function SendPage() {
   const router = useRouter();
-  const { sendMoney, wallet, loading } = useWallet();
+  const { sendMoney, wallet, loading, balance, error, clearError } = useWallet();
   const [step, setStep] = useState<Step>("amount");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("0");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const onKey = useCallback((key: string) => {
     setAmount((prev) => {
@@ -42,22 +44,34 @@ export default function SendPage() {
   }, []);
 
   const parsed = parseFloat(amount) || 0;
+  const addressOk = isValidWalletAddress(recipient);
+  const overBalance = parsed > balance;
   const canContinue =
-    parsed > 0 && recipient.trim().length > 10 && wallet != null;
+    parsed > 0 && addressOk && wallet != null && !overBalance;
 
   const handlePay = async () => {
     if (!wallet || !canContinue) return;
     setSubmitting(true);
+    setLocalError(null);
+    clearError();
     const ok = await sendMoney(recipient.trim(), amount);
     setSubmitting(false);
     if (ok) setStep("success");
+    else setLocalError("Payment could not be completed. Try again.");
   };
+
+  const hint = useMemo(() => {
+    if (!recipient.trim()) return null;
+    if (!addressOk) return "Enter a valid wallet address";
+    if (overBalance) return `You only have $${balance.toFixed(2)} USDC`;
+    return null;
+  }, [recipient, addressOk, overBalance, balance]);
 
   if (step === "success") {
     return (
       <FlowPage>
         <div className="flex flex-1 flex-col items-center px-6 pt-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Success!</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Sent</h1>
           <div
             className="mt-10 flex h-28 w-28 items-center justify-center rounded-full"
             style={{ background: "var(--glide-accent)" }}
@@ -112,13 +126,17 @@ export default function SendPage() {
 
           <div className="mt-8 flex items-center justify-between rounded-xl border px-4 py-3 glide-surface-card">
             <span className="text-sm glide-muted">Transfer from</span>
-            <span className="text-sm font-semibold">Glide · USDC</span>
+            <span className="text-sm font-semibold">Glide USDC</span>
           </div>
+
+          {(localError || error) && (
+            <p className="mt-4 text-sm text-red-400">{localError ?? error}</p>
+          )}
 
           <GlideButton
             onClick={() => void handlePay()}
             disabled={submitting || loading}
-            className="mt-8"
+            className="mt-6"
             uppercase={false}
           >
             {submitting ? "Paying" : `Pay $${parsed.toFixed(2)}`}
@@ -140,6 +158,13 @@ export default function SendPage() {
             className="mt-4 w-full max-w-xs border-0 bg-transparent text-center text-sm font-mono focus:outline-none"
             style={{ color: "var(--glide-text)" }}
           />
+          {hint ? (
+            <p className="mt-2 text-center text-xs text-red-400">{hint}</p>
+          ) : (
+            <p className="mt-2 text-center text-xs glide-muted">
+              Balance ${balance.toFixed(2)} USDC
+            </p>
+          )}
         </div>
 
         <p className="mt-8 text-center text-5xl font-normal tracking-tight">
@@ -161,4 +186,3 @@ export default function SendPage() {
     </FlowPage>
   );
 }
-

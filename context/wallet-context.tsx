@@ -34,6 +34,8 @@ type WalletContextValue = {
   createNewWallet: () => Promise<GlideWallet | null>;
   fundWallet: () => Promise<boolean>;
   sendMoney: (destinationAddress: string, amount: string) => Promise<boolean>;
+  swapMoney: (amount: string) => Promise<boolean>;
+  bridgeMoney: (amount: string, network: string) => Promise<boolean>;
   addLocalTransaction: (tx: GlideTransaction) => void;
   clearError: () => void;
 };
@@ -234,6 +236,62 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     [wallet, refresh, addLocalTransaction],
   );
 
+  const swapMoney = useCallback(
+    async (amount: string) => {
+      if (!wallet) return false;
+      setError(null);
+      try {
+        const res = await fetch("/api/swap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ walletId: wallet.id, amount }),
+        });
+        const data = (await res.json()) as {
+          balance?: number;
+          transaction?: GlideTransaction;
+          error?: string;
+        };
+        if (!res.ok) throw new Error(data.error ?? "Swap failed");
+        if (typeof data.balance === "number") setBalance(data.balance);
+        if (data.transaction) addLocalTransaction(data.transaction);
+        void refresh();
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Swap failed");
+        return false;
+      }
+    },
+    [wallet, refresh, addLocalTransaction],
+  );
+
+  const bridgeMoney = useCallback(
+    async (amount: string, network: string) => {
+      if (!wallet) return false;
+      setError(null);
+      try {
+        const res = await fetch("/api/bridge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ walletId: wallet.id, amount, network }),
+        });
+        const data = (await res.json()) as {
+          balance?: number;
+          transaction?: GlideTransaction;
+          error?: string;
+        };
+        if (!res.ok) throw new Error(data.error ?? "Bridge failed");
+        if (typeof data.balance === "number") setBalance(data.balance);
+        if (data.transaction) addLocalTransaction(data.transaction);
+        void refresh();
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Bridge failed");
+        return false;
+      }
+    },
+    [wallet, refresh, addLocalTransaction],
+  );
+
   useEffect(() => {
     if (!authReady) return;
 
@@ -300,6 +358,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       createNewWallet,
       fundWallet,
       sendMoney,
+      swapMoney,
+      bridgeMoney,
       addLocalTransaction,
       clearError: () => setError(null),
     }),
@@ -316,6 +376,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       createNewWallet,
       fundWallet,
       sendMoney,
+      swapMoney,
+      bridgeMoney,
       addLocalTransaction,
     ],
   );

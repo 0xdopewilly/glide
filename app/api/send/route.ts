@@ -1,7 +1,13 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
+import { ARC_USDC_TOKEN_ADDRESS } from "@/lib/tokens";
 import { userOwnsWallet } from "@/lib/users";
-import { fetchWalletBalance, fetchWalletById } from "@/lib/wallet-service";
+import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
+import {
+  assertSufficientBalance,
+  fetchWalletBalance,
+  fetchWalletById,
+} from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
 /** POST { walletId, destinationAddress, amount } */
@@ -26,14 +32,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (!isValidWalletAddress(destinationAddress)) {
+    return NextResponse.json(
+      { error: "Enter a valid wallet address" },
+      { status: 400 },
+    );
+  }
+
+  const parsed = parseMoneyAmount(amount);
+  if (parsed === null) {
+    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+  }
+
   const owns = await userOwnsWallet(session.userId, walletId);
   if (!owns) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const parsed = parseFloat(amount);
-  if (Number.isNaN(parsed) || parsed <= 0) {
-    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
 
   const initialized = createCircleClient();
@@ -47,12 +60,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
     }
 
+    if (wallet.address.toLowerCase() === destinationAddress.toLowerCase()) {
+      return NextResponse.json(
+        { error: "You cannot send to your own address" },
+        { status: 400 },
+      );
+    }
+
+    await assertSufficientBalance(walletId, parsed);
+
     const res = await initialized.client.createTransaction({
       walletAddress: wallet.address,
       blockchain: GLIDE_BLOCKCHAIN,
-      tokenAddress: "",
+      tokenAddress: ARC_USDC_TOKEN_ADDRESS,
       destinationAddress,
-      amount: [amount],
+      amount: [parsed.toFixed(2)],
       fee: {
         type: "level",
         config: { feeLevel: "MEDIUM" },
@@ -68,6 +90,8 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error("[Glide] send:", err);
-    return NextResponse.json({ error: safeApiError(err) }, { status: 502 });
+    const message = safeApiError(err);
+    const status = message.toLowerCase().includes("insufficient") ? 400 : 502;
+    return NextResponse.json({ error: message }, { status });
   }
 }

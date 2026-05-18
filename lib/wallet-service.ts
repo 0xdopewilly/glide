@@ -4,6 +4,7 @@ import {
   GLIDE_BLOCKCHAIN,
   safeApiError,
 } from "@/lib/circle";
+import { isUsdcToken } from "@/lib/tokens";
 import type { GlideWallet } from "@/lib/types";
 
 export async function createGlideWallet(): Promise<GlideWallet> {
@@ -28,23 +29,39 @@ export async function createGlideWallet(): Promise<GlideWallet> {
   return { id: wallet.id, address: wallet.address };
 }
 
-export async function fetchWalletBalance(walletId: string): Promise<number> {
-  const initialized = createCircleClient();
-  if ("error" in initialized) return 0;
+type TokenRow = {
+  amount: number;
+  symbol?: string;
+};
 
+async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
+  const initialized = createCircleClient();
+  if ("error" in initialized) {
+    throw new Error(initialized.error);
+  }
+
+  const balances = await initialized.client.getWalletTokenBalance({
+    id: walletId,
+  });
+
+  return (balances.data?.tokenBalances ?? []).map((entry) => ({
+    amount: parseFloat(entry.amount ?? "0"),
+    symbol: entry.token?.symbol ?? entry.token?.name,
+  }));
+}
+
+export async function fetchWalletBalance(walletId: string): Promise<number> {
   try {
-    const balances = await initialized.client.getWalletTokenBalance({
-      id: walletId,
-    });
-    const tokenBalances = balances.data?.tokenBalances ?? [];
+    const rows = await fetchTokenRows(walletId);
     let total = 0;
-    for (const entry of tokenBalances) {
-      const amount = parseFloat(entry.amount ?? "0");
-      if (!Number.isNaN(amount)) total += amount;
+    for (const row of rows) {
+      if (Number.isNaN(row.amount)) continue;
+      if (isUsdcToken(row.symbol)) total += row.amount;
     }
     return total;
-  } catch {
-    return 0;
+  } catch (err) {
+    console.error("[Glide] balance:", err);
+    throw err instanceof Error ? err : new Error("Could not load balance");
   }
 }
 
@@ -59,6 +76,18 @@ export async function fetchWalletById(walletId: string): Promise<GlideWallet | n
     return { id: w.id, address: w.address };
   } catch {
     return null;
+  }
+}
+
+export async function assertSufficientBalance(
+  walletId: string,
+  amount: number,
+): Promise<void> {
+  const balance = await fetchWalletBalance(walletId);
+  if (amount > balance) {
+    throw new Error(
+      `Insufficient balance. You have $${balance.toFixed(2)} USDC available.`,
+    );
   }
 }
 
