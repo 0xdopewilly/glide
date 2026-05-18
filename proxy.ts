@@ -7,11 +7,21 @@ const isPublicRoute = createRouteMatcher([
   "/api/health/db",
 ]);
 
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
-  }
-});
+/** Dev instance on Vercel — no custom domain in Clerk; allow these origins explicitly. */
+const authorizedParties = [
+  "http://localhost:3000",
+  "https://glide-arc.vercel.app",
+  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+];
+
+export default clerkMiddleware(
+  async (auth, request) => {
+    if (!isPublicRoute(request)) {
+      await auth.protect();
+    }
+  },
+  { authorizedParties },
+);
 
 export const config = {
   matcher: [

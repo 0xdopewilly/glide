@@ -50,12 +50,11 @@ Add these in **Project → Settings → Environment Variables** for **Production
 
 URL-encode special characters in database passwords (`@` → `%40`).
 
-## 4. Clerk production URLs
+## 4. Clerk
 
-In Clerk → **Configure → Domains**, add your Vercel URL:
+**`glide-arc.vercel.app` cannot be Clerk Production “Primary domain”** (stays Pending — no DNS on `vercel.app`).
 
-- `https://glide-arc.vercel.app`
-- Custom domain if you add one
+Use **Development** keys on Vercel and add `https://glide-arc.vercel.app` as an allowed app URL only. See **[CLERK.md](./CLERK.md)**.
 
 ## 5. Deploy
 

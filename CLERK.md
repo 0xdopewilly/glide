@@ -14,18 +14,27 @@ Official Clerk docs: [Deploy to Vercel](https://clerk.com/docs/deployments/deplo
 
 ## Recommended for Glide right now (testnet MVP)
 
-Use Clerk **Development** instance with `glide-arc.vercel.app` as an **allowed app URL** (not Primary domain).
+Use Clerk **Development** on Vercel. You do **not** add `glide-arc.vercel.app` in the Domains screen.
 
-### 1. In Clerk Dashboard
+### What the Domains page means (Development)
 
-1. Switch instance toggle to **Development** (top of dashboard).
-2. **Configure → Domains**
-   - **Remove** `glide-arc.vercel.app` as **Primary** (or leave it unset).
-   - Under **Paths** / **Application URLs** (or **Allowed redirect URLs**), add:
-     - `https://glide-arc.vercel.app`
-3. **Configure → User & Authentication → Social connections → Google**
-   - Leave **default** (no custom credentials) in Development — Google works out of the box.
-4. **API Keys** — copy **Development** keys (`pk_test_…`, `sk_test_…`) and Frontend API URL (`https://….clerk.accounts.dev`).
+Your screenshot is **correct**:
+
+| What you see | Meaning |
+|--------------|---------|
+| `dynamic-turkey-46.clerk.accounts.dev` **Verified** | Clerk’s auth server for Development — this is all you need |
+| “Development domain” badge | Normal for dev instance |
+| “Configure a custom domain in **production**” | Only when you own `yourdomain.com` — **ignore for Vercel** |
+
+There is **no “Add domain”** button in Development on purpose. **`glide-arc.vercel.app` is your app URL**, not a Clerk domain.
+
+### 1. In Clerk Dashboard (Development)
+
+1. Keep the toggle on **Development** (orange).
+2. **Do not** use **Configure → Domains** to add `glide-arc.vercel.app`.
+3. **Configure → User & Authentication → Email** — enable sign-in with email.
+4. **Social → Google** — leave **off** custom credentials (shared dev Google works).
+5. **API keys** — copy `pk_test_…`, `sk_test_…`, Frontend API `https://dynamic-turkey-46.clerk.accounts.dev`.
 
 ### 2. On Vercel
 
