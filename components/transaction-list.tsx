@@ -1,5 +1,6 @@
 "use client";
 
+import { TransactionDetailSheet } from "@/components/transaction-detail-sheet";
 import type { GlideTransaction } from "@/lib/types";
 import { Share2 } from "lucide-react";
 import { useState } from "react";
@@ -11,6 +12,8 @@ export function TransactionList({
   transactions: GlideTransaction[];
   emptyMessage?: string;
 }) {
+  const [selected, setSelected] = useState<GlideTransaction | null>(null);
+
   if (transactions.length === 0) {
     return (
       <p className="rounded-2xl bg-neutral-100 px-4 py-10 text-center text-sm font-medium tracking-tight text-neutral-500 dark:bg-[#1c1c1e] dark:text-white/40">
@@ -20,17 +23,29 @@ export function TransactionList({
   }
 
   return (
-    <ul className="flex flex-col gap-2">
-      {transactions.map((item) => (
-        <li key={item.id}>
-          <TransactionRow {...item} />
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="flex flex-col gap-2">
+        {transactions.map((item) => (
+          <li key={item.id}>
+            <TransactionRow tx={item} onSelect={() => setSelected(item)} />
+          </li>
+        ))}
+      </ul>
+      <TransactionDetailSheet
+        transaction={selected}
+        onClose={() => setSelected(null)}
+      />
+    </>
   );
 }
 
-function TransactionRow(tx: GlideTransaction) {
+function TransactionRow({
+  tx,
+  onSelect,
+}: {
+  tx: GlideTransaction;
+  onSelect: () => void;
+}) {
   const { title, amount, variant, meta, status, explorerUrl, txHash } = tx;
   const isCredit = variant === "credit";
   const [shareLabel, setShareLabel] = useState("Share");
@@ -39,7 +54,8 @@ function TransactionRow(tx: GlideTransaction) {
     .filter(Boolean)
     .join("\n");
 
-  const handleShare = async () => {
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!explorerUrl && !txHash) return;
     try {
       if (navigator.share) {
@@ -64,7 +80,16 @@ function TransactionRow(tx: GlideTransaction) {
 
   return (
     <article
-      className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 ${
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-opacity hover:opacity-90 active:scale-[0.99] ${
         isCredit
           ? "bg-emerald-500/10 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10"
           : "bg-neutral-100 dark:bg-[#1c1c1e]"
@@ -91,7 +116,7 @@ function TransactionRow(tx: GlideTransaction) {
         {canShare ? (
           <button
             type="button"
-            onClick={() => void handleShare()}
+            onClick={handleShare}
             className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold tracking-tight text-neutral-700 transition-opacity hover:opacity-80 dark:bg-black/30 dark:text-white/80"
             aria-label="Share transaction"
           >

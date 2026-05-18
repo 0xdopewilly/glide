@@ -2,7 +2,7 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { executeArcSwap } from "@/lib/app-kit";
 import { safeApiError } from "@/lib/circle";
 import { recordTransaction } from "@/lib/transactions-db";
-import { userOwnsWallet, getUserById } from "@/lib/users";
+import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
 import {
   assertSufficientBalance,
@@ -36,16 +36,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const user = await getUserById(session.userId);
-  if (!user?.circleWalletAddress) {
-    return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
-  }
-
   try {
+    const { wallet } = await getOrCreateWalletForUser({
+      userId: session.userId,
+      email: session.email,
+      displayName: session.displayName,
+    });
+
+    if (wallet.id !== walletId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     await assertSufficientBalance(walletId, parsed);
 
     const swap = await executeArcSwap({
-      walletAddress: user.circleWalletAddress,
+      walletAddress: wallet.address,
       amountIn: parsed.toFixed(2),
     });
 

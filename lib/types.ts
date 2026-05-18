@@ -8,6 +8,13 @@ export type GlideWallet = {
   address: string;
 };
 
+export type GlideTokenBalance = {
+  symbol: string;
+  amount: number;
+  /** Display value in USD (1:1 for USDC/EURC on Arc). */
+  usdValue: number;
+};
+
 export type TransactionKind = "send" | "receive" | "swap" | "bridge";
 
 export type GlideTransaction = {
@@ -27,6 +34,7 @@ export type GlideTransaction = {
 export type WalletResponse = {
   wallet: GlideWallet;
   balance: number;
+  tokens: GlideTokenBalance[];
 };
 
 export type SendRequest = {

@@ -1,9 +1,27 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
-import { fetchWalletBalance } from "@/lib/wallet-service";
+import { totalUsdFromTokens } from "@/lib/tokens";
+import {
+  fetchWalletBalance,
+  fetchWalletById,
+  fetchWalletTokenBalances,
+} from "@/lib/wallet-service";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { NextRequest, NextResponse } from "next/server";
 
-/** GET — current user's wallet, or ?walletId= with ownership check */
+async function walletPayload(walletId: string, address: string) {
+  const [tokens, balance] = await Promise.all([
+    fetchWalletTokenBalances(walletId),
+    fetchWalletBalance(walletId),
+  ]);
+  return {
+    wallet: { id: walletId, address },
+    balance,
+    tokens,
+    totalUsd: totalUsdFromTokens(tokens),
+  };
+}
+
+/** GET — current user's wallet; optional ?walletId= with ownership check */
 export async function GET(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
@@ -11,30 +29,29 @@ export async function GET(request: NextRequest) {
   const walletIdParam = request.nextUrl.searchParams.get("walletId");
 
   try {
-    if (walletIdParam) {
-      const owns = await userOwnsWallet(session.userId, walletIdParam);
-      if (!owns) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-      const { wallet } = await getOrCreateWalletForUser({
-        userId: session.userId,
-        email: session.email,
-        displayName: session.displayName,
-      });
-      if (wallet.id !== walletIdParam) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-      const balance = await fetchWalletBalance(walletIdParam);
-      return NextResponse.json({ wallet, balance });
-    }
-
-    const { wallet } = await getOrCreateWalletForUser({
+    const { wallet, user } = await getOrCreateWalletForUser({
       userId: session.userId,
       email: session.email,
       displayName: session.displayName,
     });
-    const balance = await fetchWalletBalance(wallet.id);
-    return NextResponse.json({ wallet, balance });
+
+    const targetId = walletIdParam?.trim() || wallet.id;
+
+    if (walletIdParam && targetId !== wallet.id) {
+      const owns = await userOwnsWallet(session.userId, targetId);
+      if (!owns) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
+    let address = wallet.address;
+    if (targetId === wallet.id) {
+      return NextResponse.json(await walletPayload(targetId, address));
+    }
+
+    const fromCircle = await fetchWalletById(targetId);
+    address = fromCircle?.address ?? user.circleWalletAddress ?? address;
+    return NextResponse.json(await walletPayload(targetId, address));
   } catch (err) {
     console.error("[Glide] wallet GET:", err);
     return NextResponse.json(
@@ -55,8 +72,7 @@ export async function POST() {
       email: session.email,
       displayName: session.displayName,
     });
-    const balance = await fetchWalletBalance(wallet.id);
-    return NextResponse.json({ wallet, balance });
+    return NextResponse.json(await walletPayload(wallet.id, wallet.address));
   } catch (err) {
     console.error("[Glide] wallet POST:", err);
     return NextResponse.json(

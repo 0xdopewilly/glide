@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import { Shield } from "lucide-react";
 
 export function WalletReadyGate({ children }: { children: React.ReactNode }) {
-  const { wallet, loading, error, refresh } = useWallet();
+  const { wallet, loading, error, ensureWallet } = useWallet();
 
-  if (wallet && !loading) {
+  if (wallet) {
     return <>{children}</>;
   }
 
@@ -17,15 +17,23 @@ export function WalletReadyGate({ children }: { children: React.ReactNode }) {
       animate={{ opacity: 1 }}
       className="flex min-h-0 flex-1 flex-col items-center justify-center px-8 py-16 text-center"
     >
-      <div className="relative flex h-16 w-16 items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1.1, ease: "linear" }}
-          className="absolute inset-0 rounded-full border-[3px] border-t-transparent"
-          style={{ borderColor: "var(--glide-accent)" }}
-        />
+      <motion.div
+        animate={loading ? { rotate: 360 } : { rotate: 0 }}
+        transition={
+          loading
+            ? { repeat: Infinity, duration: 1.1, ease: "linear" }
+            : { duration: 0 }
+        }
+        className="relative flex h-16 w-16 items-center justify-center"
+      >
+        {loading ? (
+          <div
+            className="absolute inset-0 rounded-full border-[3px] border-t-transparent"
+            style={{ borderColor: "var(--glide-accent)" }}
+          />
+        ) : null}
         <Shield className="relative h-6 w-6 glide-accent-text" strokeWidth={2} />
-      </div>
+      </motion.div>
       <h2 className="mt-8 text-xl font-semibold tracking-tight">
         Setting up your balance
       </h2>
@@ -37,7 +45,7 @@ export function WalletReadyGate({ children }: { children: React.ReactNode }) {
       {error ? (
         <button
           type="button"
-          onClick={() => void refresh()}
+          onClick={() => void ensureWallet()}
           className="mt-6 text-sm font-semibold glide-accent-text"
         >
           Try again

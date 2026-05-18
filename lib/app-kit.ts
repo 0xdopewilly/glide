@@ -63,24 +63,47 @@ export async function executeArcSwap(input: {
 }) {
   const { kit, adapter, kitKey } = getGlideAppKit();
 
-  const result = await kit.swap({
-    from: { adapter, chain: ArcTestnet, address: input.walletAddress },
-    tokenIn: "USDC",
-    tokenOut: "EURC",
-    amountIn: input.amountIn,
-    config: {
-      slippageBps: 300,
-      kitKey,
-    },
-  });
+  try {
+    const result = await kit.swap({
+      from: { adapter, chain: ArcTestnet, address: input.walletAddress },
+      tokenIn: "USDC",
+      tokenOut: "EURC",
+      amountIn: input.amountIn,
+      config: {
+        slippageBps: 300,
+        kitKey,
+      },
+    });
 
-  return {
-    txHash: result.txHash,
-    explorerUrl: result.explorerUrl,
-    amountOut: result.amountOut,
-    tokenIn: result.tokenIn,
-    tokenOut: result.tokenOut,
-  };
+    if (!result.txHash) {
+      throw new Error(
+        "Swap did not return a transaction. Check CIRCLE_KIT_KEY and Arc App Kit access in Circle Console.",
+      );
+    }
+
+    return {
+      txHash: result.txHash,
+      explorerUrl: result.explorerUrl,
+      amountOut: result.amountOut,
+      tokenIn: result.tokenIn,
+      tokenOut: result.tokenOut,
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Swap failed on Arc testnet";
+    if (message.includes("CIRCLE_KIT_KEY") || message.includes("Missing")) {
+      throw err;
+    }
+    if (
+      message.toLowerCase().includes("insufficient") ||
+      message.toLowerCase().includes("balance")
+    ) {
+      throw new Error(message);
+    }
+    throw new Error(
+      `${message}. If this persists, confirm CIRCLE_KIT_KEY is set on Vercel and your wallet has USDC on Arc testnet.`,
+    );
+  }
 }
 
 export async function executeArcBridge(input: {

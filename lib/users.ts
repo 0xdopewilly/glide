@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { createGlideWallet } from "@/lib/wallet-service";
+import { createGlideWallet, fetchWalletById } from "@/lib/wallet-service";
 import type { GlideWallet } from "@/lib/types";
 
 export type GlideDbUser = {
@@ -52,20 +52,30 @@ export async function getOrCreateWalletForUser(input: {
   email: string;
   displayName?: string | null;
 }): Promise<{ user: GlideDbUser; wallet: GlideWallet }> {
-  const user = await upsertUserFromClerk({
+  let user = await upsertUserFromClerk({
     id: input.userId,
     email: input.email,
     displayName: input.displayName,
   });
 
-  if (user.circleWalletId && user.circleWalletAddress) {
-    return {
-      user,
-      wallet: {
-        id: user.circleWalletId,
-        address: user.circleWalletAddress,
-      },
-    };
+  if (user.circleWalletId) {
+    let address = user.circleWalletAddress;
+    if (!address) {
+      const fromCircle = await fetchWalletById(user.circleWalletId);
+      address = fromCircle?.address ?? null;
+      if (address) {
+        user = await prisma.user.update({
+          where: { id: input.userId },
+          data: { circleWalletAddress: address },
+        });
+      }
+    }
+    if (address && user.circleWalletId) {
+      return {
+        user,
+        wallet: { id: user.circleWalletId, address },
+      };
+    }
   }
 
   const wallet = await createGlideWallet();

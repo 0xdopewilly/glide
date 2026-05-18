@@ -6,7 +6,7 @@ import { useWallet } from "@/context/wallet-context";
 import { RefreshCw } from "lucide-react";
 
 export default function ActivityPage() {
-  const { transactions, refresh, loading } = useWallet();
+  const { transactions, refresh, refreshing } = useWallet();
 
   return (
     <>
@@ -16,11 +16,11 @@ export default function ActivityPage() {
           <button
             type="button"
             onClick={() => void refresh()}
-            disabled={loading}
+            disabled={refreshing}
             className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2 text-xs font-semibold tracking-tight text-neutral-700 transition-opacity hover:opacity-80 disabled:opacity-50 dark:bg-[#1c1c1e] dark:text-white/75"
           >
             <RefreshCw
-              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
             />
             Refresh
           </button>

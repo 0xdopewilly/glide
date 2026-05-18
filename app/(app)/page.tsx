@@ -4,16 +4,30 @@ import { ActionGrid } from "@/components/action-grid";
 import { AppHeader } from "@/components/app-header";
 import { BalanceHero } from "@/components/balance-hero";
 import { ChatBar } from "@/components/chat-bar";
+import { TokenBalances } from "@/components/token-balances";
 import { TransactionList } from "@/components/transaction-list";
 import { useWallet } from "@/context/wallet-context";
+import { totalUsdFromTokens } from "@/lib/tokens";
 import Link from "next/link";
+import { useMemo } from "react";
 
 export default function HomePage() {
-  const { balance, loading, fundWallet, transactions, error, clearError } =
-    useWallet();
+  const {
+    balance,
+    tokens,
+    loading,
+    refreshing,
+    fundWallet,
+    transactions,
+    error,
+    clearError,
+    refresh,
+  } = useWallet();
+
+  const totalUsd = useMemo(() => totalUsdFromTokens(tokens), [tokens]);
 
   return (
-  <>
+    <>
       <AppHeader showLogo />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
         {error ? (
@@ -27,10 +41,14 @@ export default function HomePage() {
 
         <BalanceHero
           balance={balance}
+          totalUsd={totalUsd}
           loading={loading}
+          refreshing={refreshing}
           onAddCash={() => void fundWallet()}
+          onRefresh={() => void refresh()}
         />
         <ActionGrid />
+        <TokenBalances tokens={tokens} />
 
         <section className="mt-10 flex-1 pb-4">
           <div className="mb-3 flex items-center justify-between">

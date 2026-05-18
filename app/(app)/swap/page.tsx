@@ -18,7 +18,6 @@ export default function SwapPage() {
   const [fromAmount, setFromAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>("form");
-  const [localError, setLocalError] = useState<string | null>(null);
 
   const parsed = parseFloat(fromAmount) || 0;
   const toAmount = useMemo(() => {
@@ -33,12 +32,10 @@ export default function SwapPage() {
     e.preventDefault();
     if (!canSubmit) return;
     setSubmitting(true);
-    setLocalError(null);
     clearError();
     const ok = await swapMoney(fromAmount);
     setSubmitting(false);
     if (ok) setStep("success");
-    else setLocalError("Swap could not be completed.");
   };
 
   if (step === "success") {
@@ -110,9 +107,7 @@ export default function SwapPage() {
         {overBalance ? (
           <p className="mt-3 text-sm text-red-400">Amount exceeds your balance</p>
         ) : null}
-        {(localError || error) && (
-          <p className="mt-3 text-sm text-red-400">{localError ?? error}</p>
-        )}
+        {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
         <GlideButton
           type="submit"
           disabled={!canSubmit}

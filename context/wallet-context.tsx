@@ -2,6 +2,7 @@
 
 import type {
   GlideProfile,
+  GlideTokenBalance,
   GlideTransaction,
   GlideWallet,
 } from "@/lib/types";
@@ -26,8 +27,10 @@ type WalletContextValue = {
   saveProfile: (patch: Partial<GlideProfile>) => Promise<boolean>;
   wallet: GlideWallet | null;
   balance: number;
+  tokens: GlideTokenBalance[];
   transactions: GlideTransaction[];
   loading: boolean;
+  refreshing: boolean;
   error: string | null;
   refresh: () => Promise<void>;
   ensureWallet: () => Promise<GlideWallet | null>;
@@ -41,20 +44,40 @@ type WalletContextValue = {
 
 const WalletContext = createContext<WalletContextValue | null>(null);
 
+type WalletApiPayload = {
+  wallet?: GlideWallet;
+  balance?: number;
+  tokens?: GlideTokenBalance[];
+  error?: string;
+};
+
+function applyWalletPayload(
+  data: WalletApiPayload,
+  setWallet: (w: GlideWallet) => void,
+  setBalance: (b: number) => void,
+  setTokens: (t: GlideTokenBalance[]) => void,
+) {
+  if (!data.wallet) throw new Error(data.error ?? "Could not load wallet");
+  setWallet(data.wallet);
+  setBalance(data.balance ?? 0);
+  setTokens(data.tokens ?? []);
+}
+
 async function loadWalletFromApi(): Promise<{
   wallet: GlideWallet;
   balance: number;
+  tokens: GlideTokenBalance[];
 }> {
   const res = await fetch("/api/wallet", { method: "POST" });
-  const data = (await res.json()) as {
-    wallet?: GlideWallet;
-    balance?: number;
-    error?: string;
-  };
+  const data = (await res.json()) as WalletApiPayload;
   if (!res.ok || !data.wallet) {
     throw new Error(data.error ?? "Could not load wallet");
   }
-  return { wallet: data.wallet, balance: data.balance ?? 0 };
+  return {
+    wallet: data.wallet,
+    balance: data.balance ?? 0,
+    tokens: data.tokens ?? [],
+  };
 }
 
 async function loadProfileFromApi(): Promise<GlideProfile | null> {
@@ -68,8 +91,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<GlideProfile>(DEFAULT_PROFILE);
   const [wallet, setWallet] = useState<GlideWallet | null>(null);
   const [balance, setBalance] = useState(0);
+  const [tokens, setTokens] = useState<GlideTokenBalance[]>([]);
   const [transactions, setTransactions] = useState<GlideTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const updateProfile = useCallback((patch: Partial<GlideProfile>) => {
@@ -98,14 +123,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchWalletState = useCallback(async (w: GlideWallet) => {
-    const res = await fetch(`/api/wallet?walletId=${encodeURIComponent(w.id)}`);
+    const res = await fetch("/api/wallet");
     if (!res.ok) {
       const data = (await res.json()) as { error?: string };
       throw new Error(data.error ?? "Could not load wallet");
     }
-    const data = (await res.json()) as { wallet: GlideWallet; balance: number };
-    setWallet(data.wallet);
-    setBalance(data.balance);
+    const data = (await res.json()) as WalletApiPayload;
+    applyWalletPayload(data, setWallet, setBalance, setTokens);
     return data;
   }, []);
 
@@ -120,22 +144,26 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async () => {
     if (!wallet) return;
+    setRefreshing(true);
     setError(null);
     try {
       await fetchWalletState(wallet);
       await fetchTransactions(wallet.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Refresh failed");
+    } finally {
+      setRefreshing(false);
     }
   }, [wallet, fetchWalletState, fetchTransactions]);
 
   const provisionWallet = useCallback(async () => {
     setError(null);
-    setLoading(true);
+    setLoading((prev) => (wallet ? prev : true));
     try {
-      const { wallet: w, balance: b } = await loadWalletFromApi();
+      const { wallet: w, balance: b, tokens: t } = await loadWalletFromApi();
       setWallet(w);
       setBalance(b);
+      setTokens(t);
       await fetchTransactions(w.id);
       return w;
     } catch (e) {
@@ -144,7 +172,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [fetchTransactions]);
+  }, [fetchTransactions, wallet]);
 
   const ensureWallet = useCallback(async () => {
     if (wallet) {
@@ -168,7 +196,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch("/api/wallet/fund", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: wallet.address }),
+        body: JSON.stringify({ walletId: wallet.id, address: wallet.address }),
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
@@ -272,6 +300,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     if (!user) {
       setWallet(null);
       setBalance(0);
+      setTokens([]);
       setTransactions([]);
       setLoading(false);
       return;
@@ -280,7 +309,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     void (async () => {
-      setLoading(true);
+      setLoading((prev) => (wallet ? prev : true));
       setError(null);
 
       const saved = await loadProfileFromApi();
@@ -294,10 +323,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        const { wallet: w, balance: b } = await loadWalletFromApi();
+        const { wallet: w, balance: b, tokens: t } = await loadWalletFromApi();
         if (cancelled) return;
         setWallet(w);
         setBalance(b);
+        setTokens(t);
         await fetchTransactions(w.id);
       } catch (e) {
         if (!cancelled) {
@@ -311,6 +341,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload wallet when user id changes
   }, [authReady, user?.id, user?.displayName, user?.email, fetchTransactions]);
 
   const value = useMemo(
@@ -320,8 +351,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       saveProfile,
       wallet,
       balance,
+      tokens,
       transactions,
       loading,
+      refreshing,
       error,
       refresh,
       ensureWallet,
@@ -338,8 +371,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       saveProfile,
       wallet,
       balance,
+      tokens,
       transactions,
       loading,
+      refreshing,
       error,
       refresh,
       ensureWallet,
