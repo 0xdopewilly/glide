@@ -1,3 +1,6 @@
+// Local: provider = "sqlite"  + DATABASE_URL="file:./dev.db"
+// Production (Neon): provider = "postgresql" + pooled DATABASE_URL
+
 generator client {
   provider = "prisma-client-js"
 }
