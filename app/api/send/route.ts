@@ -3,6 +3,7 @@ import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle
 import { ARC_USDC_TOKEN_ADDRESS } from "@/lib/tokens";
 import { userOwnsWallet } from "@/lib/users";
 import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
+import { arcExplorerUrl, recordTransaction } from "@/lib/transactions-db";
 import {
   assertSufficientBalance,
   fetchWalletBalance,
@@ -81,11 +82,30 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    const circleId = res.data?.id;
+    const state = res.data?.state;
+    const txHash = (res.data as { txHash?: string } | undefined)?.txHash;
+
+    await recordTransaction({
+      userId: session.userId,
+      kind: "send",
+      title: `Sent to ${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)}`,
+      amountLabel: `−$${parsed.toFixed(2)}`,
+      variant: "debit",
+      status: state,
+      circleTransactionId: circleId,
+      txHash,
+      explorerUrl: txHash ? arcExplorerUrl(txHash) : undefined,
+      chain: GLIDE_BLOCKCHAIN,
+    });
+
     const balance = await fetchWalletBalance(walletId);
 
     return NextResponse.json({
-      transactionId: res.data?.id,
-      state: res.data?.state,
+      transactionId: circleId,
+      state,
+      txHash,
+      explorerUrl: txHash ? arcExplorerUrl(txHash) : undefined,
       balance,
     });
   } catch (err) {

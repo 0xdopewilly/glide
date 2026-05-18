@@ -5,6 +5,12 @@ import { fileURLToPath } from "url";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: [
+    "@circle-fin/app-kit",
+    "@circle-fin/adapter-circle-wallets",
+    "@circle-fin/bridge-kit",
+    "@circle-fin/developer-controlled-wallets",
+  ],
   images: {
     remotePatterns: [
       {

@@ -1,0 +1,67 @@
+# Deploy Glide to Vercel
+
+## Arc Testnet (reference)
+
+| Resource | URL |
+|----------|-----|
+| Explorer | [testnet.arcscan.app](https://testnet.arcscan.app/) |
+| Public USDC faucet | [faucet.circle.com](https://faucet.circle.com/) (Arc Testnet, 20 USDC / 2h) |
+| Chain ID | `5042002` |
+| Gas token | **USDC** (not ETH) |
+
+In-app **Add Cash** uses Circle’s testnet API; you can also fund wallets manually via the public faucet.
+
+## 1. Push to GitHub
+
+Ensure `main` is up to date on `0xdopewilly/glide`.
+
+## 2. Import on Vercel
+
+1. [vercel.com/new](https://vercel.com/new) → Import `0xdopewilly/glide`
+2. Framework: **Next.js** (auto-detected)
+3. Build command (recommended):
+
+   ```bash
+   npx prisma migrate deploy && npm run build
+   ```
+
+4. Install command: `npm install` (default)
+
+## 3. Environment variables
+
+Add these in **Project → Settings → Environment Variables** for **Production** (and Preview if you want):
+
+| Variable | Notes |
+|----------|--------|
+| `DATABASE_URL` | Supabase **connection pooling** URL (port 6543, `?pgbouncer=true`) |
+| `DIRECT_URL` | Supabase **direct** URL (port 5432) — required for migrations |
+| `CIRCLE_API_KEY` | Circle Console |
+| `CIRCLE_ENTITY_SECRET` | Circle Console |
+| `CIRCLE_KIT_KEY` | Arc **App Kit** key (required for swap/bridge) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk |
+| `CLERK_SECRET_KEY` | Clerk |
+| `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` | e.g. `https://dynamic-turkey-46.clerk.accounts.dev` |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` |
+| `NEXT_PUBLIC_CLERK_SIGN_UP_URL` | `/sign-up` |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` | `/` |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL` | `/` |
+
+URL-encode special characters in database passwords (`@` → `%40`).
+
+## 4. Clerk production URLs
+
+In Clerk → **Configure → Domains**, add your Vercel URL:
+
+- `https://your-app.vercel.app`
+- Custom domain if you add one
+
+## 5. Deploy
+
+Click **Deploy**. After build:
+
+- `https://your-app.vercel.app/api/health/db` → `{ "ok": true }`
+- Sign up → wallet + activity should work on Arc testnet
+
+## 6. Optional: custom domain
+
+Vercel → **Domains** → add `glide.yourdomain.com` and update Clerk allowed origins.

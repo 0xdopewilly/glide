@@ -12,11 +12,34 @@ datasource db {
 
 /// Glide user — Clerk id is the primary key.
 model User {
-  id                   String   @id
-  email                String   @unique
+  id                   String        @id
+  email                String        @unique
   displayName          String?
-  circleWalletId       String?  @unique
+  circleWalletId       String?       @unique
   circleWalletAddress  String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  transactions         Transaction[]
+}
+
+/// On-chain activity mirrored from Circle + App Kit (source of truth: chain).
+model Transaction {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind                String
+  title               String
+  amountLabel         String
+  variant             String
+  status              String?
+  circleTransactionId String?  @unique
+  txHash              String?
+  explorerUrl         String?
+  chain               String?
+  metadata            Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([txHash])
 }

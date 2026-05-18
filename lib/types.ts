@@ -18,6 +18,10 @@ export type GlideTransaction = {
   meta: string;
   kind?: TransactionKind;
   status?: string;
+  /** On-chain transaction hash when available */
+  txHash?: string;
+  /** Block explorer link for sharing */
+  explorerUrl?: string;
 };
 
 export type WalletResponse = {

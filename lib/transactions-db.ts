@@ -1,0 +1,108 @@
+import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
+import { formatRelativeDate } from "@/lib/format";
+import type { GlideTransaction, TransactionKind } from "@/lib/types";
+
+export type RecordTransactionInput = {
+  userId: string;
+  kind: TransactionKind;
+  title: string;
+  amountLabel: string;
+  variant: GlideTransaction["variant"];
+  status?: string;
+  circleTransactionId?: string;
+  txHash?: string;
+  explorerUrl?: string;
+  chain?: string;
+  metadata?: Prisma.InputJsonValue;
+};
+
+export async function recordTransaction(input: RecordTransactionInput) {
+  if (input.circleTransactionId) {
+    const existing = await prisma.transaction.findUnique({
+      where: { circleTransactionId: input.circleTransactionId },
+    });
+    if (existing) {
+      return prisma.transaction.update({
+        where: { id: existing.id },
+        data: {
+          status: input.status ?? existing.status,
+          txHash: input.txHash ?? existing.txHash,
+          explorerUrl: input.explorerUrl ?? existing.explorerUrl,
+          amountLabel: input.amountLabel,
+          title: input.title,
+        },
+      });
+    }
+  }
+
+  if (input.txHash) {
+    const existing = await prisma.transaction.findFirst({
+      where: { userId: input.userId, txHash: input.txHash },
+    });
+    if (existing) {
+      return prisma.transaction.update({
+        where: { id: existing.id },
+        data: {
+          status: input.status ?? existing.status,
+          explorerUrl: input.explorerUrl ?? existing.explorerUrl,
+          circleTransactionId:
+            input.circleTransactionId ?? existing.circleTransactionId,
+        },
+      });
+    }
+  }
+
+  return prisma.transaction.create({
+    data: {
+      userId: input.userId,
+      kind: input.kind,
+      title: input.title,
+      amountLabel: input.amountLabel,
+      variant: input.variant,
+      status: input.status,
+      circleTransactionId: input.circleTransactionId,
+      txHash: input.txHash,
+      explorerUrl: input.explorerUrl,
+      chain: input.chain,
+      metadata: input.metadata,
+    },
+  });
+}
+
+function rowToGlide(row: {
+  id: string;
+  kind: string;
+  title: string;
+  amountLabel: string;
+  variant: string;
+  status: string | null;
+  txHash: string | null;
+  explorerUrl: string | null;
+  createdAt: Date;
+}): GlideTransaction {
+  return {
+    id: row.txHash ?? row.id,
+    title: row.title,
+    amount: row.amountLabel,
+    variant: row.variant as GlideTransaction["variant"],
+    meta: formatRelativeDate(row.createdAt.toISOString()),
+    kind: row.kind as TransactionKind,
+    status: row.status ?? undefined,
+    txHash: row.txHash ?? undefined,
+    explorerUrl: row.explorerUrl ?? undefined,
+  };
+}
+
+export async function listUserTransactions(userId: string, limit = 50) {
+  const rows = await prisma.transaction.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
+  return rows.map(rowToGlide);
+}
+
+export function arcExplorerUrl(txHash: string) {
+  return `https://testnet.arcscan.app/tx/${txHash}`;
+}

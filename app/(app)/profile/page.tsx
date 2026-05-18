@@ -15,6 +15,7 @@ export default function ProfilePage() {
   const {
     profile,
     updateProfile,
+    saveProfile,
     wallet,
     balance,
     createNewWallet,
@@ -27,11 +28,19 @@ export default function ProfilePage() {
   const [name, setName] = useState(profile.displayName);
   const [email, setEmail] = useState(profile.email);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    updateProfile({ displayName: name.trim() || "Guest", email: email.trim() });
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    const ok = await saveProfile({
+      displayName: name.trim() || "Guest",
+      email: email.trim(),
+    });
+    setSaving(false);
+    if (ok) {
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2000);
+    }
   };
 
   return (
@@ -76,8 +85,13 @@ export default function ProfilePage() {
               className={inputClassName}
             />
           </FormField>
-          <GlideButton type="button" onClick={handleSave} uppercase={false}>
-            {saved ? "Saved" : "Save Profile"}
+          <GlideButton
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={saving}
+            uppercase={false}
+          >
+            {saved ? "Saved" : saving ? "Saving…" : "Save Profile"}
           </GlideButton>
         </div>
 

@@ -1,19 +1,20 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
-import type { FlowSuccess } from "@/lib/flow-api";
+import {
+  BRIDGE_NETWORKS,
+  executeArcBridge,
+  type BridgeNetworkKey,
+} from "@/lib/app-kit";
 import { safeApiError } from "@/lib/circle";
-import { userOwnsWallet } from "@/lib/users";
+import { recordTransaction } from "@/lib/transactions-db";
+import { getUserById, userOwnsWallet } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
-import { assertSufficientBalance, fetchWalletBalance } from "@/lib/wallet-service";
+import {
+  assertSufficientBalance,
+  fetchWalletBalance,
+} from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
-const NETWORK_LABELS: Record<string, string> = {
-  ethereum: "Ethereum",
-  base: "Base",
-  polygon: "Polygon",
-  arbitrum: "Arbitrum",
-};
-
-/** POST { walletId, amount, network } — testnet bridge preview */
+/** POST { walletId, amount, network } — bridge USDC from Arc via CCTP */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   const walletId = body.walletId?.trim();
   const amount = body.amount?.trim();
-  const network = body.network?.trim().toLowerCase() ?? "";
+  const network = body.network?.trim().toLowerCase() as BridgeNetworkKey;
 
   if (!walletId || !amount || !network) {
     return NextResponse.json(
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!NETWORK_LABELS[network]) {
+  if (!(network in BRIDGE_NETWORKS)) {
     return NextResponse.json({ error: "Unsupported network" }, { status: 400 });
   }
 
@@ -49,26 +50,62 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const user = await getUserById(session.userId);
+  if (!user?.circleWalletAddress) {
+    return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
+  }
+
+  const label = BRIDGE_NETWORKS[network].label;
+
   try {
     await assertSufficientBalance(walletId, parsed);
-    const balance = await fetchWalletBalance(walletId);
-    const label = NETWORK_LABELS[network];
 
-    const payload: FlowSuccess = {
+    const bridge = await executeArcBridge({
+      walletAddress: user.circleWalletAddress,
+      amount: parsed.toFixed(2),
+      network,
+    });
+
+    const status =
+      bridge.state === "success"
+        ? "completed"
+        : bridge.state === "error"
+          ? "failed"
+          : "pending";
+
+    await recordTransaction({
+      userId: session.userId,
+      kind: "bridge",
+      title: `Bridge to ${label}`,
+      amountLabel: `−$${parsed.toFixed(2)}`,
+      variant: "neutral",
+      status,
+      txHash: bridge.txHash,
+      explorerUrl: bridge.explorerUrl,
+      chain: "ARC-TESTNET",
+      metadata: { destination: label, network },
+    });
+
+    const balance = await fetchWalletBalance(walletId);
+
+    return NextResponse.json({
       ok: true,
       balance,
+      txHash: bridge.txHash,
+      explorerUrl: bridge.explorerUrl,
+      state: bridge.state,
       transaction: {
-        id: `bridge-${Date.now()}`,
+        id: bridge.txHash ?? `bridge-${Date.now()}`,
         title: `Bridge to ${label}`,
         amount: `−$${parsed.toFixed(2)}`,
         variant: "neutral",
-        meta: "Processing",
+        meta: status === "completed" ? "Just now" : "Processing",
         kind: "bridge",
-        status: "pending",
+        status,
+        txHash: bridge.txHash,
+        explorerUrl: bridge.explorerUrl,
       },
-    };
-
-    return NextResponse.json(payload);
+    });
   } catch (err) {
     console.error("[Glide] bridge:", err);
     const message = safeApiError(err);

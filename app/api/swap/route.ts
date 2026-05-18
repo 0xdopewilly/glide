@@ -1,14 +1,16 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
-import type { FlowSuccess } from "@/lib/flow-api";
+import { executeArcSwap } from "@/lib/app-kit";
 import { safeApiError } from "@/lib/circle";
-import { userOwnsWallet } from "@/lib/users";
+import { recordTransaction } from "@/lib/transactions-db";
+import { userOwnsWallet, getUserById } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
-import { assertSufficientBalance, fetchWalletBalance } from "@/lib/wallet-service";
+import {
+  assertSufficientBalance,
+  fetchWalletBalance,
+} from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
-const SWAP_RATE = 0.92;
-
-/** POST { walletId, amount } — testnet swap preview (balance checked, recorded in app) */
+/** POST { walletId, amount } — USDC → EURC on Arc testnet via Circle App Kit */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
@@ -34,29 +36,53 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const user = await getUserById(session.userId);
+  if (!user?.circleWalletAddress) {
+    return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
+  }
+
   try {
     await assertSufficientBalance(walletId, parsed);
-    const balance = await fetchWalletBalance(walletId);
-    const received = parsed * SWAP_RATE;
 
-    const payload: FlowSuccess = {
+    const swap = await executeArcSwap({
+      walletAddress: user.circleWalletAddress,
+      amountIn: parsed.toFixed(2),
+    });
+
+    const received = swap.amountOut ?? (parsed * 0.92).toFixed(2);
+
+    await recordTransaction({
+      userId: session.userId,
+      kind: "swap",
+      title: "Swapped USDC to EURC",
+      amountLabel: `−$${parsed.toFixed(2)}`,
+      variant: "neutral",
+      status: "completed",
+      txHash: swap.txHash,
+      explorerUrl: swap.explorerUrl,
+      chain: "ARC-TESTNET",
+      metadata: { amountOut: received, tokenOut: "EURC" },
+    });
+
+    const balance = await fetchWalletBalance(walletId);
+
+    return NextResponse.json({
       ok: true,
       balance,
+      txHash: swap.txHash,
+      explorerUrl: swap.explorerUrl,
+      receivedAmount: received,
       transaction: {
-        id: `swap-${Date.now()}`,
+        id: swap.txHash,
         title: "Swapped USDC to EURC",
         amount: `−$${parsed.toFixed(2)}`,
         variant: "neutral",
         meta: "Just now",
         kind: "swap",
         status: "completed",
+        txHash: swap.txHash,
+        explorerUrl: swap.explorerUrl,
       },
-    };
-
-    return NextResponse.json({
-      ...payload,
-      receivedAmount: received.toFixed(2),
-      rate: SWAP_RATE,
     });
   } catch (err) {
     console.error("[Glide] swap:", err);

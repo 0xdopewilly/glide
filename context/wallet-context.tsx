@@ -1,6 +1,5 @@
 "use client";
 
-import { STORAGE_KEYS } from "@/lib/storage-keys";
 import type {
   GlideProfile,
   GlideTransaction,
@@ -24,6 +23,7 @@ const DEFAULT_PROFILE: GlideProfile = {
 type WalletContextValue = {
   profile: GlideProfile;
   updateProfile: (patch: Partial<GlideProfile>) => void;
+  saveProfile: (patch: Partial<GlideProfile>) => Promise<boolean>;
   wallet: GlideWallet | null;
   balance: number;
   transactions: GlideTransaction[];
@@ -36,33 +36,10 @@ type WalletContextValue = {
   sendMoney: (destinationAddress: string, amount: string) => Promise<boolean>;
   swapMoney: (amount: string) => Promise<boolean>;
   bridgeMoney: (amount: string, network: string) => Promise<boolean>;
-  addLocalTransaction: (tx: GlideTransaction) => void;
   clearError: () => void;
 };
 
 const WalletContext = createContext<WalletContextValue | null>(null);
-
-function readProfile(): GlideProfile {
-  if (typeof window === "undefined") return DEFAULT_PROFILE;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.profile);
-    if (!raw) return DEFAULT_PROFILE;
-    return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
-  } catch {
-    return DEFAULT_PROFILE;
-  }
-}
-
-function readLocalTransactions(): GlideTransaction[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.localTransactions);
-    if (!raw) return [];
-    return JSON.parse(raw) as GlideTransaction[];
-  } catch {
-    return [];
-  }
-}
 
 async function loadWalletFromApi(): Promise<{
   wallet: GlideWallet;
@@ -80,34 +57,44 @@ async function loadWalletFromApi(): Promise<{
   return { wallet: data.wallet, balance: data.balance ?? 0 };
 }
 
+async function loadProfileFromApi(): Promise<GlideProfile | null> {
+  const res = await fetch("/api/profile");
+  if (!res.ok) return null;
+  return (await res.json()) as GlideProfile;
+}
+
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { user, ready: authReady } = useAuth();
   const [profile, setProfile] = useState<GlideProfile>(DEFAULT_PROFILE);
   const [wallet, setWallet] = useState<GlideWallet | null>(null);
   const [balance, setBalance] = useState(0);
-  const [circleTransactions, setCircleTransactions] = useState<GlideTransaction[]>(
-    [],
-  );
-  const [localTransactions, setLocalTransactions] = useState<GlideTransaction[]>(
-    [],
-  );
+  const [transactions, setTransactions] = useState<GlideTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const updateProfile = useCallback((patch: Partial<GlideProfile>) => {
-    setProfile((prev) => {
-      const next = { ...prev, ...patch };
-      localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(next));
-      return next;
-    });
+    setProfile((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  const addLocalTransaction = useCallback((tx: GlideTransaction) => {
-    setLocalTransactions((prev) => {
-      const next = [tx, ...prev];
-      localStorage.setItem(STORAGE_KEYS.localTransactions, JSON.stringify(next));
-      return next;
-    });
+  const saveProfile = useCallback(async (patch: Partial<GlideProfile>) => {
+    setError(null);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const data = (await res.json()) as GlideProfile & { error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Could not save profile");
+      setProfile({
+        displayName: data.displayName,
+        email: data.email,
+      });
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save profile");
+      return false;
+    }
   }, []);
 
   const fetchWalletState = useCallback(async (w: GlideWallet) => {
@@ -128,7 +115,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     );
     if (!res.ok) return;
     const data = (await res.json()) as { transactions: GlideTransaction[] };
-    setCircleTransactions(data.transactions ?? []);
+    setTransactions(data.transactions ?? []);
   }, []);
 
   const refresh = useCallback(async () => {
@@ -217,23 +204,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           throw new Error(data.error ?? "Transfer failed");
         }
         if (typeof data.balance === "number") setBalance(data.balance);
-        addLocalTransaction({
-          id: `local-${Date.now()}`,
-          title: `Sent to ${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)}`,
-          amount: `−$${parseFloat(amount).toFixed(2)}`,
-          variant: "debit",
-          meta: "Just now",
-          kind: "send",
-          status: "pending",
-        });
-        window.setTimeout(() => void refresh(), 2000);
+        window.setTimeout(() => void refresh(), 2500);
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Transfer failed");
         return false;
       }
     },
-    [wallet, refresh, addLocalTransaction],
+    [wallet, refresh],
   );
 
   const swapMoney = useCallback(
@@ -248,20 +226,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         });
         const data = (await res.json()) as {
           balance?: number;
-          transaction?: GlideTransaction;
           error?: string;
         };
         if (!res.ok) throw new Error(data.error ?? "Swap failed");
         if (typeof data.balance === "number") setBalance(data.balance);
-        if (data.transaction) addLocalTransaction(data.transaction);
-        void refresh();
+        await refresh();
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Swap failed");
         return false;
       }
     },
-    [wallet, refresh, addLocalTransaction],
+    [wallet, refresh],
   );
 
   const bridgeMoney = useCallback(
@@ -276,20 +252,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         });
         const data = (await res.json()) as {
           balance?: number;
-          transaction?: GlideTransaction;
           error?: string;
         };
         if (!res.ok) throw new Error(data.error ?? "Bridge failed");
         if (typeof data.balance === "number") setBalance(data.balance);
-        if (data.transaction) addLocalTransaction(data.transaction);
-        void refresh();
+        await refresh();
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Bridge failed");
         return false;
       }
     },
-    [wallet, refresh, addLocalTransaction],
+    [wallet, refresh],
   );
 
   useEffect(() => {
@@ -298,22 +272,27 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     if (!user) {
       setWallet(null);
       setBalance(0);
-      setCircleTransactions([]);
+      setTransactions([]);
       setLoading(false);
       return;
     }
 
     let cancelled = false;
-    setProfile(readProfile());
-    setLocalTransactions(readLocalTransactions());
-    updateProfile({
-      displayName: user.displayName,
-      email: user.email,
-    });
 
     void (async () => {
       setLoading(true);
       setError(null);
+
+      const saved = await loadProfileFromApi();
+      if (!cancelled) {
+        setProfile(
+          saved ?? {
+            displayName: user.displayName,
+            email: user.email,
+          },
+        );
+      }
+
       try {
         const { wallet: w, balance: b } = await loadWalletFromApi();
         if (cancelled) return;
@@ -332,22 +311,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [authReady, user?.id, user?.displayName, user?.email, fetchTransactions, updateProfile]);
-
-  const transactions = useMemo(() => {
-    const merged = [...localTransactions, ...circleTransactions];
-    const seen = new Set<string>();
-    return merged.filter((tx) => {
-      if (seen.has(tx.id)) return false;
-      seen.add(tx.id);
-      return true;
-    });
-  }, [localTransactions, circleTransactions]);
+  }, [authReady, user?.id, user?.displayName, user?.email, fetchTransactions]);
 
   const value = useMemo(
     () => ({
       profile,
       updateProfile,
+      saveProfile,
       wallet,
       balance,
       transactions,
@@ -360,12 +330,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       sendMoney,
       swapMoney,
       bridgeMoney,
-      addLocalTransaction,
       clearError: () => setError(null),
     }),
     [
       profile,
       updateProfile,
+      saveProfile,
       wallet,
       balance,
       transactions,
@@ -378,7 +348,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       sendMoney,
       swapMoney,
       bridgeMoney,
-      addLocalTransaction,
     ],
   );
 
