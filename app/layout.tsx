@@ -26,8 +26,13 @@ export const metadata: Metadata = {
   title: "Glide",
   description: "Move money instantly. Simple, fast, and familiar.",
   icons: {
-    icon: "/logo-mark.png",
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo-mark.svg", type: "image/svg+xml" },
+    ],
     apple: "/logo-mark.png",
+    shortcut: "/favicon-32x32.png",
   },
   appleWebApp: {
     title: "Glide",
