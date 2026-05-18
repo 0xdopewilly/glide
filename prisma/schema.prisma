@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Glide user — Clerk id is the primary key.
+model User {
+  id                   String   @id
+  email                String   @unique
+  displayName          String?
+  circleWalletId       String?  @unique
+  circleWalletAddress  String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
