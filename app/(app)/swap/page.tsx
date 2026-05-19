@@ -2,6 +2,7 @@
 
 import { FormField, inputClassName } from "@/components/form-field";
 import { GlideButton } from "@/components/glide-button";
+import { GlidePillButton } from "@/components/glide-pill-button";
 import { FlowPage } from "@/components/flow-page";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowDownUp, Check } from "lucide-react";
@@ -67,9 +68,6 @@ export default function SwapPage() {
   return (
     <FlowPage title="Swap" backHref="/">
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col px-5 pb-8">
-        <p className="mt-2 text-sm glide-muted">
-          Swap on Arc testnet. Balance ${balance.toFixed(2)} USDC.
-        </p>
         <FormField id="swap-from" label="From USDC" className="mt-6">
           <input
             id="swap-from"
@@ -108,14 +106,13 @@ export default function SwapPage() {
           <p className="mt-3 text-sm text-red-400">Amount exceeds your balance</p>
         ) : null}
         {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
-        <GlideButton
+        <GlidePillButton
           type="submit"
           disabled={!canSubmit}
-          className="mt-8"
-          uppercase={false}
+          className="mt-8 w-full justify-center py-3.5"
         >
           {submitting ? "Processing" : "Confirm swap"}
-        </GlideButton>
+        </GlidePillButton>
       </form>
     </FlowPage>
   );

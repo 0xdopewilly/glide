@@ -49,11 +49,6 @@ export function BalanceHero({
       </h1>
       <p className="mt-2 text-[15px] leading-relaxed text-neutral-500 dark:text-white/45">
         Your balance on Glide
-        {balance !== displayTotal && balance > 0 ? (
-          <span className="block text-xs text-neutral-400 dark:text-white/35">
-            ${formatUsd(balance)} USDC spendable
-          </span>
-        ) : null}
       </p>
       <GlidePillButton
         type="button"
@@ -62,12 +57,8 @@ export function BalanceHero({
         className="mt-6"
         icon={<Plus className="h-4 w-4" strokeWidth={2.5} />}
       >
-        Get testnet USDC
+        Add Cash
       </GlidePillButton>
-      <p className="mt-2 max-w-[18rem] text-xs leading-relaxed text-neutral-500 dark:text-white/40">
-        Requests free test USDC from Circle&apos;s Arc faucet to your wallet (not a card
-        deposit). Balance may take ~30s to update — tap refresh.
-      </p>
     </section>
   );
 }

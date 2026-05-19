@@ -202,9 +202,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Could not request testnet USDC");
       }
-      setNotice(
-        "Testnet USDC requested from Circle. Tap refresh in ~30 seconds to see your balance.",
-      );
       window.setTimeout(() => void refresh(), 3000);
       window.setTimeout(() => void refresh(), 8000);
       return true;

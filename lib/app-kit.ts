@@ -100,9 +100,13 @@ export async function executeArcSwap(input: {
     ) {
       throw new Error(message);
     }
-    throw new Error(
-      `${message} Use a Kit Key (KIT_KEY:keyId:keySecret) from https://developers.circle.com/w3s/keys#kit-keys — not your TEST_API_KEY. Check https://glide-arc.vercel.app/api/health/kit after updating Vercel env.`,
-    );
+    if (
+      message.toLowerCase().includes("api key") ||
+      message.toLowerCase().includes("authorization")
+    ) {
+      throw new Error("Swap unavailable — server kit key is missing or invalid.");
+    }
+    throw new Error("Swap could not be completed. Try again in a moment.");
   }
 }
 

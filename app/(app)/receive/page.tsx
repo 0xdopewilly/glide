@@ -22,14 +22,16 @@ export default function ReceivePage() {
   };
 
   return (
-    <FlowPage title="Receive" backHref="/">
+    <FlowPage title="Add cash" backHref="/">
       <div className="flex flex-col px-5 pb-8">
         <div className="mt-6 flex flex-col items-center text-center">
           <UserAvatar size="lg" />
           <p className="mt-4 text-xl font-semibold tracking-tight">
             {profile.displayName.trim() || "Guest"}
           </p>
-          <p className="mt-1 text-sm glide-muted">Scan or share to get paid</p>
+          <p className="mt-1 text-sm glide-muted">
+            Share your address to receive USDC or EURC on Arc
+          </p>
         </div>
 
         <ReceiveQr address={address} />

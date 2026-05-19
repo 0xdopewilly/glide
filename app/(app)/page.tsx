@@ -9,20 +9,19 @@ import { TransactionList } from "@/components/transaction-list";
 import { useWallet } from "@/context/wallet-context";
 import { totalUsdFromTokens } from "@/lib/tokens";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
 export default function HomePage() {
+  const router = useRouter();
   const {
     balance,
     tokens,
     loading,
     refreshing,
-    fundWallet,
     transactions,
     error,
-    notice,
     clearError,
-    clearNotice,
     refresh,
   } = useWallet();
 
@@ -40,21 +39,12 @@ export default function HomePage() {
             </button>
           </div>
         ) : null}
-        {notice && !error ? (
-          <div className="mt-3 rounded-2xl bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-800 dark:text-emerald-300">
-            <span>{notice}</span>
-            <button type="button" onClick={clearNotice} className="ml-2 underline">
-              Dismiss
-            </button>
-          </div>
-        ) : null}
-
         <BalanceHero
           balance={balance}
           totalUsd={totalUsd}
           loading={loading}
           refreshing={refreshing}
-          onAddCash={() => void fundWallet()}
+          onAddCash={() => router.push("/receive")}
           onRefresh={() => void refresh()}
         />
         <ActionGrid />
