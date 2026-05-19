@@ -4,6 +4,7 @@ import { FormField, inputClassName } from "@/components/form-field";
 import { GlideButton } from "@/components/glide-button";
 import { GlidePillButton } from "@/components/glide-pill-button";
 import { FlowPage } from "@/components/flow-page";
+import { FlowProcessingOverlay } from "@/components/flow-processing-overlay";
 import { FlowStepMotion } from "@/components/flow-step-motion";
 import { KitSetupBanner, useCircleReady } from "@/components/kit-setup-banner";
 import { useWallet } from "@/context/wallet-context";
@@ -44,6 +45,8 @@ export default function SwapPage() {
 
   return (
     <FlowPage title={step === "form" ? "Swap" : undefined} backHref="/">
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <FlowProcessingOverlay open={submitting} mode="swap" />
       <FlowStepMotion stepKey={step}>
         {step === "success" ? (
           <div className="flex flex-1 flex-col items-center px-6 pt-10 text-center">
@@ -118,6 +121,7 @@ export default function SwapPage() {
           </form>
         )}
       </FlowStepMotion>
+      </div>
     </FlowPage>
   );
 }

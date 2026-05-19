@@ -1,10 +1,12 @@
-import type { AgentHistoryMessage } from "@/lib/agent-context";
+import type { AgentHistoryMessage, BridgeNetwork } from "@/lib/agent-context";
 import {
   canExecuteSendFromHistory,
   extractAmountFromHistory,
   extractRecipientNameFromHistory,
   extractUsernameFromHistory,
   extractWalletFromHistory,
+  isSwapOrBridgeMessage,
+  parseExplicitIntentFromMessage,
 } from "@/lib/agent-context";
 import { findContactByName } from "@/lib/contacts-db";
 import { findUserByUsername } from "@/lib/usernames";
@@ -17,7 +19,7 @@ export type GlideIntent =
   | { action: "bridge"; amount: string; network: BridgeNetwork }
   | { action: "navigate"; path: string };
 
-export type BridgeNetwork = "ethereum" | "base" | "polygon" | "arbitrum";
+export type { BridgeNetwork } from "@/lib/agent-context";
 
 export const AGENT_SYSTEM_PROMPT = `You are Glide, a friendly mobile wallet assistant on Arc testnet (USDC).
 Users speak in plain language. Never mention gas, seed phrases, MetaMask, or Web3 jargon.
@@ -31,6 +33,8 @@ RULES (critical):
 4. Ask at most ONE clarifying question when something is truly missing.
 5. Amounts are USD strings like "1.00". Addresses must be 0x + 40 hex chars.
 6. For Glide users, "to" can be @username (e.g. "khadee") or a saved contact name — not only 0x addresses.
+7. "swap 1 USDC to EURC" is ALWAYS {"action":"swap","amount":"1.00"} — EURC is a token, NOT a person. Never send when user said swap or bridge.
+8. "bridge $5 to Base" is ALWAYS bridge JSON with network "base" — never send.
 
 Respond with JSON only:
 - {"action":"reply","message":"..."} — only when info is still missing
@@ -98,8 +102,24 @@ export async function reconcileIntentWithHistory(
     { role: "user", content: latestUserMessage },
   ];
 
+  const explicit = parseExplicitIntentFromMessage(latestUserMessage);
+  if (explicit) return explicit;
+
+  if (intent?.action === "swap" || intent?.action === "bridge") {
+    return intent;
+  }
+
+  if (isSwapOrBridgeMessage(latestUserMessage)) {
+    return (
+      intent ?? {
+        action: "reply",
+        message: "How much USDC should I swap or bridge?",
+      }
+    );
+  }
+
   const ready = canExecuteSendFromHistory(fullHistory);
-  if (ready) {
+  if (ready && !isSwapOrBridgeMessage(latestUserMessage)) {
     return {
       action: "send",
       amount: ready.amount,
@@ -108,7 +128,7 @@ export async function reconcileIntentWithHistory(
     };
   }
 
-  if (userId) {
+  if (userId && !isSwapOrBridgeMessage(latestUserMessage)) {
     const amount = extractAmountFromHistory(fullHistory);
     const handle = extractUsernameFromHistory(fullHistory);
     if (handle && amount && !extractWalletFromHistory(fullHistory)) {

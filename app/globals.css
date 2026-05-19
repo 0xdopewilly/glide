@@ -98,6 +98,51 @@ body {
   opacity: 0.92;
 }
 
+/* Swap / bridge processing overlay */
+.glide-processing-glow {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--glide-accent) 55%, transparent) 0%,
+    transparent 70%
+  );
+}
+
+.glide-processing-ring {
+  border: 2px solid transparent;
+  border-top-color: var(--glide-accent);
+  border-right-color: color-mix(in srgb, var(--glide-accent) 40%, transparent);
+  animation: glide-ring-spin 1.1s linear infinite;
+}
+
+.glide-processing-ring--delay {
+  animation-duration: 1.6s;
+  animation-direction: reverse;
+  opacity: 0.65;
+}
+
+.glide-processing-card {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--glide-accent) 88%, #1e1b4b),
+    color-mix(in srgb, var(--glide-gradient-to) 75%, #0f172a)
+  );
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes glide-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glide-processing-ring,
+  .glide-processing-ring--delay {
+    animation: none;
+    border-color: color-mix(in srgb, var(--glide-accent) 50%, transparent);
+  }
+}
+
 /* Numeric keypad — GPU transform only, no layout thrash */
 .glide-key {
   -webkit-tap-highlight-color: transparent;

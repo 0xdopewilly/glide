@@ -10,8 +10,86 @@ export type AgentHistoryMessage = {
   content: string;
 };
 
+export type BridgeNetwork = "ethereum" | "base" | "polygon" | "arbitrum";
+
 const ADDRESS_RE = /0x[a-fA-F0-9]{40}/;
 const USERNAME_RE = /@?([a-z][a-z0-9_]{2,19})\b/i;
+
+/** Tokens / verbs that look like @handles but are not people. */
+const NOT_A_USERNAME = new Set([
+  "usdc",
+  "eurc",
+  "usdt",
+  "btc",
+  "eth",
+  "swap",
+  "bridge",
+  "send",
+  "convert",
+  "arc",
+  "base",
+  "polygon",
+  "arbitrum",
+  "ethereum",
+]);
+
+export function isSwapOrBridgeMessage(text: string): boolean {
+  return /\b(swap|convert|bridge)\b/i.test(text);
+}
+
+export function extractAmountFromText(text: string): string | null {
+  const dollar = text.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
+  if (dollar) {
+    const n = parseMoneyAmount(dollar[1]);
+    if (n !== null && n > 0) return n.toFixed(2);
+  }
+  const usdc = text.match(/(\d+(?:\.\d{1,2})?)\s*usdc/i);
+  if (usdc) {
+    const n = parseMoneyAmount(usdc[1]);
+    if (n !== null && n > 0) return n.toFixed(2);
+  }
+  const leading = text.match(
+    /(?:swap|bridge|convert|send)\s+(\d+(?:\.\d{1,2})?)/i,
+  );
+  if (leading) {
+    const n = parseMoneyAmount(leading[1]);
+    if (n !== null && n > 0) return n.toFixed(2);
+  }
+  return null;
+}
+
+export function extractBridgeNetworkFromText(text: string): BridgeNetwork {
+  const lower = text.toLowerCase();
+  if (/\bbase\b/.test(lower)) return "base";
+  if (/\bpolygon\b/.test(lower)) return "polygon";
+  if (/\barbitrum\b/.test(lower)) return "arbitrum";
+  return "ethereum";
+}
+
+/** Deterministic swap/bridge from the latest user line (beats stale send context). */
+export function parseExplicitIntentFromMessage(
+  text: string,
+): { action: "swap"; amount: string } | { action: "bridge"; amount: string; network: BridgeNetwork } | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  const amount = extractAmountFromText(trimmed);
+  if (!amount) return null;
+
+  if (/\bbridge\b/i.test(trimmed)) {
+    return {
+      action: "bridge",
+      amount,
+      network: extractBridgeNetworkFromText(trimmed),
+    };
+  }
+
+  if (/\b(swap|convert)\b/i.test(trimmed)) {
+    return { action: "swap", amount };
+  }
+
+  return null;
+}
 
 /** Last wallet address the user mentioned in the thread. */
 export function extractWalletFromHistory(
@@ -33,24 +111,8 @@ export function extractAmountFromHistory(
   for (let i = history.length - 1; i >= 0; i--) {
     const m = history[i];
     if (m.role !== "user") continue;
-    const text = m.content.trim();
-    const dollar = text.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
-    if (dollar) {
-      const n = parseMoneyAmount(dollar[1]);
-      if (n !== null && n > 0) return n.toFixed(2);
-    }
-    const usdc = text.match(/(\d+(?:\.\d{1,2})?)\s*usdc/i);
-    if (usdc) {
-      const n = parseMoneyAmount(usdc[1]);
-      if (n !== null && n > 0) return n.toFixed(2);
-    }
-    const sendAmt = text.match(/send\s+(\d+(?:\.\d{1,2})?)/i);
-    if (sendAmt) {
-      const n = parseMoneyAmount(sendAmt[1]);
-      if (n !== null && n > 0) return n.toFixed(2);
-    }
-    const plain = parseMoneyAmount(text.replace(/^\$/, ""));
-    if (plain !== null && plain > 0 && text.length < 24) return plain.toFixed(2);
+    const hit = extractAmountFromText(m.content.trim());
+    if (hit) return hit;
   }
   return null;
 }
@@ -74,8 +136,10 @@ export function extractUsernameFromHistory(
 export function extractRecipientNameFromHistory(
   history: AgentHistoryMessage[],
 ): string | null {
-  for (const m of history) {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const m = history[i];
     if (m.role !== "user") continue;
+    if (isSwapOrBridgeMessage(m.content)) continue;
     const text = m.content;
     const patterns = [
       /(?:named?|called)\s+([A-Za-z][A-Za-z0-9' -]{0,28})/i,

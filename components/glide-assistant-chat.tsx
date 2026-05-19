@@ -1,7 +1,9 @@
 "use client";
 
 import { ChatMessageBubble } from "@/components/chat/chat-message";
+import { ProcessingBubble } from "@/components/chat/processing-bubble";
 import type { GlideIntent } from "@/lib/agent-intents";
+import type { ActionSuccessType } from "@/lib/chat-cache";
 import {
   readChatHistory,
   writeChatHistory,
@@ -42,6 +44,8 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
   const { sendMoney, swapMoney, bridgeMoney, refresh, clearError } = useWallet();
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [processingAction, setProcessingAction] =
+    useState<ActionSuccessType | null>(null);
   const [savingContactId, setSavingContactId] = useState<string | null>(null);
   const [messages, setMessages] = useState<StoredChatMessage[]>([WELCOME]);
   const [hydrated, setHydrated] = useState(false);
@@ -86,6 +90,16 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         router.push(intent.path);
         return;
       }
+
+      const processing: ActionSuccessType | null =
+        intent.action === "send" ||
+        intent.action === "swap" ||
+        intent.action === "bridge"
+          ? intent.action
+          : null;
+      if (processing) setProcessingAction(processing);
+
+      try {
       if (intent.action === "send") {
         const ok = await sendMoney(intent.to, intent.amount);
         if (ok) {
@@ -173,6 +187,9 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             text: "Bridge didn't complete. Try again in a moment.",
           });
         }
+      }
+      } finally {
+        setProcessingAction(null);
       }
     },
     [bridgeMoney, clearError, pushMessage, refresh, router, sendMoney, swapMoney],
@@ -314,7 +331,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
 
   useEffect(() => {
     scrollToEnd();
-  }, [messages, scrollToEnd]);
+  }, [messages, processingAction, scrollToEnd]);
 
   return (
     <div
@@ -365,7 +382,9 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             onSaveContact={saveContact}
           />
         ))}
-        {busy ? (
+        {processingAction ? (
+          <ProcessingBubble action={processingAction} />
+        ) : busy ? (
           <div className="flex justify-start px-1 py-1">
             <div className="glide-chat-typing flex gap-1.5 rounded-[20px] rounded-bl-[6px] border border-neutral-200/50 bg-white/90 px-4 py-3.5 dark:border-white/[0.06] dark:bg-[#1e1e22]">
               <span />
