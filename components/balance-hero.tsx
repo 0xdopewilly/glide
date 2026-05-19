@@ -1,21 +1,18 @@
 "use client";
 
-import { GlidePillButton } from "@/components/glide-pill-button";
 import { usePrivacy } from "@/context/privacy-context";
 import { formatUsd } from "@/lib/format";
-import { ArrowDownLeft, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 export function BalanceHero({
   balance,
   totalUsd,
-  onRequestCash,
   onRefresh,
   loading,
   refreshing,
 }: {
   balance: number;
   totalUsd?: number;
-  onRequestCash: () => void;
   onRefresh: () => void;
   loading?: boolean;
   refreshing?: boolean;
@@ -53,15 +50,6 @@ export function BalanceHero({
       <p className="mt-2 text-[15px] leading-relaxed text-neutral-500 dark:text-white/45">
         Your balance on Glide
       </p>
-      <GlidePillButton
-        type="button"
-        onClick={onRequestCash}
-        disabled={loading}
-        className="mt-6"
-        icon={<ArrowDownLeft className="h-4 w-4" strokeWidth={2.5} />}
-      >
-        Request Cash
-      </GlidePillButton>
     </section>
   );
 }

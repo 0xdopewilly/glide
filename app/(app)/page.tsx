@@ -8,11 +8,9 @@ import { TransactionList } from "@/components/transaction-list";
 import { useWallet } from "@/context/wallet-context";
 import { totalUsdFromTokens } from "@/lib/tokens";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
 export default function HomePage() {
-  const router = useRouter();
   const {
     balance,
     tokens,
@@ -44,7 +42,6 @@ export default function HomePage() {
           totalUsd={totalUsd}
           loading={loading}
           refreshing={refreshing}
-          onRequestCash={() => router.push("/request")}
           onRefresh={() => void refresh()}
         />
         <ActionGrid />
