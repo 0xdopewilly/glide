@@ -17,10 +17,10 @@
   --glide-success: #0d9f6e;
   --glide-gradient-from: #3b7fd4;
   --glide-gradient-to: #8b5cf6;
-  --glide-glow-primary: rgba(59, 127, 212, 0.52);
-  --glide-glow-secondary: rgba(139, 92, 246, 0.42);
-  --glide-glow-accent: rgba(56, 189, 248, 0.38);
-  --glide-glow-warm: rgba(251, 146, 60, 0.22);
+  --glide-glow-primary: rgba(59, 127, 212, 0.62);
+  --glide-glow-secondary: rgba(139, 92, 246, 0.52);
+  --glide-glow-accent: rgba(56, 189, 248, 0.45);
+  --glide-glow-warm: rgba(251, 146, 60, 0.28);
 }
 
 .dark {

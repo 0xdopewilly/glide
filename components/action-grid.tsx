@@ -1,24 +1,17 @@
 "use client";
 
-import {
-  ArrowLeftRight,
-  Download,
-  Link2,
-  Send,
-} from "lucide-react";
+import { Download, Send } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 const ACTIONS = [
   { href: "/send", label: "Send", icon: Send },
   { href: "/receive", label: "Receive", icon: Download },
-  { href: "/swap", label: "Swap", icon: ArrowLeftRight },
-  { href: "/bridge", label: "Bridge", icon: Link2 },
 ] as const;
 
 export function ActionGrid() {
   return (
-    <nav aria-label="Quick actions" className="mt-8 grid grid-cols-4 gap-3">
+    <nav aria-label="Quick actions" className="mt-8 grid grid-cols-2 gap-4 px-2">
       {ACTIONS.map(({ href, label, icon: Icon }) => (
         <ActionLink
           key={href}

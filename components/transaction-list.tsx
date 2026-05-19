@@ -1,10 +1,12 @@
 "use client";
 
-import { TransactionDetailSheet } from "@/components/transaction-detail-sheet";
 import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction } from "@/lib/types";
-import { Share2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, ExternalLink, Share2 } from "lucide-react";
 import { useState } from "react";
+
+const EXPAND_EASE = [0.22, 1, 0.36, 1] as const;
 
 function TransactionSkeleton() {
   return (
@@ -28,7 +30,7 @@ export function TransactionList({
   loading?: boolean;
   emptyMessage?: string;
 }) {
-  const [selected, setSelected] = useState<GlideTransaction | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (loading && transactions.length === 0) {
     return <TransactionSkeleton />;
@@ -43,28 +45,30 @@ export function TransactionList({
   }
 
   return (
-    <>
-      <ul className="flex flex-col gap-2">
-        {transactions.map((item) => (
-          <li key={item.id}>
-            <TransactionRow tx={item} onSelect={() => setSelected(item)} />
-          </li>
-        ))}
-      </ul>
-      <TransactionDetailSheet
-        transaction={selected}
-        onClose={() => setSelected(null)}
-      />
-    </>
+    <ul className="flex flex-col gap-2">
+      {transactions.map((item) => (
+        <li key={item.id}>
+          <TransactionRow
+            tx={item}
+            expanded={expandedId === item.id}
+            onToggle={() =>
+              setExpandedId((id) => (id === item.id ? null : item.id))
+            }
+          />
+        </li>
+      ))}
+    </ul>
   );
 }
 
 function TransactionRow({
   tx,
-  onSelect,
+  expanded,
+  onToggle,
 }: {
   tx: GlideTransaction;
-  onSelect: () => void;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
   const { title, amount, variant, meta, status, explorerUrl, txHash, note } = tx;
   const isCredit = variant === "credit";
@@ -101,56 +105,114 @@ function TransactionRow({
 
   return (
     <article
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
-      className={`glide-tap flex cursor-pointer items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-opacity hover:opacity-90 ${
+      className={`overflow-hidden rounded-2xl transition-shadow duration-200 ${
+        expanded ? "shadow-md ring-1 ring-black/5 dark:ring-white/10" : ""
+      } ${
         isCredit
           ? "bg-emerald-500/10 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10"
           : "bg-neutral-100 dark:bg-[#1c1c1e]"
       }`}
     >
-      <div className="min-w-0 flex-1 text-left">
-        <p className="truncate text-[15px] font-semibold tracking-tight text-neutral-950 dark:text-white">
-          {title}
-        </p>
-        <p className="mt-0.5 text-xs font-medium text-neutral-500 dark:text-white/45">
-          {meta}
-          {status ? ` · ${status}` : ""}
-        </p>
-        {note ? (
-          <p className="mt-0.5 truncate text-xs text-neutral-400 dark:text-white/35">
-            {note}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="glide-tap flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+        aria-expanded={expanded}
+      >
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold tracking-tight text-neutral-950 dark:text-white">
+            {title}
           </p>
-        ) : null}
-      </div>
+          <p className="mt-0.5 text-xs font-medium text-neutral-500 dark:text-white/45">
+            {meta}
+            {status ? ` · ${status}` : ""}
+          </p>
+          {note && !expanded ? (
+            <p className="mt-0.5 truncate text-xs text-neutral-400 dark:text-white/35">
+              {note}
+            </p>
+          ) : null}
+        </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        <p
-          className={`text-[15px] font-semibold tracking-tight ${
-            isCredit ? "text-emerald-600 dark:text-emerald-400" : "text-neutral-950 dark:text-white"
-          } ${blurAmounts ? "glide-amount-blur" : ""}`}
-        >
-          {blurAmounts ? "•••" : amount}
-        </p>
-        {canShare ? (
-          <button
-            type="button"
-            onClick={handleShare}
-            className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold tracking-tight text-neutral-700 transition-opacity hover:opacity-80 dark:bg-black/30 dark:text-white/80"
-            aria-label="Share transaction"
+        <div className="flex shrink-0 items-center gap-2">
+          <p
+            className={`text-[15px] font-semibold tracking-tight ${
+              isCredit
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-neutral-950 dark:text-white"
+            } ${blurAmounts ? "glide-amount-blur" : ""}`}
           >
-            <Share2 className="h-3 w-3" />
-            {shareLabel}
-          </button>
+            {blurAmounts ? "•••" : amount}
+          </p>
+          <motion.span
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.22, ease: EXPAND_EASE }}
+            className="text-neutral-400 dark:text-white/35"
+          >
+            <ChevronDown className="h-4 w-4" strokeWidth={2.5} />
+          </motion.span>
+        </div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {expanded ? (
+          <motion.div
+            key="receipt"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.28, ease: EXPAND_EASE }}
+            className="overflow-hidden"
+          >
+            <div
+              className="border-t px-4 pb-4 pt-3 dark:border-white/10"
+              style={{ borderColor: "var(--glide-border)" }}
+            >
+              {note ? (
+                <p className="rounded-xl bg-white/60 px-3 py-2.5 text-sm dark:bg-black/30">
+                  &ldquo;{note}&rdquo;
+                </p>
+              ) : null}
+
+              {txHash ? (
+                <div className="mt-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] glide-muted">
+                    Transaction hash
+                  </p>
+                  <p className="mt-1 break-all font-mono text-[11px] leading-relaxed">
+                    {txHash}
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {explorerUrl ? (
+                  <a
+                    href={explorerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-neutral-950 px-3.5 py-2 text-[11px] font-semibold text-white dark:bg-white dark:text-neutral-950"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Explorer
+                  </a>
+                ) : null}
+                {canShare ? (
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3.5 py-2 text-[11px] font-semibold tracking-tight text-neutral-700 dark:bg-black/30 dark:text-white/80"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    {shareLabel}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </motion.div>
         ) : null}
-      </div>
+      </AnimatePresence>
     </article>
   );
 }

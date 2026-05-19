@@ -12,20 +12,20 @@ import {
 import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowUp, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 const WELCOME: StoredChatMessage = {
   id: "welcome",
   role: "assistant",
   kind: "text",
-  text: "Hi! I can send, swap, bridge, or open scan. What do you need?",
+  text: "Hi! I'm Glide Assist — send, request, split bills, swap, or bridge. What do you need?",
 };
 
 const QUICK_PROMPTS = [
   "Send $5",
   "Swap $10 to EURC",
-  "Open scan",
+  "Split $40 with @friend",
   "My balance",
 ] as const;
 
@@ -40,6 +40,7 @@ function toAgentHistory(messages: StoredChatMessage[]) {
 
 export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { sendMoney, swapMoney, bridgeMoney, refresh, clearError } = useWallet();
   const [message, setMessage] = useState("");
@@ -60,6 +61,13 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     setMessages(readChatHistory(userId));
     setHydrated(true);
   }, [userId]);
+
+  useEffect(() => {
+    const q = searchParams.get("q")?.trim();
+    if (!q || !hydrated) return;
+    setMessage(q);
+    inputRef.current?.focus();
+  }, [searchParams, hydrated]);
 
   useEffect(() => {
     if (!hydrated || !userId) return;

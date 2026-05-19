@@ -2,13 +2,23 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 
-export function PrivacySettings() {
+export function PrivacySettings({ embedded = false }: { embedded?: boolean }) {
   const { hideBalance, blurAmounts, setHideBalance, setBlurAmounts } = usePrivacy();
 
   return (
-    <div className="rounded-2xl border border-neutral-200/80 p-4 dark:border-white/10">
-      <p className="text-sm font-semibold tracking-tight">Privacy</p>
-      <label className="mt-4 flex cursor-pointer items-center justify-between gap-3">
+    <div
+      className={
+        embedded
+          ? ""
+          : "rounded-2xl border border-neutral-200/80 p-4 dark:border-white/10"
+      }
+    >
+      {!embedded ? (
+        <p className="text-sm font-semibold tracking-tight">Privacy</p>
+      ) : null}
+      <label
+        className={`flex cursor-pointer items-center justify-between gap-3 ${embedded ? "py-1" : "mt-4"}`}
+      >
         <span className="text-sm glide-muted">Hide balance on home</span>
         <input
           type="checkbox"

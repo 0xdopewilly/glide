@@ -17,7 +17,7 @@ export function VenmoActionList() {
   const { fundWallet, loading } = useWallet();
 
   const rows = [
-    { href: "/scan", icon: QrCode, label: "Scan code" },
+    { href: "/send?scan=1", icon: QrCode, label: "Scan to pay" },
     { href: "/request", icon: ArrowDownLeft, label: "Request" },
     { href: "/send", icon: Send, label: "Pay" },
   ] as const;

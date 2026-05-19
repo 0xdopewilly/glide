@@ -21,7 +21,7 @@ const WELCOME: StoredChatMessage = {
   id: "welcome",
   role: "assistant",
   kind: "text",
-  text: "Hi! I can send, swap, bridge, or open scan. What do you need?",
+  text: "Hi! I'm Glide Assist — send, request, split bills, swap, or bridge. What do you need?",
 };
 
 function key(userId: string) {

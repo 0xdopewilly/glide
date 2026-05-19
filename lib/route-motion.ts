@@ -1,5 +1,5 @@
 /** Tab order (left → right) for horizontal slide direction. */
-const TAB_ORDER = ["/", "/scan", "/ask", "/activity", "/profile"] as const;
+const TAB_ORDER = ["/", "/payments", "/ask", "/trade", "/activity"] as const;
 
 /** Full-screen flows — treated as “forward” from home. */
 const FLOW_ROUTES = [
@@ -10,6 +10,9 @@ const FLOW_ROUTES = [
   "/request",
   "/pay",
   "/contacts",
+  "/profile",
+  "/scheduled",
+  "/scan",
 ] as const;
 
 function tabIndex(path: string): number {

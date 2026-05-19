@@ -5,6 +5,7 @@ import { FlowPage } from "@/components/flow-page";
 import { NumericKeypad } from "@/components/numeric-keypad";
 import { UserAvatar } from "@/components/user-avatar";
 import { GlideButton } from "@/components/glide-button";
+import { SendScanSheet } from "@/components/send-scan-sheet";
 import { shortenAddress } from "@/lib/format";
 import {
   isValidUsername,
@@ -12,7 +13,7 @@ import {
   normalizeUsername,
 } from "@/lib/validation";
 import { useWallet } from "@/context/wallet-context";
-import { AtSign, Check, User, Wallet } from "lucide-react";
+import { AtSign, Check, QrCode, User, Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -45,6 +46,13 @@ export default function SendPage() {
   const [resolveState, setResolveState] = useState<ResolveState>("idle");
   const [resolvedMeta, setResolvedMeta] = useState<ResolvedMeta | null>(null);
   const [resolveMessage, setResolveMessage] = useState<string | null>(null);
+  const [scanOpen, setScanOpen] = useState(
+    () => searchParams.get("scan") === "1",
+  );
+
+  useEffect(() => {
+    if (searchParams.get("scan") === "1") setScanOpen(true);
+  }, [searchParams]);
 
   useEffect(() => {
     const to = searchParams.get("to")?.trim();
@@ -285,11 +293,22 @@ export default function SendPage() {
 
   return (
     <FlowPage backHref="/">
+      <SendScanSheet open={scanOpen} onClose={() => setScanOpen(false)} />
       <div className="flex min-h-0 flex-1 flex-col px-5 pb-4 font-[family-name:var(--font-jakarta)]">
         <section className="mt-2">
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] glide-muted">
-            Send money
-          </p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] glide-muted">
+              Send money
+            </p>
+            <button
+              type="button"
+              onClick={() => setScanOpen(true)}
+              className="glide-tap inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold tracking-tight text-violet-300 ring-1 ring-white/10"
+            >
+              <QrCode className="h-3.5 w-3.5" strokeWidth={2.5} />
+              Scan QR
+            </button>
+          </div>
 
           <div
             className={`glide-input-focus mt-4 rounded-2xl border bg-white/[0.05] p-4 dark:bg-white/[0.06] ${recipientBorderClass}`}

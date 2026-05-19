@@ -4,13 +4,7 @@ import { Shield, Wallet } from "lucide-react";
 
 export function AccountSecurityCard() {
   return (
-    <section
-      className="mt-8 space-y-4 rounded-2xl border p-4"
-      style={{
-        background: "var(--glide-surface-elevated)",
-        borderColor: "var(--glide-border)",
-      }}
-    >
+    <section className="mt-4 space-y-4 rounded-2xl p-4 glide-surface-card">
       <div className="flex items-center gap-2">
         <Shield className="h-5 w-5 text-indigo-500" strokeWidth={2} />
         <h3 className="text-sm font-semibold tracking-tight">

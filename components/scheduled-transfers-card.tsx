@@ -13,7 +13,7 @@ type Row = {
   nextRunAt: string;
 };
 
-export function ScheduledTransfersCard() {
+export function ScheduledTransfersCard({ className = "" }: { className?: string }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [destination, setDestination] = useState("");
   const [amount, setAmount] = useState("");
@@ -58,45 +58,64 @@ export function ScheduledTransfersCard() {
   };
 
   return (
-    <div className="rounded-2xl border border-neutral-200/80 p-4 dark:border-white/10">
-      <p className="text-sm font-semibold tracking-tight">Scheduled sends</p>
-      <p className="mt-1 text-xs glide-muted">
-        Rent, allowances — runs via daily cron on the server.
+    <div className={`rounded-2xl p-4 glide-surface-card ${className}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] glide-muted">
+        Active
       </p>
       {rows.length > 0 ? (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-3 space-y-2">
           {rows.map((r) => (
             <li
               key={r.id}
-              className="flex items-center justify-between gap-2 rounded-xl bg-neutral-100 px-3 py-2 text-sm dark:bg-[#1c1c1e]"
+              className="flex items-center justify-between gap-3 rounded-xl bg-white/60 px-3.5 py-3 text-sm dark:bg-black/35"
             >
-              <span>
-                ${r.amount} → {r.recipientLabel ?? r.destination} ({r.frequency})
+              <span className="min-w-0 leading-snug">
+                <span className="font-semibold">${r.amount}</span>
+                <span className="glide-muted"> → </span>
+                <span className="font-medium">
+                  {r.recipientLabel ?? r.destination}
+                </span>
+                <span className="mt-0.5 block text-xs capitalize glide-muted">
+                  {r.frequency} · next {new Date(r.nextRunAt).toLocaleDateString()}
+                </span>
               </span>
               <button
                 type="button"
                 onClick={() => void cancel(r.id)}
-                className="text-xs font-semibold text-red-500"
+                className="shrink-0 text-xs font-semibold text-red-500 hover:text-red-600"
               >
                 Cancel
               </button>
             </li>
           ))}
         </ul>
-      ) : null}
-      <FormField id="sched-to" label="To (@username or 0x)" className="mt-4">
+      ) : (
+        <p className="mt-3 rounded-xl border border-dashed px-4 py-6 text-center text-sm glide-muted"
+          style={{ borderColor: "var(--glide-border)" }}
+        >
+          No scheduled sends yet. Add one below.
+        </p>
+      )}
+
+      <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.06em] glide-muted">
+        New schedule
+      </p>
+      <FormField id="sched-to" label="To (Glide Tag or address)" className="mt-3">
         <input
           id="sched-to"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
+          placeholder="@friend or 0x…"
           className={inputClassName}
         />
       </FormField>
-      <FormField id="sched-amt" label="Amount" className="mt-3">
+      <FormField id="sched-amt" label="Amount (USD)" className="mt-3">
         <input
           id="sched-amt"
+          inputMode="decimal"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          placeholder="50"
           className={inputClassName}
         />
       </FormField>
@@ -115,11 +134,11 @@ export function ScheduledTransfersCard() {
         type="button"
         variant="simple"
         onClick={() => void create()}
-        disabled={loading}
+        disabled={loading || !destination.trim() || !amount.trim()}
         className="mt-4 w-full"
         uppercase={false}
       >
-        Schedule send
+        {loading ? "Scheduling…" : "Schedule send"}
       </GlideButton>
     </div>
   );

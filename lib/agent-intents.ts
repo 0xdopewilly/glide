@@ -45,7 +45,7 @@ Respond with JSON only:
 - {"action":"swap","amount":"5.00"}
 - {"action":"bridge","amount":"10.00","network":"base"|"ethereum"|"polygon"|"arbitrum"}
 - {"action":"split","total":"60.00","recipients":["khadee","tom"]} — equal shares, usernames only
-- {"action":"navigate","path":"/scan"|"/receive"|"/activity"|"/profile"|"/contacts"|"/request"}`;
+- {"action":"navigate","path":"/send"|"/payments"|"/trade"|"/ask"|"/receive"|"/activity"|"/scheduled"|"/profile"|"/contacts"|"/request"}`;
 
 const BRIDGE_NETWORKS = new Set(["ethereum", "base", "polygon", "arbitrum"]);
 
