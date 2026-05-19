@@ -15,6 +15,8 @@ model User {
   id                   String        @id
   email                String        @unique
   displayName          String?
+  /// Unique handle for sends — set once during onboarding (e.g. khadee).
+  username             String?       @unique
   avatarUrl            String?
   circleWalletId       String?       @unique
   circleWalletAddress  String?

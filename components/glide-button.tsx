@@ -3,8 +3,8 @@
 import { ArrowRight } from "lucide-react";
 import type { ButtonHTMLAttributes } from "react";
 
-/** Primary = white notched CTA (reference). Ghost = text link. */
-type Variant = "primary" | "ghost";
+/** Primary = white notched CTA. Simple = rounded fill (forms). Ghost = text link. */
+type Variant = "primary" | "simple" | "ghost";
 
 export function GlideButton({
   variant = "primary",
@@ -30,6 +30,18 @@ export function GlideButton({
       <button
         type="button"
         className={`glide-btn-ghost ${size === "sm" ? "glide-btn-ghost--sm" : ""} ${widthClass} ${fullWidth ? "" : "glide-btn-ghost--inline"} ${className}`}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  if (variant === "simple") {
+    return (
+      <button
+        type="button"
+        className={`glide-btn-simple ${widthClass} ${className}`}
         {...props}
       >
         {children}

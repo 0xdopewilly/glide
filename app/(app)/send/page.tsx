@@ -6,9 +6,14 @@ import { NumericKeypad } from "@/components/numeric-keypad";
 import { UserAvatar } from "@/components/user-avatar";
 import { GlideButton } from "@/components/glide-button";
 import { shortenAddress } from "@/lib/format";
-import { isValidWalletAddress } from "@/lib/validation";
+import { looksLikeRecipient } from "@/lib/recipient-input";
+import {
+  isValidUsername,
+  isValidWalletAddress,
+  normalizeUsername,
+} from "@/lib/validation";
 import { useWallet } from "@/context/wallet-context";
-import { Check } from "lucide-react";
+import { AtSign, Check, User, Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -19,6 +24,17 @@ function formatAmountDisplay(raw: string) {
   return raw;
 }
 
+function recipientKind(
+  value: string,
+): "wallet" | "username" | "contact" | null {
+  const t = value.trim();
+  if (!t) return null;
+  if (isValidWalletAddress(t)) return "wallet";
+  if (isValidUsername(normalizeUsername(t))) return "username";
+  if (t.length >= 2) return "contact";
+  return null;
+}
+
 export default function SendPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -27,6 +43,7 @@ export default function SendPage() {
   const [recipient, setRecipient] = useState(
     () => searchParams.get("to")?.trim() ?? "",
   );
+  const [recipientFocused, setRecipientFocused] = useState(false);
 
   useEffect(() => {
     const to = searchParams.get("to")?.trim();
@@ -52,10 +69,11 @@ export default function SendPage() {
   }, []);
 
   const parsed = parseFloat(amount) || 0;
-  const addressOk = isValidWalletAddress(recipient);
+  const recipientOk = looksLikeRecipient(recipient);
+  const kind = recipientKind(recipient);
   const overBalance = parsed > balance;
   const canContinue =
-    parsed > 0 && addressOk && wallet != null && !overBalance;
+    parsed > 0 && recipientOk && wallet != null && !overBalance;
 
   const handlePay = async () => {
     if (!wallet || !canContinue) return;
@@ -68,17 +86,39 @@ export default function SendPage() {
     else setLocalError("Payment could not be completed. Try again.");
   };
 
+  const recipientLabel = useMemo(() => {
+    const t = recipient.trim();
+    if (isValidWalletAddress(t)) return shortenAddress(t, 8);
+    if (t.startsWith("@")) return t;
+    if (/^[a-z0-9_]{3,20}$/i.test(t)) return `@${t.toLowerCase()}`;
+    return t;
+  }, [recipient]);
+
   const hint = useMemo(() => {
     if (!recipient.trim()) return null;
-    if (!addressOk) return "Enter a valid wallet address";
+    if (!recipientOk) {
+      return "Use a wallet address (0x…), @username, or contact name";
+    }
     if (overBalance) return `You only have $${balance.toFixed(2)} USDC`;
     return null;
-  }, [recipient, addressOk, overBalance, balance]);
+  }, [recipient, recipientOk, overBalance, balance]);
+
+  const recipientBorderClass = useMemo(() => {
+    if (!recipient.trim()) {
+      return recipientFocused
+        ? "border-violet-500/50 ring-2 ring-violet-500/20"
+        : "border-white/12 dark:border-white/10";
+    }
+    if (recipientOk) {
+      return "border-emerald-500/40 ring-2 ring-emerald-500/15";
+    }
+    return "border-red-400/50 ring-2 ring-red-500/15";
+  }, [recipient, recipientFocused, recipientOk]);
 
   if (step === "success") {
     return (
       <FlowPage>
-        <div className="flex flex-1 flex-col items-center px-6 pt-8 text-center">
+        <div className="flex flex-1 flex-col items-center px-6 pt-8 text-center font-[family-name:var(--font-jakarta)]">
           <h1 className="text-3xl font-bold tracking-tight">Sent</h1>
           <div
             className="mt-10 flex h-28 w-28 items-center justify-center rounded-full"
@@ -86,16 +126,14 @@ export default function SendPage() {
           >
             <Check className="h-14 w-14 text-white" strokeWidth={2.5} />
           </div>
-          <p className="mt-10 text-lg glide-muted">You paid</p>
+          <p className="mt-10 text-base font-medium glide-muted">You paid</p>
           <p
-            className="mt-2 text-4xl font-semibold tracking-tight"
+            className="mt-2 text-5xl font-bold tracking-tight"
             style={{ color: "var(--glide-success)" }}
           >
             ${parsed.toFixed(2)}
           </p>
-          <p className="mt-3 text-lg font-medium">
-            {shortenAddress(recipient, 6)}
-          </p>
+          <p className="mt-3 text-lg font-semibold">{recipientLabel}</p>
           <GlideButton
             onClick={() => router.push("/")}
             className="mt-auto mb-8 max-w-sm"
@@ -110,44 +148,48 @@ export default function SendPage() {
 
   if (step === "review") {
     return (
-      <FlowPage title="Pay" onBack={() => setStep("amount")}>
-        <div className="flex flex-col px-5 pb-6">
-          <div className="mt-6 flex flex-col items-center text-center">
+      <FlowPage title="Review" onBack={() => setStep("amount")}>
+        <div className="flex flex-col px-5 pb-6 font-[family-name:var(--font-jakarta)]">
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-center dark:bg-white/[0.06]">
             <UserAvatar size="lg" />
-            <p className="mt-3 font-mono text-sm glide-muted">
-              {shortenAddress(recipient, 8)}
+            <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-500 dark:text-violet-300">
+              Sending to
             </p>
-            <p className="mt-4 text-4xl font-normal tracking-tight">
+            <p className="mt-2 text-xl font-bold tracking-tight">{recipientLabel}</p>
+            <p className="mt-4 text-5xl font-bold tracking-tight tabular-nums">
               ${formatAmountDisplay(amount)}
             </p>
           </div>
 
-          <label className="mt-8 block text-sm font-medium glide-muted">
-            What&apos;s it for?
+          <label className="mt-6 block text-xs font-semibold uppercase tracking-[0.1em] glide-muted">
+            Note (optional)
           </label>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Dinner, rent, thanks"
-            className="mt-2 w-full border-0 border-b bg-transparent py-3 text-[17px] focus:outline-none glide-input"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-[16px] font-medium focus:border-violet-500/40 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:bg-white/[0.06]"
           />
 
-          <div className="mt-8 flex items-center justify-between rounded-xl border px-4 py-3 glide-surface-card">
-            <span className="text-sm glide-muted">Transfer from</span>
-            <span className="text-sm font-semibold">Glide USDC</span>
+          <div className="mt-5 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 dark:bg-white/[0.05]">
+            <span className="text-sm font-medium glide-muted">From</span>
+            <span className="text-sm font-bold">Glide · USDC</span>
           </div>
 
           {(localError || error) && (
-            <p className="mt-4 text-sm text-red-400">{localError ?? error}</p>
+            <p className="mt-4 text-center text-sm font-medium text-red-400">
+              {localError ?? error}
+            </p>
           )}
 
           <GlideButton
             onClick={() => void handlePay()}
             disabled={submitting || loading}
+            variant="simple"
             className="mt-6"
             uppercase={false}
           >
-            {submitting ? "Paying" : `Pay $${parsed.toFixed(2)}`}
+            {submitting ? "Paying…" : `Pay $${parsed.toFixed(2)}`}
           </GlideButton>
         </div>
       </FlowPage>
@@ -156,35 +198,98 @@ export default function SendPage() {
 
   return (
     <FlowPage backHref="/">
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
-        <div className="mt-4 flex flex-col items-center">
-          <UserAvatar size="lg" />
-          <input
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            placeholder="Recipient wallet address"
-            className="mt-4 w-full max-w-xs border-0 bg-transparent text-center text-sm font-mono focus:outline-none"
-            style={{ color: "var(--glide-text)" }}
-          />
+      <div className="flex min-h-0 flex-1 flex-col px-5 pb-4 font-[family-name:var(--font-jakarta)]">
+        <section className="mt-2">
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] glide-muted">
+            Send money
+          </p>
+
+          <div
+            className={`mt-4 rounded-2xl border bg-white/[0.05] p-4 transition-[border-color,box-shadow] dark:bg-white/[0.06] ${recipientBorderClass}`}
+          >
+            <label
+              htmlFor="send-recipient"
+              className="block text-[11px] font-bold uppercase tracking-[0.12em] text-violet-500 dark:text-violet-300"
+            >
+              Send to
+            </label>
+            <div className="relative mt-2">
+              {kind === "username" ? (
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-violet-400">
+                  @
+                </span>
+              ) : null}
+              <input
+                id="send-recipient"
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
+                onFocus={() => setRecipientFocused(true)}
+                onBlur={() => setRecipientFocused(false)}
+                placeholder="Wallet address or @username"
+                autoComplete="off"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                className={`w-full rounded-xl border-0 bg-black/20 py-3.5 text-center text-[16px] font-semibold tracking-tight text-white placeholder:font-medium placeholder:text-white/35 focus:outline-none dark:bg-black/30 ${
+                  kind === "username" ? "pl-8 pr-3" : "px-3"
+                } ${kind === "wallet" ? "font-mono text-[14px]" : ""}`}
+              />
+            </div>
+            <p className="mt-2.5 text-center text-[12px] leading-snug font-medium text-white/45">
+              Or type a saved contact name
+            </p>
+            {recipientOk && kind ? (
+              <div className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-emerald-500">
+                {kind === "wallet" ? (
+                  <Wallet className="h-3.5 w-3.5" />
+                ) : kind === "username" ? (
+                  <AtSign className="h-3.5 w-3.5" />
+                ) : (
+                  <User className="h-3.5 w-3.5" />
+                )}
+                {kind === "wallet"
+                  ? "Wallet address"
+                  : kind === "username"
+                    ? "Glide username"
+                    : "Contact name"}
+              </div>
+            ) : null}
+          </div>
+
           {hint ? (
-            <p className="mt-2 text-center text-xs text-red-400">{hint}</p>
+            <p
+              className={`mt-3 text-center text-[13px] font-medium leading-snug ${
+                recipientOk && !overBalance
+                  ? "text-emerald-500/90"
+                  : "text-red-400"
+              }`}
+            >
+              {hint}
+            </p>
           ) : (
-            <p className="mt-2 text-center text-xs glide-muted">
+            <p className="mt-3 text-center text-[13px] font-medium glide-muted">
               Balance ${balance.toFixed(2)} USDC
             </p>
           )}
+        </section>
+
+        <div className="mt-6 flex flex-col items-center">
+          <span className="text-sm font-semibold uppercase tracking-[0.12em] glide-muted">
+            Amount
+          </span>
+          <p className="mt-2 flex items-baseline gap-0.5 text-[56px] font-bold leading-none tracking-tight tabular-nums">
+            <span className="text-[32px] font-bold text-white/50">$</span>
+            <AnimatedAmount value={formatAmountDisplay(amount)} />
+          </p>
         </div>
 
-        <p className="mt-8 text-center text-5xl font-normal tracking-tight">
-          <AnimatedAmount value={formatAmountDisplay(amount)} />
-        </p>
-
-        <div className="mt-auto">
+        <div className="mt-auto pt-4">
           <NumericKeypad onKey={onKey} />
           <GlideButton
             disabled={!canContinue}
             onClick={() => setStep("review")}
-            className="mb-2 mt-2"
+            variant="simple"
+            className="mb-2 mt-3"
             uppercase={false}
           >
             Continue

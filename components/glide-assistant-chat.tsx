@@ -313,7 +313,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
 
       <div
         ref={listRef}
-        className={`glide-scroll flex flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 ${
+        className={`glide-scroll flex min-w-0 flex-1 flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-contain px-4 ${
           isPage ? "min-h-0 py-2" : "max-h-[min(42vh,320px)] min-h-[120px] py-3"
         }`}
       >

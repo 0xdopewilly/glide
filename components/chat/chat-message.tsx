@@ -2,7 +2,7 @@
 
 import { ActionSuccessCard } from "@/components/chat/action-success-card";
 import type { ActionSuccessType, StoredChatMessage } from "@/lib/chat-cache";
-import { shortenAddress } from "@/lib/format";
+import { formatChatBubbleText, isEthAddress, shortenAddress } from "@/lib/format";
 import { UserPlus } from "lucide-react";
 import Link from "next/link";
 
@@ -88,16 +88,23 @@ export function ChatMessageBubble({
   }
 
   const isUser = message.role === "user";
+  const rawText = message.text ?? "";
+  const isAddress = isUser && isEthAddress(rawText);
+  const bubbleText = formatChatBubbleText(rawText);
+
   return (
-    <div className={`flex px-1 py-0.5 ${isUser ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`flex w-full min-w-0 px-1 py-0.5 ${isUser ? "justify-end" : "justify-start"}`}
+    >
       <div
-        className={`glide-chat-bubble max-w-[min(88%,280px)] text-[15px] leading-[1.45] ${
+        className={`glide-chat-bubble min-w-0 max-w-[min(88%,280px)] text-[15px] leading-[1.45] [overflow-wrap:anywhere] break-words ${
           isUser
             ? "rounded-[20px] rounded-br-[6px] bg-violet-600 px-3.5 py-2.5 font-medium text-white"
             : "rounded-[20px] rounded-bl-[6px] border border-neutral-200/60 bg-white/90 px-3.5 py-2.5 text-neutral-800 dark:border-white/[0.06] dark:bg-[#1e1e22] dark:text-white/90"
-        }`}
+        } ${isAddress ? "font-mono text-[13px] tracking-tight" : ""}`}
+        title={isAddress ? rawText.trim() : undefined}
       >
-        {message.text}
+        {bubbleText}
       </div>
     </div>
   );

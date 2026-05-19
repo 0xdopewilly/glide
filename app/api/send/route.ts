@@ -2,7 +2,8 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
 import { ARC_USDC_TOKEN_ADDRESS } from "@/lib/tokens";
 import { userOwnsWallet } from "@/lib/users";
-import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
+import { resolveRecipient } from "@/lib/resolve-recipient";
+import { parseMoneyAmount } from "@/lib/validation";
 import { arcExplorerUrl, recordTransaction } from "@/lib/transactions-db";
 import {
   assertSufficientBalance,
@@ -23,22 +24,28 @@ export async function POST(request: NextRequest) {
   };
 
   const walletId = body.walletId?.trim();
-  const destinationAddress = body.destinationAddress?.trim();
+  const recipientRaw = body.destinationAddress?.trim();
   const amount = body.amount?.trim();
 
-  if (!walletId || !destinationAddress || !amount) {
+  if (!walletId || !recipientRaw || !amount) {
     return NextResponse.json(
       { error: "walletId, destinationAddress, and amount are required" },
       { status: 400 },
     );
   }
 
-  if (!isValidWalletAddress(destinationAddress)) {
+  const resolved = await resolveRecipient(session.userId, recipientRaw);
+  if (!resolved) {
     return NextResponse.json(
-      { error: "Enter a valid wallet address" },
+      {
+        error:
+          "Recipient not found. Use a wallet address, @username, or a saved contact name.",
+      },
       { status: 400 },
     );
   }
+
+  const destinationAddress = resolved.address;
 
   const parsed = parseMoneyAmount(amount);
   if (parsed === null) {
@@ -89,7 +96,7 @@ export async function POST(request: NextRequest) {
     await recordTransaction({
       userId: session.userId,
       kind: "send",
-      title: `Sent to ${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)}`,
+      title: `Sent to ${resolved.label.startsWith("0x") ? `${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)}` : resolved.label}`,
       amountLabel: `−$${parsed.toFixed(2)}`,
       variant: "debit",
       status: state,

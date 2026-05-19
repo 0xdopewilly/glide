@@ -3,9 +3,12 @@ import {
   canExecuteSendFromHistory,
   extractAmountFromHistory,
   extractRecipientNameFromHistory,
+  extractUsernameFromHistory,
   extractWalletFromHistory,
 } from "@/lib/agent-context";
 import { findContactByName } from "@/lib/contacts-db";
+import { findUserByUsername } from "@/lib/usernames";
+import { normalizeUsername } from "@/lib/validation";
 
 export type GlideIntent =
   | { action: "reply"; message: string }
@@ -27,10 +30,11 @@ RULES (critical):
 3. When you have BOTH a valid 0x address AND an amount from the conversation, you MUST respond with send JSON immediately — do not ask "what would you like to do".
 4. Ask at most ONE clarifying question when something is truly missing.
 5. Amounts are USD strings like "1.00". Addresses must be 0x + 40 hex chars.
+6. For Glide users, "to" can be @username (e.g. "khadee") or a saved contact name — not only 0x addresses.
 
 Respond with JSON only:
 - {"action":"reply","message":"..."} — only when info is still missing
-- {"action":"send","amount":"1.00","to":"0x...","recipientName":"Khadee"} — optional recipientName if user named someone
+- {"action":"send","amount":"1.00","to":"0x..."} OR {"action":"send","amount":"1.00","to":"khadee","recipientName":"Khadee"}
 - {"action":"swap","amount":"5.00"}
 - {"action":"bridge","amount":"10.00","network":"base"|"ethereum"|"polygon"|"arbitrum"}
 - {"action":"navigate","path":"/scan"|"/receive"|"/activity"|"/profile"|"/contacts"}`;
@@ -105,8 +109,21 @@ export async function reconcileIntentWithHistory(
   }
 
   if (userId) {
-    const name = extractRecipientNameFromHistory(fullHistory);
     const amount = extractAmountFromHistory(fullHistory);
+    const handle = extractUsernameFromHistory(fullHistory);
+    if (handle && amount && !extractWalletFromHistory(fullHistory)) {
+      const glideUser = await findUserByUsername(handle);
+      if (glideUser?.circleWalletAddress) {
+        return {
+          action: "send",
+          amount,
+          to: glideUser.circleWalletAddress,
+          recipientName: glideUser.displayName ?? glideUser.username,
+        };
+      }
+    }
+
+    const name = extractRecipientNameFromHistory(fullHistory);
     if (name && amount && !extractWalletFromHistory(fullHistory)) {
       const contact = await findContactByName(userId, name);
       if (contact) {
@@ -115,6 +132,15 @@ export async function reconcileIntentWithHistory(
           amount,
           to: contact.walletAddress,
           recipientName: contact.name,
+        };
+      }
+      const glideUser = await findUserByUsername(normalizeUsername(name));
+      if (glideUser?.circleWalletAddress) {
+        return {
+          action: "send",
+          amount,
+          to: glideUser.circleWalletAddress,
+          recipientName: glideUser.displayName ?? glideUser.username,
         };
       }
     }

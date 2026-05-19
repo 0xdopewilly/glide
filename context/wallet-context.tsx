@@ -128,6 +128,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setProfile({
         displayName: data.displayName,
         email: data.email,
+        username: data.username ?? null,
         avatarUrl: data.avatarUrl ?? null,
       });
       return true;

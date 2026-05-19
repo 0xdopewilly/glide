@@ -6,9 +6,9 @@ import {
   reconcileIntentWithHistory,
   type GlideIntent,
 } from "@/lib/agent-intents";
-import { findContactByName } from "@/lib/contacts-db";
 import { safeApiError } from "@/lib/circle";
 import { groqChat, type GroqMessage } from "@/lib/groq";
+import { resolveRecipient } from "@/lib/resolve-recipient";
 import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -59,16 +59,17 @@ async function resolveSendRecipient(
   userId: string,
   intent: GlideIntent & { action: "send" },
 ): Promise<GlideIntent & { action: "send" }> {
-  if (isValidWalletAddress(intent.to)) return intent;
-  const contact = await findContactByName(userId, intent.to);
-  if (contact) {
-    return {
-      ...intent,
-      to: contact.walletAddress,
-      recipientName: intent.recipientName ?? contact.name,
-    };
-  }
-  return intent;
+  const resolved = await resolveRecipient(userId, intent.to);
+  if (!resolved) return intent;
+  return {
+    ...intent,
+    to: resolved.address,
+    recipientName:
+      intent.recipientName ??
+      (resolved.source === "contact" || resolved.source === "username"
+        ? resolved.label.replace(/^@/, "")
+        : undefined),
+  };
 }
 
 /** POST { message, history? } — Groq assistant with full conversation context */

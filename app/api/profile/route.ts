@@ -12,7 +12,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { displayName: true, email: true, avatarUrl: true },
+    select: { displayName: true, email: true, username: true, avatarUrl: true },
   });
 
   if (!user) {
@@ -22,6 +22,7 @@ export async function GET() {
   return NextResponse.json({
     displayName: user.displayName ?? session.displayName ?? "Guest",
     email: user.email,
+    username: user.username,
     avatarUrl: user.avatarUrl,
   });
 }
@@ -68,12 +69,18 @@ export async function PATCH(request: NextRequest) {
         ...(email ? { email } : {}),
         ...(avatarUrl !== undefined ? { avatarUrl } : {}),
       },
-      select: { displayName: true, email: true, avatarUrl: true },
+      select: {
+        displayName: true,
+        email: true,
+        username: true,
+        avatarUrl: true,
+      },
     });
 
     return NextResponse.json({
       displayName: user.displayName ?? "Guest",
       email: user.email,
+      username: user.username,
       avatarUrl: user.avatarUrl,
     });
   } catch (err) {

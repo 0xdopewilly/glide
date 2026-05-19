@@ -10,6 +10,19 @@ export function shortenAddress(address: string, chars = 6) {
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
 }
 
+const ETH_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
+
+export function isEthAddress(value: string) {
+  return ETH_ADDRESS_RE.test(value.trim());
+}
+
+/** Readable chat line for long hex pasted as a message. */
+export function formatChatBubbleText(text: string) {
+  const trimmed = text.trim();
+  if (isEthAddress(trimmed)) return shortenAddress(trimmed, 6);
+  return text;
+}
+
 export function formatRelativeDate(iso?: string) {
   if (!iso) return "Recently";
   const date = new Date(iso);

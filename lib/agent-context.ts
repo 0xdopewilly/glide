@@ -1,4 +1,9 @@
-import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
+import {
+  isValidUsername,
+  isValidWalletAddress,
+  normalizeUsername,
+  parseMoneyAmount,
+} from "@/lib/validation";
 
 export type AgentHistoryMessage = {
   role: "user" | "assistant";
@@ -6,6 +11,7 @@ export type AgentHistoryMessage = {
 };
 
 const ADDRESS_RE = /0x[a-fA-F0-9]{40}/;
+const USERNAME_RE = /@?([a-z][a-z0-9_]{2,19})\b/i;
 
 /** Last wallet address the user mentioned in the thread. */
 export function extractWalletFromHistory(
@@ -45,6 +51,21 @@ export function extractAmountFromHistory(
     }
     const plain = parseMoneyAmount(text.replace(/^\$/, ""));
     if (plain !== null && plain > 0 && text.length < 24) return plain.toFixed(2);
+  }
+  return null;
+}
+
+/** @username from chat (e.g. "send $5 to @khadee"). */
+export function extractUsernameFromHistory(
+  history: AgentHistoryMessage[],
+): string | null {
+  for (let i = history.length - 1; i >= 0; i--) {
+    const m = history[i];
+    if (m.role !== "user") continue;
+    const hit = m.content.match(USERNAME_RE);
+    if (hit?.[1] && isValidUsername(hit[1])) {
+      return normalizeUsername(hit[1]);
+    }
   }
   return null;
 }

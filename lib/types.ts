@@ -1,6 +1,7 @@
 export type GlideProfile = {
   displayName: string;
   email: string;
+  username?: string | null;
   avatarUrl?: string | null;
 };
 

@@ -84,6 +84,11 @@ export default function ProfilePage() {
           <p className="mt-4 text-base font-semibold tracking-tight">
             {name.trim() || "Guest"}
           </p>
+          {profile.username ? (
+            <p className="mt-0.5 text-sm font-medium text-violet-500 dark:text-violet-300">
+              @{profile.username}
+            </p>
+          ) : null}
           <p className="mt-1 text-sm font-medium glide-muted">
             Balance ${balance.toFixed(2)}
           </p>
@@ -110,6 +115,7 @@ export default function ProfilePage() {
           </FormField>
           <GlideButton
             type="button"
+            variant="simple"
             onClick={() => void handleSave()}
             disabled={saving}
             uppercase={false}
@@ -122,6 +128,7 @@ export default function ProfilePage() {
           <PushNotificationsToggle />
           <GlideButton
             type="button"
+            variant="simple"
             onClick={() => router.push("/contacts")}
             uppercase={false}
             className="w-full"
