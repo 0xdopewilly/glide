@@ -1,6 +1,7 @@
 "use client";
 
 import type { ActionSuccessType } from "@/lib/chat-cache";
+import { formatStableAmount } from "@/lib/currency-format";
 import { shortenAddress } from "@/lib/format";
 import type { LucideIcon } from "lucide-react";
 import { ArrowLeftRight, Globe2, Send } from "lucide-react";
@@ -41,12 +42,14 @@ export function ActionSuccessCard({
   recipientName,
   to,
   targetToken,
+  token,
   network,
 }: {
   action: ActionSuccessType;
   amount?: string;
   recipientName?: string;
   to?: string;
+  token?: string;
   targetToken?: string;
   network?: string;
 }) {
@@ -80,7 +83,7 @@ export function ActionSuccessCard({
         </p>
         {amount ? (
           <p className="mt-2 text-4xl font-bold tracking-tight tabular-nums">
-            ${amount}
+            {formatStableAmount(amount, token)}
           </p>
         ) : null}
         {detail ? (

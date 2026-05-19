@@ -33,6 +33,7 @@ export function ChatMessageBubble({
         amount={message.amount}
         recipientName={message.recipientName}
         to={message.to}
+        token={message.token}
         targetToken={message.targetToken}
         network={message.network}
       />

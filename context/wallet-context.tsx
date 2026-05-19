@@ -16,6 +16,7 @@ import {
   writeCachedProfile,
 } from "@/lib/profile-cache";
 import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
+import { playSuccessChime } from "@/lib/success-chime";
 import {
   createContext,
   useCallback,
@@ -53,7 +54,11 @@ type WalletContextValue = {
   sendMoney: (
     destinationAddress: string,
     amount: string,
-    options?: { note?: string; requestCode?: string },
+    options?: {
+      note?: string;
+      requestCode?: string;
+      token?: string;
+    },
   ) => Promise<boolean>;
   swapMoney: (amount: string) => Promise<boolean>;
   bridgeMoney: (amount: string, network: string) => Promise<boolean>;
@@ -67,6 +72,7 @@ type WalletApiPayload = {
   wallet?: GlideWallet;
   balance?: number;
   tokens?: GlideTokenBalance[];
+  totalUsd?: number;
   error?: string;
 };
 
@@ -275,7 +281,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     async (
       destinationAddress: string,
       amount: string,
-      options?: { note?: string; requestCode?: string },
+      options?: {
+        note?: string;
+        requestCode?: string;
+        token?: string;
+      },
     ) => {
       if (!wallet) return false;
       setError(null);
@@ -287,6 +297,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             walletId: wallet.id,
             destinationAddress,
             amount,
+            token: options?.token,
             note: options?.note,
             requestCode: options?.requestCode,
           }),
@@ -299,7 +310,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           throw new Error(data.error ?? "Transfer failed");
         }
         if (typeof data.balance === "number") setBalance(data.balance);
-        window.setTimeout(() => void refresh(), 2500);
+        void refresh();
+        playSuccessChime();
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Transfer failed");
@@ -326,6 +338,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (!res.ok) throw new Error(data.error ?? "Swap failed");
         if (typeof data.balance === "number") setBalance(data.balance);
         await refresh();
+        playSuccessChime();
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Swap failed");
@@ -352,6 +365,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (!res.ok) throw new Error(data.error ?? "Bridge failed");
         if (typeof data.balance === "number") setBalance(data.balance);
         await refresh();
+        playSuccessChime();
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Bridge failed");

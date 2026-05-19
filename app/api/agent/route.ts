@@ -6,6 +6,10 @@ import {
   reconcileIntentWithHistory,
   type GlideIntent,
 } from "@/lib/agent-intents";
+import {
+  formatStableAmount,
+  formatStableAmountWithCode,
+} from "@/lib/currency-format";
 import { safeApiError } from "@/lib/circle";
 import { groqChat, type GroqMessage } from "@/lib/groq";
 import { resolveRecipient } from "@/lib/resolve-recipient";
@@ -27,9 +31,33 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
     if (amount === null || amount <= 0) {
       return { reply: "How much should I send?" };
     }
+    const token = intent.token ?? "USDC";
     return {
-      reply: `Sending $${amount.toFixed(2)}…`,
-      intent: { ...intent, amount: amount.toFixed(2) },
+      reply: `Sending ${formatStableAmount(amount, token)}…`,
+      intent: { ...intent, amount: amount.toFixed(2), token },
+    };
+  }
+  if (intent.action === "send_batch") {
+    if (!isValidWalletAddress(intent.to)) {
+      return { reply: "I need a valid recipient to send." };
+    }
+    const normalized = intent.transfers.map((t) => {
+      const amount = parseMoneyAmount(t.amount);
+      if (amount === null || amount <= 0) return null;
+      return { amount: amount.toFixed(2), token: t.token };
+    });
+    if (normalized.some((t) => t === null)) {
+      return { reply: "How much of each token should I send?" };
+    }
+    const transfers = normalized.filter(
+      (t): t is { amount: string; token: "USDC" | "EURC" } => t !== null,
+    );
+    const summary = transfers
+      .map((t) => formatStableAmountWithCode(t.amount, t.token))
+      .join(" and ");
+    return {
+      reply: `Sending ${summary}…`,
+      intent: { ...intent, transfers },
     };
   }
   if (intent.action === "swap") {
@@ -85,6 +113,23 @@ async function resolveSendRecipient(
   };
 }
 
+async function resolveSendBatchRecipient(
+  userId: string,
+  intent: GlideIntent & { action: "send_batch" },
+): Promise<GlideIntent & { action: "send_batch" }> {
+  const resolved = await resolveRecipient(userId, intent.to);
+  if (!resolved) return intent;
+  return {
+    ...intent,
+    to: resolved.address,
+    recipientName:
+      intent.recipientName ??
+      (resolved.source === "contact" || resolved.source === "username"
+        ? resolved.label.replace(/^@/, "")
+        : undefined),
+  };
+}
+
 /** POST { message, history? } — Groq assistant with full conversation context */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
@@ -126,6 +171,9 @@ export async function POST(request: NextRequest) {
 
     if (intent?.action === "send") {
       intent = await resolveSendRecipient(session.userId, intent);
+    }
+    if (intent?.action === "send_batch") {
+      intent = await resolveSendBatchRecipient(session.userId, intent);
     }
 
     if (!intent) {

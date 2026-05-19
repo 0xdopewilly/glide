@@ -1,97 +1,148 @@
 "use client";
 
+import { ChainIcon } from "@/components/chain-icon";
+import { TokenIcon } from "@/components/token-icon";
+import type { GlideChainKey } from "@/lib/chain-meta";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowDownUp, Globe2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const LABELS = {
   swap: {
     title: "Swapping",
-    subtitle: "USDC → EURC on Arc",
-    Icon: ArrowDownUp,
+    defaultSubtitle: "USDC → EURC on Arc",
   },
   bridge: {
     title: "Bridging",
-    subtitle: "Arc → destination chain",
-    Icon: Globe2,
+    defaultSubtitle: "Sending USDC cross-chain",
   },
 } as const;
 
-/** Full-screen processing state for swap / bridge flows. */
+function FlowIcon({
+  children,
+  reduceMotion,
+}: {
+  children: React.ReactNode;
+  reduceMotion: boolean | null;
+}) {
+  return (
+    <motion.span
+      className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-md ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/10"
+      animate={
+        reduceMotion
+          ? undefined
+          : { boxShadow: ["0 4px 14px rgba(0,0,0,0.08)", "0 8px 24px rgba(124,58,237,0.18)", "0 4px 14px rgba(0,0,0,0.08)"] }
+      }
+      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+    >
+      {children}
+    </motion.span>
+  );
+}
+
 export function FlowProcessingOverlay({
   open,
   mode,
+  subtitle,
+  bridgeChainId,
 }: {
   open: boolean;
   mode: "swap" | "bridge";
+  subtitle?: string;
+  bridgeChainId?: GlideChainKey;
 }) {
   const reduceMotion = useReducedMotion();
-  const { title, subtitle, Icon } = LABELS[mode];
+  const { title, defaultSubtitle } = LABELS[mode];
+  const detail = subtitle ?? defaultSubtitle;
 
   return (
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center overflow-hidden bg-black/75 px-8 backdrop-blur-md"
+          className="absolute inset-0 z-20 flex items-center justify-center bg-black/35 px-6 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.18 }}
           role="status"
           aria-live="polite"
           aria-busy="true"
         >
           <motion.div
-            className="glide-processing-glow pointer-events-none absolute h-56 w-56 rounded-full"
-            animate={reduceMotion ? undefined : { scale: [1, 1.15, 1], opacity: [0.35, 0.65, 0.35] }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <div className="relative flex flex-col items-center">
+            className="w-full max-w-[280px] rounded-3xl px-6 py-7 text-center shadow-xl glide-surface-card"
+            initial={{ opacity: 0, y: 16, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ type: "spring", damping: 28, stiffness: 380 }}
+          >
             <motion.div
-              className="relative flex h-28 w-28 items-center justify-center"
-              animate={reduceMotion ? undefined : { rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+              className="flex items-center justify-center gap-2.5"
+              initial={reduceMotion ? undefined : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.05 }}
             >
-              <span className="glide-processing-ring absolute inset-0 rounded-full" />
-              <span className="glide-processing-ring glide-processing-ring--delay absolute inset-2 rounded-full" />
-              <span
-                className="flex h-16 w-16 items-center justify-center rounded-2xl"
-                style={{ background: "var(--glide-accent)" }}
-              >
-                <Icon className="h-8 w-8 text-white" strokeWidth={2.25} />
-              </span>
+              {mode === "swap" ? (
+                <>
+                  <FlowIcon reduceMotion={reduceMotion}>
+                    <TokenIcon symbol="USDC" size={40} />
+                  </FlowIcon>
+                  <motion.span
+                    className="flex h-8 w-8 items-center justify-center text-violet-500 dark:text-violet-300"
+                    animate={reduceMotion ? undefined : { x: [0, 3, 0], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                    aria-hidden
+                  >
+                    <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                  </motion.span>
+                  <FlowIcon reduceMotion={reduceMotion}>
+                    <TokenIcon symbol="EURC" size={40} />
+                  </FlowIcon>
+                </>
+              ) : (
+                <>
+                  <FlowIcon reduceMotion={reduceMotion}>
+                    <TokenIcon symbol="USDC" size={40} />
+                  </FlowIcon>
+                  <motion.span
+                    className="flex h-8 w-8 items-center justify-center text-violet-500 dark:text-violet-300"
+                    animate={reduceMotion ? undefined : { x: [0, 3, 0], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                    aria-hidden
+                  >
+                    <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                  </motion.span>
+                  <FlowIcon reduceMotion={reduceMotion}>
+                    {bridgeChainId ? (
+                      <ChainIcon chainId={bridgeChainId} size="sm" />
+                    ) : (
+                      <span className="text-xs font-semibold text-violet-600">→</span>
+                    )}
+                  </FlowIcon>
+                </>
+              )}
             </motion.div>
-            {!reduceMotion ? (
-              <>
-                <motion.span
-                  className="absolute -left-3 top-6 h-3 w-3 rounded-full bg-violet-400"
-                  animate={{ y: [0, -10, 0], opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 1.1, repeat: Infinity, delay: 0 }}
-                />
-                <motion.span
-                  className="absolute -right-2 top-10 h-2.5 w-2.5 rounded-full bg-sky-400"
-                  animate={{ y: [0, -12, 0], opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.3, repeat: Infinity, delay: 0.2 }}
-                />
-                <motion.span
-                  className="absolute bottom-4 left-4 h-2 w-2 rounded-full bg-emerald-400"
-                  animate={{ y: [0, -8, 0], opacity: [0.45, 1, 0.45] }}
-                  transition={{ duration: 1, repeat: Infinity, delay: 0.35 }}
-                />
-              </>
-            ) : null}
-            <p className="mt-8 text-xl font-bold tracking-tight">{title}…</p>
-            <p className="mt-1.5 text-sm glide-muted">{subtitle}</p>
-            <div className="mt-6 flex gap-1.5">
-              {[0, 1, 2].map((i) => (
-                <motion.span
-                  key={i}
-                  className="h-2 w-2 rounded-full bg-white/80"
-                  animate={reduceMotion ? undefined : { y: [0, -6, 0], opacity: [0.35, 1, 0.35] }}
-                  transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.12 }}
-                />
-              ))}
+
+            <div
+              className="relative mx-auto mt-6 h-0.5 w-full max-w-[200px] overflow-hidden rounded-full bg-neutral-200 dark:bg-white/10"
+              aria-hidden
+            >
+              <motion.div
+                className="absolute inset-y-0 w-2/5 rounded-full bg-violet-500 dark:bg-violet-400"
+                animate={
+                  reduceMotion
+                    ? { left: "30%", width: "40%" }
+                    : { left: ["-40%", "100%"] }
+                }
+                transition={
+                  reduceMotion
+                    ? undefined
+                    : { duration: 1.25, repeat: Infinity, ease: "easeInOut" }
+                }
+              />
             </div>
-          </div>
+
+            <p className="mt-5 text-base font-semibold tracking-tight">{title}…</p>
+            <p className="mt-0.5 text-sm glide-muted">{detail}</p>
+          </motion.div>
         </motion.div>
       ) : null}
     </AnimatePresence>

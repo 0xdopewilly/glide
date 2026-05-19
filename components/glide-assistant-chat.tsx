@@ -101,15 +101,81 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
 
       const processing: ActionSuccessType | null =
         intent.action === "send" ||
+        intent.action === "send_batch" ||
         intent.action === "swap" ||
         intent.action === "bridge"
-          ? intent.action
+          ? intent.action === "send_batch"
+            ? "send"
+            : intent.action
           : null;
       if (processing) setProcessingAction(processing);
 
       try {
+      if (intent.action === "send_batch") {
+        const label = intent.recipientName?.trim();
+        let completed = 0;
+        for (const transfer of intent.transfers) {
+          const ok = await sendMoney(intent.to, transfer.amount, {
+            token: transfer.token,
+          });
+          if (!ok) break;
+          completed++;
+          pushMessage({
+            id: `success-${Date.now()}-${transfer.token}`,
+            role: "assistant",
+            kind: "action_success",
+            successAction: "send",
+            amount: transfer.amount,
+            token: transfer.token,
+            to: intent.to,
+            recipientName: label,
+          });
+        }
+        if (completed === intent.transfers.length) {
+          try {
+            const displayName = label ?? "Contact";
+            const params = new URLSearchParams({
+              wallet: intent.to,
+              name: displayName,
+            });
+            const check = await fetch(`/api/contacts/exists?${params}`);
+            const data = (await check.json()) as { exists?: boolean };
+            if (!data.exists) {
+              pushMessage({
+                id: `contact-${Date.now()}`,
+                role: "assistant",
+                kind: "add_contact",
+                contactName: displayName,
+                walletAddress: intent.to,
+                contactSaved: false,
+              });
+            }
+          } catch {
+            /* skip */
+          }
+          await refresh();
+        } else if (completed > 0) {
+          pushMessage({
+            id: `partial-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: `Sent ${completed} of ${intent.transfers.length} payments. Check balance and try the rest on Send.`,
+          });
+          await refresh();
+        } else {
+          pushMessage({
+            id: `err-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: "Send didn't go through. Check your balance and try again.",
+          });
+        }
+        return;
+      }
       if (intent.action === "send") {
-        const ok = await sendMoney(intent.to, intent.amount);
+        const ok = await sendMoney(intent.to, intent.amount, {
+          token: intent.token ?? "USDC",
+        });
         if (ok) {
           const label = intent.recipientName?.trim();
           pushMessage({
@@ -118,6 +184,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             kind: "action_success",
             successAction: "send",
             amount: intent.amount,
+            token: intent.token ?? "USDC",
             to: intent.to,
             recipientName: label,
           });

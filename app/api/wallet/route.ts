@@ -1,5 +1,5 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
-import { totalUsdFromTokens } from "@/lib/tokens";
+import { resolveWalletTotalUsd } from "@/lib/tokens";
 import {
   fetchAllWalletTokenBalances,
   fetchWalletBalance,
@@ -9,15 +9,27 @@ import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { NextRequest, NextResponse } from "next/server";
 
 async function walletPayload(walletId: string, address: string) {
-  const [tokens, balance] = await Promise.all([
-    fetchAllWalletTokenBalances(walletId, address),
-    fetchWalletBalance(walletId),
-  ]);
+  let tokens: Awaited<ReturnType<typeof fetchAllWalletTokenBalances>> = [];
+  let balance = 0;
+
+  try {
+    [tokens, balance] = await Promise.all([
+      fetchAllWalletTokenBalances(walletId, address),
+      fetchWalletBalance(walletId),
+    ]);
+  } catch (err) {
+    console.error("[Glide] wallet balances:", err);
+    tokens = await fetchAllWalletTokenBalances(walletId, address);
+    balance = tokens.find((t) => t.symbol === "USDC")?.amount ?? 0;
+  }
+
+  const totalUsd = resolveWalletTotalUsd(tokens, balance);
+
   return {
     wallet: { id: walletId, address },
     balance,
     tokens,
-    totalUsd: totalUsdFromTokens(tokens),
+    totalUsd,
   };
 }
 

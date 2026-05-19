@@ -1,6 +1,11 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
-import { ARC_USDC_TOKEN_ADDRESS } from "@/lib/tokens";
+import {
+  arcTokenAddressForSymbol,
+  isEurcToken,
+  normalizeTokenSymbol,
+} from "@/lib/tokens";
+import { formatStableAmount } from "@/lib/currency-format";
 import { userOwnsWallet } from "@/lib/users";
 import { notifyPaymentSent } from "@/lib/push";
 import {
@@ -25,6 +30,7 @@ export async function POST(request: NextRequest) {
     walletId?: string;
     destinationAddress?: string;
     amount?: string;
+    token?: string;
     note?: string;
     requestCode?: string;
   };
@@ -32,6 +38,7 @@ export async function POST(request: NextRequest) {
   const walletId = body.walletId?.trim();
   const recipientRaw = body.destinationAddress?.trim();
   const amount = body.amount?.trim();
+  const token = normalizeTokenSymbol(body.token);
   const note = body.note?.trim().slice(0, 140) || undefined;
   const requestCode = body.requestCode?.trim().toLowerCase();
 
@@ -83,12 +90,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await assertSufficientBalance(walletId, parsed);
+    await assertSufficientBalance(walletId, parsed, token);
 
     const res = await initialized.client.createTransaction({
       walletAddress: wallet.address,
       blockchain: GLIDE_BLOCKCHAIN,
-      tokenAddress: ARC_USDC_TOKEN_ADDRESS,
+      tokenAddress: arcTokenAddressForSymbol(token),
       destinationAddress,
       amount: [parsed.toFixed(2)],
       fee: {
@@ -105,14 +112,17 @@ export async function POST(request: NextRequest) {
       userId: session.userId,
       kind: "send",
       title: `Sent to ${formatResolvedRecipientLabel(resolved)}`,
-      amountLabel: `−$${parsed.toFixed(2)}`,
+      amountLabel: `−${formatStableAmount(parsed, token)}`,
       variant: "debit",
       status: state,
       circleTransactionId: circleId,
       txHash,
       explorerUrl: txHash ? arcExplorerUrl(txHash) : undefined,
       chain: GLIDE_BLOCKCHAIN,
-      metadata: note ? { note } : undefined,
+      metadata: {
+        ...(note ? { note } : {}),
+        token,
+      },
     });
 
     if (requestCode) {
@@ -126,6 +136,7 @@ export async function POST(request: NextRequest) {
       session.userId,
       parsed.toFixed(2),
       formatResolvedRecipientLabel(resolved),
+      isEurcToken(token) ? "EURC" : "USDC",
     ).catch((err) => console.error("[Glide] send push:", err));
 
     return NextResponse.json({

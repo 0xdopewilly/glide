@@ -8,6 +8,8 @@ import { FlowProcessingOverlay } from "@/components/flow-processing-overlay";
 import { FlowStepMotion } from "@/components/flow-step-motion";
 import { KitSetupBanner, useCircleReady } from "@/components/kit-setup-banner";
 import { useWallet } from "@/context/wallet-context";
+import { BRIDGE_KEY_TO_CHAIN } from "@/lib/chain-meta";
+import type { BridgeNetworkKey } from "@/lib/app-kit";
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -50,7 +52,16 @@ export default function BridgePage() {
   return (
     <FlowPage title={step === "form" ? "Bridge" : undefined} backHref="/">
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <FlowProcessingOverlay open={submitting} mode="bridge" />
+        <FlowProcessingOverlay
+          open={submitting}
+          mode="bridge"
+          subtitle={`USDC → ${networkLabel}`}
+          bridgeChainId={
+            network in BRIDGE_KEY_TO_CHAIN
+              ? BRIDGE_KEY_TO_CHAIN[network as BridgeNetworkKey]
+              : undefined
+          }
+        />
         <FlowStepMotion stepKey={step}>
         {step === "success" ? (
           <div className="flex flex-1 flex-col items-center px-6 pt-10 text-center">
