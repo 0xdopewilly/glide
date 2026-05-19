@@ -99,15 +99,26 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             to: intent.to,
             recipientName: label,
           });
-          if (label) {
-            pushMessage({
-              id: `contact-${Date.now()}`,
-              role: "assistant",
-              kind: "add_contact",
-              contactName: label,
-              walletAddress: intent.to,
-              contactSaved: false,
+          const displayName = label ?? "Contact";
+          try {
+            const params = new URLSearchParams({
+              wallet: intent.to,
+              name: displayName,
             });
+            const check = await fetch(`/api/contacts/exists?${params}`);
+            const data = (await check.json()) as { exists?: boolean };
+            if (!data.exists) {
+              pushMessage({
+                id: `contact-${Date.now()}`,
+                role: "assistant",
+                kind: "add_contact",
+                contactName: displayName,
+                walletAddress: intent.to,
+                contactSaved: false,
+              });
+            }
+          } catch {
+            /* skip prompt if lookup fails */
           }
           await refresh();
         } else {
@@ -167,14 +178,43 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     [bridgeMoney, clearError, pushMessage, refresh, router, sendMoney, swapMoney],
   );
 
+  const dismissPendingContactPrompts = useCallback(() => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.kind === "add_contact" && !m.contactSaved
+          ? { ...m, contactSkipped: true }
+          : m,
+      ),
+    );
+  }, []);
+
   const sendToAgent = useCallback(
     async (text: string) => {
       if (!text.trim() || busy) return;
+      const trimmed = text.trim();
+
+      if (/already in (my )?contacts?/i.test(trimmed)) {
+        dismissPendingContactPrompts();
+        pushMessage({
+          id: `user-${Date.now()}`,
+          role: "user",
+          kind: "text",
+          text: trimmed,
+        });
+        pushMessage({
+          id: `asst-${Date.now()}`,
+          role: "assistant",
+          kind: "text",
+          text: "Got it — they're already in your contacts.",
+        });
+        return;
+      }
+
       pushMessage({
         id: `user-${Date.now()}`,
         role: "user",
         kind: "text",
-        text: text.trim(),
+        text: trimmed,
       });
       setBusy(true);
 
@@ -222,7 +262,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         setBusy(false);
       }
     },
-    [busy, messages, pushMessage, runIntent],
+    [busy, dismissPendingContactPrompts, messages, pushMessage, runIntent],
   );
 
   const saveContact = async (messageId: string) => {

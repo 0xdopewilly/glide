@@ -11,6 +11,7 @@ export type StoredChatMessage = {
   walletAddress?: string;
   contactName?: string;
   contactSaved?: boolean;
+  contactSkipped?: boolean;
   successAction?: ActionSuccessType;
   targetToken?: string;
   network?: string;

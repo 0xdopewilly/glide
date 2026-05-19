@@ -29,6 +29,38 @@ export async function findContactByName(userId: string, name: string) {
   );
 }
 
+export async function findContactByWallet(userId: string, walletAddress: string) {
+  const normalized = walletAddress.trim().toLowerCase();
+  if (!normalized.startsWith("0x")) return null;
+
+  const row = await prisma.contact.findFirst({
+    where: {
+      userId,
+      walletAddress: { equals: normalized, mode: "insensitive" },
+    },
+  });
+
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    walletAddress: row.walletAddress,
+  };
+}
+
+export async function contactExistsForRecipient(
+  userId: string,
+  walletAddress: string,
+  name?: string | null,
+) {
+  const byWallet = await findContactByWallet(userId, walletAddress);
+  if (byWallet) return byWallet;
+  if (name?.trim()) {
+    return findContactByName(userId, name);
+  }
+  return null;
+}
+
 export async function createContact(
   userId: string,
   name: string,

@@ -39,7 +39,11 @@ export function ChatMessageBubble({
     );
   }
 
-  if (message.kind === "add_contact" && !message.contactSaved) {
+  if (
+    message.kind === "add_contact" &&
+    !message.contactSaved &&
+    !message.contactSkipped
+  ) {
     return (
       <div className="flex justify-start px-1 py-0.5">
         <div className="glide-chat-card max-w-[min(88%,280px)] rounded-[20px] rounded-bl-[6px] border border-neutral-200/60 bg-white/90 px-3.5 py-3 dark:border-white/[0.06] dark:bg-[#1e1e22]">
