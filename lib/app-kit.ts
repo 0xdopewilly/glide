@@ -145,6 +145,9 @@ export async function executeArcBridge(input: {
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Bridge failed on Arc testnet";
+    if (message.includes("CIRCLE_KIT_KEY") || message.includes("Missing")) {
+      throw err;
+    }
     if (
       message.toLowerCase().includes("insufficient") ||
       message.toLowerCase().includes("balance")
@@ -159,6 +162,25 @@ export async function executeArcBridge(input: {
         "Your wallet needs a small on-chain transaction first. Try sending USDC once, then bridge again.",
       );
     }
-    throw new Error("Bridge could not be completed. Try again in a moment.");
+    if (
+      message.toLowerCase().includes("api key") ||
+      message.toLowerCase().includes("authorization") ||
+      message.includes("401") ||
+      message.includes("403")
+    ) {
+      const status = kitKeyStatus();
+      if (!status.ok) {
+        throw new Error(status.hint ?? "Bridge unavailable — check Circle API credentials.");
+      }
+      if (!status.circleApiKeySet || !status.circleEntitySecretSet) {
+        throw new Error(
+          "Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET on the server. Add them on Vercel and redeploy.",
+        );
+      }
+      throw new Error(
+        "Circle rejected the request. Confirm CIRCLE_API_KEY and CIRCLE_ENTITY_SECRET match your wallet app in Circle Console, then redeploy.",
+      );
+    }
+    throw new Error(message.length < 200 ? message : "Bridge could not be completed. Try again.");
   }
 }
