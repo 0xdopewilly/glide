@@ -227,15 +227,16 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         return;
       }
       if (intent.action === "swap") {
-        const ok = await swapMoney(intent.amount);
+        const result = await swapMoney(intent.amount);
         setProcessingAction(null);
-        if (ok) {
+        if (result.ok) {
           pushMessage({
             id: `swap-${Date.now()}`,
             role: "assistant",
             kind: "action_success",
             successAction: "swap",
             amount: intent.amount,
+            receivedAmount: result.receivedAmount,
             targetToken: "EURC",
           });
         } else {

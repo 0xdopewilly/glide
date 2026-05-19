@@ -13,6 +13,7 @@ const FLOW_ROUTES = [
   "/profile",
   "/scheduled",
   "/scan",
+  "/notifications",
 ] as const;
 
 function tabIndex(path: string): number {

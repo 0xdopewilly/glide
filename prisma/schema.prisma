@@ -27,6 +27,23 @@ model User {
   pushSubscriptions    PushSubscription[]
   paymentRequests      PaymentRequest[]
   scheduledTransfers   ScheduledTransfer[]
+  notifications        Notification[]
+}
+
+/// In-app inbox for payments, requests, and activity alerts.
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  url       String?
+  read      Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, read, createdAt(sort: Desc)])
 }
 
 /// Shareable payment request (link + QR).

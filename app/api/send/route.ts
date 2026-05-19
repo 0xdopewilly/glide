@@ -126,8 +126,28 @@ export async function POST(request: NextRequest) {
     });
 
     if (requestCode) {
-      const { markPaymentRequestPaid } = await import("@/lib/payment-requests");
-      await markPaymentRequestPaid(requestCode, session.userId);
+      const { getPaymentRequestByCode, markPaymentRequestPaid } =
+        await import("@/lib/payment-requests");
+      const { notifyRequestPaid } = await import("@/lib/push");
+      const { prisma } = await import("@/lib/db");
+      const req = await getPaymentRequestByCode(requestCode);
+      const updated = await markPaymentRequestPaid(
+        requestCode,
+        session.userId,
+      );
+      if (updated.count > 0 && req?.userId && req.userId !== session.userId) {
+        const payer = await prisma.user.findUnique({
+          where: { id: session.userId },
+          select: { username: true, displayName: true },
+        });
+        const payerLabel =
+          payer?.username ?? payer?.displayName ?? session.displayName ?? "Someone";
+        void notifyRequestPaid(
+          req.userId,
+          parsed.toFixed(2),
+          payerLabel,
+        ).catch((err) => console.error("[Glide] request paid notify:", err));
+      }
     }
 
     const balance = await fetchWalletBalance(walletId);

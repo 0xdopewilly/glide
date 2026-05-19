@@ -1,6 +1,7 @@
 "use client";
 
 import { GlideLogo } from "@/components/glide-logo";
+import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { useGoBack } from "@/lib/use-go-back";
@@ -14,6 +15,7 @@ export function AppHeader({
   onBack,
   showBack = false,
   showLogo = false,
+  showNotifications = false,
 }: {
   title?: string;
   backHref?: string;
@@ -21,6 +23,7 @@ export function AppHeader({
   onBack?: () => void;
   showBack?: boolean;
   showLogo?: boolean;
+  showNotifications?: boolean;
 }) {
   const fallback = backFallback ?? backHref ?? "/";
   const goBack = useGoBack(fallback);
@@ -60,7 +63,8 @@ export function AppHeader({
           {title}
         </h1>
       ) : null}
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1">
+        {showNotifications ? <NotificationBell /> : null}
         <ThemeToggle />
         <UserAvatar size="sm" linked />
       </div>
