@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Delete } from "lucide-react";
 
 const KEYS = [
   ["1", "2", "3"],
@@ -10,28 +10,26 @@ const KEYS = [
 ] as const;
 
 export function NumericKeypad({ onKey }: { onKey: (key: string) => void }) {
-  const [pulse, setPulse] = useState<string | null>(null);
-
   const press = (key: string) => {
-    setPulse(key);
-    window.setTimeout(() => setPulse(null), 100);
     onKey(key === "back" ? "back" : key);
   };
 
   return (
-    <div className="grid grid-cols-3 gap-1.5 px-2 pb-2">
+    <div className="glide-keypad grid grid-cols-3 gap-1 px-1 pb-1">
       {KEYS.flat().map((key) => (
         <button
           key={key}
           type="button"
           onClick={() => press(key)}
-          className={`glide-tap flex h-[3.25rem] items-center justify-center rounded-2xl text-[1.65rem] font-medium tracking-tight transition-colors duration-100 ${
-            pulse === key ? "bg-[color-mix(in_srgb,var(--glide-accent)_18%,transparent)]" : ""
-          }`}
+          className="glide-key glide-tap flex h-[3.35rem] items-center justify-center rounded-2xl text-[1.65rem] font-medium tracking-tight"
           style={{ color: "var(--glide-text)" }}
           aria-label={key === "back" ? "Delete" : key}
         >
-          {key === "back" ? "⌫" : key}
+          {key === "back" ? (
+            <Delete className="h-6 w-6 opacity-80" strokeWidth={2} />
+          ) : (
+            key
+          )}
         </button>
       ))}
     </div>

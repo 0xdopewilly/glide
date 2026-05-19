@@ -14,7 +14,10 @@ import {
 import { useWallet } from "@/context/wallet-context";
 import { AtSign, Check, User, Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
+
+const MOTION_EASE = [0.22, 1, 0.36, 1] as const;
 
 type Step = "amount" | "review" | "success";
 
@@ -276,7 +279,7 @@ export default function SendPage() {
           </p>
 
           <div
-            className={`mt-4 rounded-2xl border bg-white/[0.05] p-4 transition-[border-color,box-shadow] dark:bg-white/[0.06] ${recipientBorderClass}`}
+            className={`glide-input-focus mt-4 rounded-2xl border bg-white/[0.05] p-4 dark:bg-white/[0.06] ${recipientBorderClass}`}
           >
             <label
               htmlFor="send-recipient"
@@ -332,32 +335,35 @@ export default function SendPage() {
             ) : null}
           </div>
 
-          {hint ? (
-            <p
-              className={`mt-3 text-center text-[13px] font-medium leading-snug ${
-                resolveState === "fail" || overBalance
+          <motion.p
+            key={hint ?? `balance-${balance.toFixed(2)}`}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.15, ease: MOTION_EASE }}
+            className={`mt-3 text-center text-[13px] font-medium leading-snug ${
+              hint
+                ? resolveState === "fail" || overBalance
                   ? "text-red-400"
                   : resolveState === "checking"
                     ? "text-violet-400"
                     : "text-emerald-500/90"
-              }`}
-            >
-              {hint}
-            </p>
-          ) : (
-            <p className="mt-3 text-center text-[13px] font-medium glide-muted">
-              Balance ${balance.toFixed(2)} USDC
-            </p>
-          )}
+                : "glide-muted"
+            }`}
+          >
+            {hint ?? `Balance $${balance.toFixed(2)} USDC`}
+          </motion.p>
         </section>
 
-        <div className="mt-6 flex flex-col items-center">
+        <div className="glide-amount-display mt-6 flex flex-col items-center">
           <span className="text-sm font-semibold uppercase tracking-[0.12em] glide-muted">
             Amount
           </span>
-          <p className="mt-2 flex items-baseline gap-0.5 text-[56px] font-bold leading-none tracking-tight tabular-nums">
-            <span className="text-[32px] font-bold text-white/50">$</span>
-            <AnimatedAmount value={formatAmountDisplay(amount)} />
+          <p className="mt-2 text-[56px] font-bold leading-none tracking-tight">
+            <AnimatedAmount
+              value={formatAmountDisplay(amount)}
+              prefix="$"
+              prefixClassName="text-[32px] font-bold text-white/50"
+            />
           </p>
         </div>
 
