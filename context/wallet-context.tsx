@@ -7,12 +7,14 @@ import type {
   GlideWallet,
 } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
+import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -61,6 +63,7 @@ function applyWalletPayload(
 ) {
   if (!data.wallet) throw new Error(data.error ?? "Could not load wallet");
   setWallet(data.wallet);
+  writeCachedWallet(data.wallet);
   setBalance(data.balance ?? 0);
   setTokens(data.tokens ?? []);
 }
@@ -96,6 +99,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [tokens, setTokens] = useState<GlideTokenBalance[]>([]);
   const [transactions, setTransactions] = useState<GlideTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const cacheRestoredRef = useRef(false);
+  const userIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (cacheRestoredRef.current) return;
+    cacheRestoredRef.current = true;
+    const cached = readCachedWallet();
+    if (cached) {
+      setWallet(cached);
+      setLoading(false);
+    }
+  }, []);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -165,6 +180,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     try {
       const { wallet: w, balance: b, tokens: t } = await loadWalletFromApi();
       setWallet(w);
+      writeCachedWallet(w);
       setBalance(b);
       setTokens(t);
       await fetchTransactions(w.id);
@@ -299,7 +315,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     if (!authReady) return;
 
     if (!user) {
+      userIdRef.current = null;
       setWallet(null);
+      writeCachedWallet(null);
       setBalance(0);
       setTokens([]);
       setTransactions([]);
@@ -307,10 +325,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const userChanged = userIdRef.current !== user.id;
+    userIdRef.current = user.id;
+
     let cancelled = false;
 
     void (async () => {
-      setLoading((prev) => (wallet ? prev : true));
+      if (userChanged) {
+        const cached = readCachedWallet();
+        if (cached) {
+          setWallet(cached);
+          setLoading(false);
+        } else {
+          setLoading(true);
+        }
+      }
+
       setError(null);
 
       const saved = await loadProfileFromApi();
@@ -327,6 +357,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         const { wallet: w, balance: b, tokens: t } = await loadWalletFromApi();
         if (cancelled) return;
         setWallet(w);
+        writeCachedWallet(w);
         setBalance(b);
         setTokens(t);
         await fetchTransactions(w.id);
@@ -342,8 +373,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload wallet when user id changes
-  }, [authReady, user?.id, user?.displayName, user?.email, fetchTransactions]);
+  }, [authReady, user?.id, fetchTransactions]);
 
   const value = useMemo(
     () => ({
