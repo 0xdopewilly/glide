@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  ArrowDownLeft,
   ArrowLeftRight,
+  Download,
   Link2,
   Send,
 } from "lucide-react";
