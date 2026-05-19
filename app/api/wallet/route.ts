@@ -1,16 +1,16 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { totalUsdFromTokens } from "@/lib/tokens";
 import {
+  fetchAllWalletTokenBalances,
   fetchWalletBalance,
   fetchWalletById,
-  fetchWalletTokenBalances,
 } from "@/lib/wallet-service";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { NextRequest, NextResponse } from "next/server";
 
 async function walletPayload(walletId: string, address: string) {
   const [tokens, balance] = await Promise.all([
-    fetchWalletTokenBalances(walletId),
+    fetchAllWalletTokenBalances(walletId, address),
     fetchWalletBalance(walletId),
   ]);
   return {

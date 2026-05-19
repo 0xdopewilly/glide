@@ -1,3 +1,5 @@
+import type { GlideChainKey } from "@/lib/chain-meta";
+
 export type GlideProfile = {
   displayName: string;
   email: string;
@@ -15,6 +17,8 @@ export type GlideTokenBalance = {
   amount: number;
   /** Display value in USD (1:1 for USDC/EURC on Arc). */
   usdValue: number;
+  chainId: GlideChainKey;
+  chainLabel: string;
 };
 
 export type TransactionKind = "send" | "receive" | "swap" | "bridge";

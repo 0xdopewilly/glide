@@ -4,6 +4,8 @@ import {
   GLIDE_BLOCKCHAIN,
   safeApiError,
 } from "@/lib/circle";
+import { fetchOffArcUsdcBalances } from "@/lib/chain-balances";
+import { CHAIN_META } from "@/lib/chain-meta";
 import {
   ARC_DISPLAY_TOKENS,
   isArcStablecoin,
@@ -11,6 +13,8 @@ import {
   normalizeTokenSymbol,
 } from "@/lib/tokens";
 import type { GlideTokenBalance, GlideWallet } from "@/lib/types";
+
+const ARC_CHAIN = CHAIN_META["arc-testnet"];
 
 export async function createGlideWallet(): Promise<GlideWallet> {
   const initialized = createCircleClient();
@@ -72,16 +76,35 @@ export async function fetchWalletTokenBalances(
     symbol,
     amount: amounts.get(symbol) ?? 0,
     usdValue: amounts.get(symbol) ?? 0,
+    chainId: ARC_CHAIN.id,
+    chainLabel: ARC_CHAIN.label,
   }));
 
   for (const [symbol, amount] of amounts) {
     if (ARC_DISPLAY_TOKENS.includes(symbol as (typeof ARC_DISPLAY_TOKENS)[number])) {
       continue;
     }
-    balances.push({ symbol, amount, usdValue: amount });
+    balances.push({
+      symbol,
+      amount,
+      usdValue: amount,
+      chainId: ARC_CHAIN.id,
+      chainLabel: ARC_CHAIN.label,
+    });
   }
 
   return balances;
+}
+
+export async function fetchAllWalletTokenBalances(
+  walletId: string,
+  walletAddress: string,
+): Promise<GlideTokenBalance[]> {
+  const [arc, offArc] = await Promise.all([
+    fetchWalletTokenBalances(walletId),
+    fetchOffArcUsdcBalances(walletAddress),
+  ]);
+  return [...arc, ...offArc];
 }
 
 export async function fetchUsdcBalance(walletId: string): Promise<number> {
