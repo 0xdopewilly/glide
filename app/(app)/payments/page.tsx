@@ -2,7 +2,6 @@
 
 import { PageHeader } from "@/components/page-header";
 import {
-  Bell,
   CalendarClock,
   ChevronRight,
   HandCoins,
@@ -19,12 +18,6 @@ const PAYMENT_ACTIONS: {
   description: string;
   icon: LucideIcon;
 }[] = [
-  {
-    href: "/notifications",
-    title: "Notifications",
-    description: "Payment requests and money received",
-    icon: Bell,
-  },
   {
     href: "/send",
     title: "Send money",
