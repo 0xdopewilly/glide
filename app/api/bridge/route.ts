@@ -9,10 +9,7 @@ import { notifyBridgeComplete } from "@/lib/push";
 import { recordTransaction } from "@/lib/transactions-db";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
-import {
-  assertSufficientBalance,
-  fetchWalletBalance,
-} from "@/lib/wallet-service";
+import { assertSufficientBalance } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
 /** POST { walletId, amount, network } — bridge USDC from Arc via CCTP */
@@ -79,7 +76,7 @@ export async function POST(request: NextRequest) {
           ? "failed"
           : "pending";
 
-    await recordTransaction({
+    void recordTransaction({
       userId: session.userId,
       kind: "bridge",
       title: `Bridge to ${label}`,
@@ -90,9 +87,7 @@ export async function POST(request: NextRequest) {
       explorerUrl: bridge.explorerUrl,
       chain: "ARC-TESTNET",
       metadata: { destination: label, network },
-    });
-
-    const balance = await fetchWalletBalance(walletId);
+    }).catch((err) => console.error("[Glide] bridge record:", err));
 
     void notifyBridgeComplete(session.userId, parsed.toFixed(2), label).catch(
       (err) => console.error("[Glide] bridge push:", err),
@@ -100,7 +95,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      balance,
       txHash: bridge.txHash,
       explorerUrl: bridge.explorerUrl,
       state: bridge.state,

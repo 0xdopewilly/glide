@@ -5,10 +5,7 @@ import { notifySwapComplete } from "@/lib/push";
 import { recordTransaction } from "@/lib/transactions-db";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
-import {
-  assertSufficientBalance,
-  fetchWalletBalance,
-} from "@/lib/wallet-service";
+import { assertSufficientBalance } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
 /** POST { walletId, amount } — USDC → EURC on Arc testnet via Circle App Kit */
@@ -57,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const received = swap.amountOut ?? (parsed * 0.92).toFixed(2);
 
-    await recordTransaction({
+    void recordTransaction({
       userId: session.userId,
       kind: "swap",
       title: "Swapped USDC to EURC",
@@ -68,9 +65,7 @@ export async function POST(request: NextRequest) {
       explorerUrl: swap.explorerUrl,
       chain: "ARC-TESTNET",
       metadata: { amountOut: received, tokenOut: "EURC" },
-    });
-
-    const balance = await fetchWalletBalance(walletId);
+    }).catch((err) => console.error("[Glide] swap record:", err));
 
     void notifySwapComplete(session.userId, parsed.toFixed(2)).catch((err) =>
       console.error("[Glide] swap push:", err),
@@ -78,7 +73,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      balance,
       txHash: swap.txHash,
       explorerUrl: swap.explorerUrl,
       receivedAmount: received,

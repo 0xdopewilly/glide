@@ -38,9 +38,9 @@ export default function SwapPage() {
     if (!canSubmit) return;
     setSubmitting(true);
     clearError();
-    const ok = await swapMoney(fromAmount);
+    const result = await swapMoney(fromAmount);
     setSubmitting(false);
-    if (ok) setStep("success");
+    if (result.ok) setStep("success");
   };
 
   return (

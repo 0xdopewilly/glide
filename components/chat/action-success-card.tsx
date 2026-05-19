@@ -43,6 +43,7 @@ export function ActionSuccessCard({
   to,
   targetToken,
   token,
+  receivedAmount,
   network,
 }: {
   action: ActionSuccessType;
@@ -51,6 +52,7 @@ export function ActionSuccessCard({
   to?: string;
   token?: string;
   targetToken?: string;
+  receivedAmount?: string;
   network?: string;
 }) {
   const { label, gradient, Icon } = CONFIG[action];
@@ -62,7 +64,12 @@ export function ActionSuccessCard({
   if (action === "send" && recipient) {
     detail = `to ${recipient}`;
   } else if (action === "swap") {
-    detail = `to ${targetToken?.trim() || "EURC"}`;
+    const out = targetToken?.trim() || "EURC";
+    if (amount && receivedAmount) {
+      detail = `${formatStableAmount(amount, "USDC")} → ${formatStableAmount(receivedAmount, "EURC")}`;
+    } else {
+      detail = `to ${out}`;
+    }
   } else if (action === "bridge") {
     const net = formatNetwork(network);
     detail = net ? `to ${net}` : "in progress";
@@ -81,12 +88,14 @@ export function ActionSuccessCard({
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
           {label}
         </p>
-        {amount ? (
+        {amount || receivedAmount ? (
           <p className="mt-2 text-4xl font-bold tracking-tight tabular-nums">
-            {formatStableAmount(
-              amount,
-              action === "swap" ? "USDC" : token,
-            )}
+            {action === "swap" && receivedAmount
+              ? formatStableAmount(receivedAmount, "EURC")
+              : formatStableAmount(
+                  amount ?? receivedAmount ?? "0",
+                  action === "swap" ? "USDC" : token,
+                )}
           </p>
         ) : null}
         {detail ? (

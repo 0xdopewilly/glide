@@ -16,6 +16,8 @@ export type StoredChatMessage = {
   /** USDC or EURC for send success cards */
   token?: string;
   targetToken?: string;
+  /** EURC received from swap (display with €) */
+  receivedAmount?: string;
   network?: string;
 };
 

@@ -35,6 +35,7 @@ export function ChatMessageBubble({
         to={message.to}
         token={message.token}
         targetToken={message.targetToken}
+        receivedAmount={message.receivedAmount}
         network={message.network}
       />
     );
