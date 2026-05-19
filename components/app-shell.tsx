@@ -1,7 +1,6 @@
 "use client";
 
 import { BottomNav } from "@/components/bottom-nav";
-import { GlideAssistant } from "@/components/glide-assistant";
 import { GlideGradient } from "@/components/glide-gradient";
 import { PageMotion } from "@/components/page-motion";
 import { usePathname } from "next/navigation";
@@ -26,7 +25,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           style={{ fontFamily: jakarta }}
         >
           <PageMotion>{children}</PageMotion>
-          <GlideAssistant />
         </div>
         {!hideNav ? (
           <div className="relative z-10 shrink-0">

@@ -44,9 +44,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const quick = request.nextUrl.searchParams.get("quick") === "1";
+
   try {
-    const fromCircle = await syncCircleTransactionsToDb(session.userId, walletId);
     const fromDb = await listUserTransactions(session.userId);
+
+    if (quick) {
+      return NextResponse.json({ transactions: fromDb });
+    }
+
+    const fromCircle = await syncCircleTransactionsToDb(session.userId, walletId);
     const transactions = mergeTransactions([fromCircle, fromDb]);
 
     return NextResponse.json({ transactions });

@@ -7,6 +7,10 @@ import type {
   GlideWallet,
 } from "@/lib/types";
 import { useAuth } from "@/context/auth-context";
+import {
+  readCachedTransactions,
+  writeCachedTransactions,
+} from "@/lib/transaction-cache";
 import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import {
   createContext,
@@ -31,6 +35,7 @@ type WalletContextValue = {
   balance: number;
   tokens: GlideTokenBalance[];
   transactions: GlideTransaction[];
+  transactionsLoading: boolean;
   loading: boolean;
   refreshing: boolean;
   error: string | null;
@@ -99,6 +104,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [balance, setBalance] = useState(0);
   const [tokens, setTokens] = useState<GlideTokenBalance[]>([]);
   const [transactions, setTransactions] = useState<GlideTransaction[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const userIdRef = useRef<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -145,14 +151,36 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
-  const fetchTransactions = useCallback(async (walletId: string) => {
-    const res = await fetch(
-      `/api/transactions?walletId=${encodeURIComponent(walletId)}`,
-    );
-    if (!res.ok) return;
-    const data = (await res.json()) as { transactions: GlideTransaction[] };
-    setTransactions(data.transactions ?? []);
-  }, []);
+  const fetchTransactions = useCallback(
+    async (walletId: string, opts?: { quick?: boolean }) => {
+      const uid = userIdRef.current;
+      const quick = opts?.quick ?? false;
+      if (!quick) setTransactionsLoading(true);
+
+      try {
+        const qs = quick ? "&quick=1" : "";
+        const res = await fetch(
+          `/api/transactions?walletId=${encodeURIComponent(walletId)}${qs}`,
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { transactions: GlideTransaction[] };
+        const list = data.transactions ?? [];
+        setTransactions(list);
+        if (uid) writeCachedTransactions(list, uid);
+      } finally {
+        if (!quick) setTransactionsLoading(false);
+      }
+    },
+    [],
+  );
+
+  const loadTransactions = useCallback(
+    async (walletId: string) => {
+      await fetchTransactions(walletId, { quick: true });
+      void fetchTransactions(walletId);
+    },
+    [fetchTransactions],
+  );
 
   const refresh = useCallback(async () => {
     if (!wallet || !userIdRef.current) return;
@@ -160,13 +188,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setError(null);
     try {
       await fetchWalletState(wallet, userIdRef.current);
-      await fetchTransactions(wallet.id);
+      await loadTransactions(wallet.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Refresh failed");
     } finally {
       setRefreshing(false);
     }
-  }, [wallet, fetchWalletState, fetchTransactions]);
+  }, [wallet, fetchWalletState, loadTransactions]);
 
   const provisionWallet = useCallback(async () => {
     setError(null);
@@ -179,7 +207,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       writeCachedWallet(w, uid);
       setBalance(b);
       setTokens(t);
-      await fetchTransactions(w.id);
+      void loadTransactions(w.id);
       return w;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Wallet setup failed");
@@ -187,21 +215,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [fetchTransactions, wallet]);
+  }, [loadTransactions, wallet]);
 
   const ensureWallet = useCallback(async () => {
     const uid = userIdRef.current;
     if (wallet && uid) {
       try {
         await fetchWalletState(wallet, uid);
-        await fetchTransactions(wallet.id);
+        void loadTransactions(wallet.id);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not load wallet");
       }
       return wallet;
     }
     return provisionWallet();
-  }, [wallet, fetchWalletState, fetchTransactions, provisionWallet]);
+  }, [wallet, fetchWalletState, loadTransactions, provisionWallet]);
 
   const createNewWallet = provisionWallet;
 
@@ -323,9 +351,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     userIdRef.current = user.id;
     const cached = readCachedWallet(user.id);
+    const cachedTxs = readCachedTransactions(user.id);
+    if (cachedTxs?.length) setTransactions(cachedTxs);
     if (cached) {
       setWallet(cached);
       setLoading(false);
+      void fetchTransactions(cached.id, { quick: true });
     } else {
       setLoading(true);
     }
@@ -353,7 +384,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         writeCachedWallet(w, user.id);
         setBalance(b);
         setTokens(t);
-        await fetchTransactions(w.id);
+        void loadTransactions(w.id);
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Wallet setup failed");
@@ -366,7 +397,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [authReady, user?.id, fetchTransactions]);
+  }, [authReady, user?.id, fetchTransactions, loadTransactions]);
 
   const value = useMemo(
     () => ({
@@ -377,6 +408,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       balance,
       tokens,
       transactions,
+      transactionsLoading,
       loading,
       refreshing,
       error,
@@ -399,6 +431,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       balance,
       tokens,
       transactions,
+      transactionsLoading,
       loading,
       refreshing,
       error,

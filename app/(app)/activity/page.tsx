@@ -6,7 +6,7 @@ import { useWallet } from "@/context/wallet-context";
 import { RefreshCw } from "lucide-react";
 
 export default function ActivityPage() {
-  const { transactions, refresh, refreshing } = useWallet();
+  const { transactions, transactionsLoading, refresh, refreshing } = useWallet();
 
   return (
     <>
@@ -25,7 +25,7 @@ export default function ActivityPage() {
             Refresh
           </button>
         </div>
-        <TransactionList transactions={transactions} />
+        <TransactionList transactions={transactions} loading={transactionsLoading} />
       </div>
     </>
   );

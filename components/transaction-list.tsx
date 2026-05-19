@@ -5,14 +5,33 @@ import type { GlideTransaction } from "@/lib/types";
 import { Share2 } from "lucide-react";
 import { useState } from "react";
 
+function TransactionSkeleton() {
+  return (
+    <ul className="flex flex-col gap-2" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <li
+          key={i}
+          className="h-[4.25rem] animate-pulse rounded-2xl bg-neutral-100 dark:bg-[#1c1c1e]"
+        />
+      ))}
+    </ul>
+  );
+}
+
 export function TransactionList({
   transactions,
+  loading = false,
   emptyMessage = "No activity yet",
 }: {
   transactions: GlideTransaction[];
+  loading?: boolean;
   emptyMessage?: string;
 }) {
   const [selected, setSelected] = useState<GlideTransaction | null>(null);
+
+  if (loading && transactions.length === 0) {
+    return <TransactionSkeleton />;
+  }
 
   if (transactions.length === 0) {
     return (

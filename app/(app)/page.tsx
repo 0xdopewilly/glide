@@ -19,6 +19,7 @@ export default function HomePage() {
     loading,
     refreshing,
     transactions,
+    transactionsLoading,
     error,
     clearError,
     refresh,
@@ -63,6 +64,7 @@ export default function HomePage() {
           </div>
           <TransactionList
             transactions={transactions.slice(0, 3)}
+            loading={transactionsLoading}
             emptyMessage="Your activity will show up here"
           />
         </section>
