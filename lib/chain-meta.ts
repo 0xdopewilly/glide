@@ -17,6 +17,8 @@ export type ChainMeta = {
   color: string;
   /** Optional logo under /public/chains */
   logo?: string;
+  /** How the logo fits the circular badge (default cover). */
+  logoFit?: "cover" | "contain";
 };
 
 export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
@@ -24,8 +26,10 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
     id: "arc-testnet",
     label: "Arc Testnet",
     shortLabel: "Arc",
-    badgeClass: "from-sky-500 to-violet-600",
-    color: "#6366f1",
+    badgeClass: "from-[#1a2744] to-[#0b1120]",
+    color: "#0b1120",
+    logo: "/chains/arc.png",
+    logoFit: "contain",
   },
   "ethereum-sepolia": {
     id: "ethereum-sepolia",

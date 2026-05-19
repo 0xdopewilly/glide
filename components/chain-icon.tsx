@@ -17,9 +17,12 @@ export function ChainIcon({
   const [failed, setFailed] = useState(false);
 
   if (meta.logo && !failed) {
+    const contain = meta.logoFit === "contain";
     return (
       <span
-        className={`relative inline-flex shrink-0 overflow-hidden rounded-full bg-white ring-1 ring-black/5 dark:ring-white/10 ${box}`}
+        className={`relative inline-flex shrink-0 overflow-hidden rounded-full ring-1 ring-black/5 dark:ring-white/10 ${box} ${
+          contain ? "bg-[#0b1120]" : "bg-white"
+        }`}
         title={meta.label}
         aria-hidden
       >
@@ -28,7 +31,7 @@ export function ChainIcon({
           alt=""
           width={dim}
           height={dim}
-          className="object-cover"
+          className={contain ? "object-contain p-px" : "object-cover"}
           onError={() => setFailed(true)}
           unoptimized
         />

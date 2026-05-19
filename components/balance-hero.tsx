@@ -1,5 +1,6 @@
 "use client";
 
+import { ChainIcon } from "@/components/chain-icon";
 import { usePrivacy } from "@/context/privacy-context";
 import { formatUsd } from "@/lib/format";
 import { RefreshCw } from "lucide-react";
@@ -23,7 +24,8 @@ export function BalanceHero({
   return (
     <section className="flex flex-col items-start px-0 pb-2 pt-4 text-left">
       <div className="flex w-full items-center justify-between gap-2">
-        <span className="inline-flex rounded-full bg-neutral-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-600 dark:bg-[#1c1c1e] dark:text-white/80">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-600 dark:bg-[#1c1c1e] dark:text-white/80">
+          <ChainIcon chainId="arc-testnet" size="sm" />
           Arc testnet
         </span>
         <button
