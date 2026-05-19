@@ -1,6 +1,7 @@
 "use client";
 
 import { FormField, inputClassName } from "@/components/form-field";
+import { PLACEHOLDER_GLIDE_TAG_OR_ADDRESS } from "@/lib/placeholders";
 import { GlideButton } from "@/components/glide-button";
 import { useEffect, useState } from "react";
 
@@ -105,7 +106,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
           id="sched-to"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          placeholder="@friend or 0x…"
+          placeholder={PLACEHOLDER_GLIDE_TAG_OR_ADDRESS}
           className={inputClassName}
         />
       </FormField>

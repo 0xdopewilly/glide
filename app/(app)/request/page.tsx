@@ -2,6 +2,7 @@
 
 import { FlowPage } from "@/components/flow-page";
 import { FormField, inputClassName } from "@/components/form-field";
+import { PLACEHOLDER_GLIDE_TAG } from "@/lib/placeholders";
 import { GlideButton } from "@/components/glide-button";
 import { NumericKeypad } from "@/components/numeric-keypad";
 import { useWallet } from "@/context/wallet-context";
@@ -154,14 +155,25 @@ export default function RequestPage() {
             {mode === "person" ? (
               <div className="mt-6 space-y-4">
                 <FormField id="req-tag" label="Glide Tag">
-                  <input
-                    id="req-tag"
-                    value={glideTag}
-                    onChange={(e) => setGlideTag(e.target.value.replace(/^@+/, ""))}
-                    placeholder="khadee"
-                    className={inputClassName}
-                    autoComplete="off"
-                  />
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base font-medium glide-muted">
+                      @
+                    </span>
+                    <input
+                      id="req-tag"
+                      value={glideTag}
+                      onChange={(e) =>
+                        setGlideTag(e.target.value.replace(/^@+/, "").toLowerCase())
+                      }
+                      placeholder={PLACEHOLDER_GLIDE_TAG}
+                      className={`${inputClassName} pl-9`}
+                      autoComplete="off"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      maxLength={20}
+                    />
+                  </div>
                 </FormField>
                 <p className="text-center text-xs glide-muted">or</p>
                 <FormField id="req-email" label="Email">

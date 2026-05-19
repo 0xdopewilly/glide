@@ -5,6 +5,7 @@ import { GlideButton } from "@/components/glide-button";
 import { FormField, inputClassName } from "@/components/form-field";
 import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
+import { PLACEHOLDER_GLIDE_TAG } from "@/lib/placeholders";
 import { isValidUsername, normalizeUsername } from "@/lib/validation";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -150,7 +151,7 @@ export default function SetupUsernamePage() {
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck={false}
-                placeholder="khadee"
+                placeholder={PLACEHOLDER_GLIDE_TAG}
                 className={`${inputClassName} pl-9`}
                 maxLength={20}
               />

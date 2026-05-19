@@ -7,6 +7,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { GlideButton } from "@/components/glide-button";
 import { SendScanSheet } from "@/components/send-scan-sheet";
 import { shortenAddress } from "@/lib/format";
+import { PLACEHOLDER_GLIDE_TAG_OR_WALLET } from "@/lib/placeholders";
 import {
   isValidUsername,
   isValidWalletAddress,
@@ -331,7 +332,7 @@ export default function SendPage() {
                 onChange={(e) => setRecipient(e.target.value)}
                 onFocus={() => setRecipientFocused(true)}
                 onBlur={() => setRecipientFocused(false)}
-                placeholder="Wallet address or Glide Tag"
+                placeholder={PLACEHOLDER_GLIDE_TAG_OR_WALLET}
                 autoComplete="off"
                 autoCapitalize="off"
                 autoCorrect="off"
