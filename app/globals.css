@@ -138,7 +138,8 @@ body {
 
 /* Chat */
 .glide-chat-bubble,
-.glide-chat-card {
+.glide-chat-card,
+.glide-chat-receipt {
   animation: glide-chat-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
@@ -186,7 +187,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .glide-chat-row,
   .glide-chat-bubble,
-  .glide-chat-card {
+  .glide-chat-card,
+  .glide-chat-receipt {
     animation: none;
   }
 

@@ -93,7 +93,8 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           pushMessage({
             id: `success-${Date.now()}`,
             role: "assistant",
-            kind: "send_success",
+            kind: "action_success",
+            successAction: "send",
             amount: intent.amount,
             to: intent.to,
             recipientName: label,
@@ -121,28 +122,46 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
       }
       if (intent.action === "swap") {
         const ok = await swapMoney(intent.amount);
-        pushMessage({
-          id: `swap-${Date.now()}`,
-          role: "assistant",
-          kind: "text",
-          text: ok
-            ? `Swapped $${intent.amount} to EURC.`
-            : "Swap didn't complete. Check the error banner on screen.",
-        });
-        if (ok) await refresh();
+        if (ok) {
+          pushMessage({
+            id: `swap-${Date.now()}`,
+            role: "assistant",
+            kind: "action_success",
+            successAction: "swap",
+            amount: intent.amount,
+            targetToken: "EURC",
+          });
+          await refresh();
+        } else {
+          pushMessage({
+            id: `swap-err-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: "Swap didn't complete. Check the error banner on screen.",
+          });
+        }
         return;
       }
       if (intent.action === "bridge") {
         const ok = await bridgeMoney(intent.amount, intent.network);
-        pushMessage({
-          id: `bridge-${Date.now()}`,
-          role: "assistant",
-          kind: "text",
-          text: ok
-            ? `Bridge started for $${intent.amount}.`
-            : "Bridge didn't complete. Try again in a moment.",
-        });
-        if (ok) await refresh();
+        if (ok) {
+          pushMessage({
+            id: `bridge-${Date.now()}`,
+            role: "assistant",
+            kind: "action_success",
+            successAction: "bridge",
+            amount: intent.amount,
+            network: intent.network,
+          });
+          await refresh();
+        } else {
+          pushMessage({
+            id: `bridge-err-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: "Bridge didn't complete. Try again in a moment.",
+          });
+        }
       }
     },
     [bridgeMoney, clearError, pushMessage, refresh, router, sendMoney, swapMoney],
@@ -261,14 +280,14 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     <div
       className={
         isPage
-          ? "flex min-h-0 flex-1 flex-col bg-gradient-to-b from-transparent to-violet-500/[0.03] dark:to-violet-500/[0.06]"
+          ? "flex min-h-0 flex-1 flex-col"
           : "flex w-full flex-col overflow-hidden rounded-3xl border border-neutral-200/90 bg-white dark:border-white/10 dark:bg-[#141416]"
       }
     >
       {isPage ? (
         <header className="shrink-0 px-5 pb-3 pt-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/25">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-600 text-white">
               <Sparkles className="h-[18px] w-[18px]" />
             </span>
             <div>
@@ -294,7 +313,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
 
       <div
         ref={listRef}
-        className={`glide-scroll flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-3 ${
+        className={`glide-scroll flex flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 ${
           isPage ? "min-h-0 py-2" : "max-h-[min(42vh,320px)] min-h-[120px] py-3"
         }`}
       >
@@ -321,7 +340,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         onSubmit={handleSubmit}
         className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
       >
-        <div className="flex items-center gap-2 rounded-[28px] border border-neutral-200/70 bg-white/90 p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1a1a1e]/95 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
+        <div className="flex items-center gap-2 rounded-[28px] border border-neutral-200/70 bg-white/90 p-1.5 dark:border-white/[0.08] dark:bg-[#1a1a1e]/95">
           <label htmlFor="glide-assistant-input" className="sr-only">
             Message Glide
           </label>
@@ -338,7 +357,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           <button
             type="submit"
             disabled={busy || !message.trim()}
-            className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md disabled:opacity-40"
+            className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white disabled:opacity-40"
             aria-label="Send"
           >
             <ArrowUp className="h-5 w-5" strokeWidth={2.5} />
