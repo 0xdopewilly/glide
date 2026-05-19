@@ -2,41 +2,37 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 import { useWallet } from "@/context/wallet-context";
-import {
-  ArrowLeftRight,
-  Clock,
-  Home,
-  Sparkles,
-  Wallet,
-} from "lucide-react";
+import { totalUsdFromTokens } from "@/lib/tokens";
+import { ArrowLeftRight, Clock, Sparkles, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 
-const NAV: {
+const ICON_NAV: {
   href: string;
   label: string;
-  icon: typeof Home;
+  icon: typeof Wallet;
   assist?: boolean;
 }[] = [
-  { href: "/", label: "Home", icon: Home },
   { href: "/payments", label: "Payments", icon: Wallet },
   { href: "/ask", label: "Glide Assist", icon: Sparkles, assist: true },
   { href: "/trade", label: "Trade", icon: ArrowLeftRight },
   { href: "/activity", label: "Activity", icon: Clock },
 ];
 
-function formatNavBalance(balance: number, hidden: boolean) {
-  if (hidden) return "hidden";
-  if (balance >= 100) return `$${Math.round(balance)}`;
-  if (balance >= 10) return `$${balance.toFixed(0)}`;
-  return `$${balance.toFixed(2)}`;
+function formatNavBalance(amount: number) {
+  if (amount >= 100) return `$${Math.round(amount)}`;
+  if (amount >= 10) return `$${amount.toFixed(0)}`;
+  return `$${amount.toFixed(2)}`;
 }
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { balance } = useWallet();
+  const { tokens } = useWallet();
   const { hideBalance } = usePrivacy();
-  const balanceLabel = formatNavBalance(balance, hideBalance);
+  const totalUsd = useMemo(() => totalUsdFromTokens(tokens), [tokens]);
+  const balanceLabel = hideBalance ? "•••" : formatNavBalance(totalUsd);
+  const homeActive = pathname === "/";
 
   return (
     <nav
@@ -44,20 +40,37 @@ export function BottomNav() {
       aria-label="Main"
     >
       <ul className="flex items-center justify-between gap-0.5">
-        {NAV.map(({ href, label, icon: Icon, assist }) => {
-          const active =
-            href === "/" ? pathname === "/" : pathname.startsWith(href);
-          const homeLabel =
-            href === "/"
-              ? `Home, balance ${balanceLabel}`
-              : label;
+        <li className="flex flex-1 justify-center">
+          <Link
+            href="/"
+            prefetch
+            aria-label={`Home, balance ${balanceLabel}`}
+            aria-current={homeActive ? "page" : undefined}
+            className={`glide-tap flex h-11 min-w-[2.75rem] items-center justify-center rounded-full px-2.5 transition-[background-color,color,box-shadow] duration-200 ease-out ${
+              homeActive
+                ? "bg-white text-neutral-950 shadow-sm dark:bg-white dark:text-[#0a0a0a]"
+                : "text-neutral-800 dark:text-white/80"
+            }`}
+          >
+            <span
+              className={`font-bold tabular-nums tracking-tight ${
+                balanceLabel.length > 6 ? "text-[12px]" : "text-[14px]"
+              }`}
+            >
+              {balanceLabel}
+            </span>
+          </Link>
+        </li>
+
+        {ICON_NAV.map(({ href, label, icon: Icon, assist }) => {
+          const active = pathname.startsWith(href);
 
           return (
             <li key={href} className="flex flex-1 justify-center">
               <Link
                 href={href}
                 prefetch
-                aria-label={homeLabel}
+                aria-label={label}
                 aria-current={active ? "page" : undefined}
                 className={`glide-tap flex h-11 w-11 items-center justify-center rounded-full transition-[background-color,color,box-shadow,transform] duration-200 ease-out ${
                   active
