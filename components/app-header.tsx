@@ -3,20 +3,28 @@
 import { GlideLogo } from "@/components/glide-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
+import { useGoBack } from "@/lib/use-go-back";
 import { ChevronLeft } from "lucide-react";
-import Link from "next/link";
 
 export function AppHeader({
   title,
+  /** Fallback route if there is no browser history (e.g. deep link). */
   backHref,
+  backFallback,
   onBack,
+  showBack = false,
   showLogo = false,
 }: {
   title?: string;
   backHref?: string;
+  backFallback?: string;
   onBack?: () => void;
+  showBack?: boolean;
   showLogo?: boolean;
 }) {
+  const fallback = backFallback ?? backHref ?? "/";
+  const goBack = useGoBack(fallback);
+
   const backControl = onBack ? (
     <button
       type="button"
@@ -26,14 +34,15 @@ export function AppHeader({
     >
       <ChevronLeft className="h-6 w-6" strokeWidth={2} />
     </button>
-  ) : backHref ? (
-    <Link
-      href={backHref}
+  ) : showBack || backHref || backFallback ? (
+    <button
+      type="button"
+      onClick={goBack}
       className="inline-flex items-center text-neutral-600 transition-colors hover:text-neutral-950 dark:text-white/75 dark:hover:text-white"
       aria-label="Back"
     >
       <ChevronLeft className="h-6 w-6" strokeWidth={2} />
-    </Link>
+    </button>
   ) : showLogo ? (
     <div className="flex items-center gap-2.5">
       <GlideLogo size="sm" linked glow={false} />
