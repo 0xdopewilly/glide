@@ -3,7 +3,6 @@
 import { ActionGrid } from "@/components/action-grid";
 import { AppHeader } from "@/components/app-header";
 import { BalanceHero } from "@/components/balance-hero";
-import { ChatBar } from "@/components/chat-bar";
 import { TokenBalances } from "@/components/token-balances";
 import { TransactionList } from "@/components/transaction-list";
 import { useWallet } from "@/context/wallet-context";
@@ -68,7 +67,6 @@ export default function HomePage() {
           />
         </section>
       </div>
-      <ChatBar />
     </>
   );
 }

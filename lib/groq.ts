@@ -1,5 +1,8 @@
 const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
 
+/** Default Groq model — fast, strong JSON for intents. Override with GROQ_MODEL. */
+export const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
+
 export type GroqMessage = {
   role: "system" | "user" | "assistant";
   content: string;
@@ -14,7 +17,7 @@ export async function groqChat(
     throw new Error("GROQ_API_KEY is not configured on the server.");
   }
 
-  const model = process.env.GROQ_MODEL?.trim() || "llama-3.3-70b-versatile";
+  const model = process.env.GROQ_MODEL?.trim() || DEFAULT_GROQ_MODEL;
 
   const res = await fetch(GROQ_API, {
     method: "POST",
