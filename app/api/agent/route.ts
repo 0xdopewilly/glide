@@ -13,6 +13,7 @@ import {
 import { safeApiError } from "@/lib/circle";
 import { groqChat, type GroqMessage } from "@/lib/groq";
 import { resolveRecipient } from "@/lib/resolve-recipient";
+import { formatSplitProcessingReply } from "@/lib/split-bill";
 import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -89,7 +90,10 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
       return { reply: "Who should I split with? Tag at least two @usernames." };
     }
     return {
-      reply: `Splitting $${total.toFixed(2)} between ${intent.recipients.length} people…`,
+      reply: formatSplitProcessingReply(
+        total.toFixed(2),
+        intent.recipients.length,
+      ),
       intent: { ...intent, total: total.toFixed(2) },
     };
   }

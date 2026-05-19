@@ -1,8 +1,16 @@
 "use client";
 
 import { ChatMessageBubble } from "@/components/chat/chat-message";
-import { ProcessingBubble } from "@/components/chat/processing-bubble";
+import {
+  ProcessingBubble,
+  type ProcessingAction,
+} from "@/components/chat/processing-bubble";
 import type { GlideIntent } from "@/lib/agent-intents";
+import {
+  computeSplitSharePerPerson,
+  formatSplitPartialMessage,
+  formatSplitSuccessMessage,
+} from "@/lib/split-bill";
 import type { ActionSuccessType } from "@/lib/chat-cache";
 import {
   readChatHistory,
@@ -26,7 +34,7 @@ const WELCOME: StoredChatMessage = {
 const QUICK_PROMPTS = [
   "Send $5",
   "Swap $10 to EURC",
-  "Split $40 with @friend",
+  "Split $60 with @fifi and @khadee",
   "My balance",
 ] as const;
 
@@ -47,7 +55,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [processingAction, setProcessingAction] =
-    useState<ActionSuccessType | null>(null);
+    useState<ProcessingAction | null>(null);
   const [savingContactId, setSavingContactId] = useState<string | null>(null);
   const [messages, setMessages] = useState<StoredChatMessage[]>([WELCOME]);
   const [hydrated, setHydrated] = useState(false);
@@ -100,14 +108,17 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         return;
       }
 
-      const processing: ActionSuccessType | null =
+      const processing: ProcessingAction | null =
         intent.action === "send" ||
         intent.action === "send_batch" ||
         intent.action === "swap" ||
-        intent.action === "bridge"
+        intent.action === "bridge" ||
+        intent.action === "split"
           ? intent.action === "send_batch"
             ? "send"
-            : intent.action
+            : intent.action === "split"
+              ? "request"
+              : intent.action
           : null;
       if (processing) setProcessingAction(processing);
 
@@ -272,35 +283,73 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         return;
       }
       if (intent.action === "split") {
-        setProcessingAction("send");
         const total = parseFloat(intent.total);
-        const each = (total / intent.recipients.length).toFixed(2);
-        let sent = 0;
-        for (const to of intent.recipients) {
-          const ok = await sendMoney(to, each);
-          if (ok) sent++;
+        const share = computeSplitSharePerPerson(
+          total,
+          intent.recipients.length,
+        );
+        const note = `Your share of a $${intent.total} bill`;
+        let requested = 0;
+        const failures: string[] = [];
+
+        for (const glideTag of intent.recipients) {
+          try {
+            const res = await fetch("/api/request", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ amount: share, glideTag, note }),
+            });
+            const data = (await res.json()) as { error?: string };
+            if (res.ok) {
+              requested++;
+            } else {
+              failures.push(
+                `@${glideTag}: ${data.error ?? "could not request"}`,
+              );
+            }
+          } catch {
+            failures.push(`@${glideTag}: request failed`);
+          }
         }
-        if (sent === intent.recipients.length) {
+
+        if (requested === intent.recipients.length) {
           pushMessage({
             id: `split-${Date.now()}`,
             role: "assistant",
             kind: "text",
-            text: `Split $${intent.total} — sent $${each} to ${intent.recipients.map((r) => `@${r}`).join(", ")}.`,
+            text: formatSplitSuccessMessage(
+              intent.total,
+              share,
+              intent.recipients,
+            ),
           });
-          void refresh();
-        } else if (sent > 0) {
+        } else if (requested > 0) {
           pushMessage({
             id: `split-partial-${Date.now()}`,
             role: "assistant",
             kind: "text",
-            text: `Sent ${sent} of ${intent.recipients.length} payments. Check balance and try the rest on Send.`,
+            text: formatSplitPartialMessage(
+              requested,
+              intent.recipients.length,
+              share,
+            ),
           });
+          if (failures.length > 0) {
+            pushMessage({
+              id: `split-fail-${Date.now()}`,
+              role: "assistant",
+              kind: "text",
+              text: failures.join(" "),
+            });
+          }
         } else {
           pushMessage({
             id: `split-err-${Date.now()}`,
             role: "assistant",
             kind: "text",
-            text: "Split didn't go through. Check your balance.",
+            text:
+              failures[0] ??
+              "Could not create payment requests. Check tags and try Request.",
           });
         }
       }

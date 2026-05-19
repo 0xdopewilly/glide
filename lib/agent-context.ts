@@ -76,6 +76,11 @@ export function extractAmountFromText(text: string): string | null {
     const n = parseMoneyAmount(leading[1]);
     if (n !== null && n > 0) return n.toFixed(2);
   }
+  const split = text.match(/\bsplit\s+\$?\s*(\d+(?:\.\d{1,2})?)/i);
+  if (split) {
+    const n = parseMoneyAmount(split[1]);
+    if (n !== null && n > 0) return n.toFixed(2);
+  }
   return null;
 }
 
@@ -199,17 +204,9 @@ export function parseExplicitIntentFromMessage(
   return null;
 }
 
-/** split $60 with @a @b @c or split $60 between khadee, tom */
-export function parseSplitFromMessage(text: string): {
-  total: string;
-  recipients: string[];
-} | null {
+/** @handles from "split … with @a and @b" (excludes token-like @mentions). */
+export function extractSplitRecipients(text: string): string[] {
   const trimmed = text.trim();
-  if (!/\bsplit\b/i.test(trimmed)) return null;
-
-  const total = extractAmountFromText(trimmed);
-  if (!total) return null;
-
   const handles = new Set<string>();
   const atMentions = trimmed.matchAll(/@([a-z][a-z0-9_]{2,19})/gi);
   for (const m of atMentions) {
@@ -231,14 +228,24 @@ export function parseSplitFromMessage(text: string): {
     }
   }
 
-  const peopleMatch = trimmed.match(/\b(\d+)\s+people?\b/i);
-  if (handles.size === 0 && peopleMatch) {
-    return null;
-  }
+  return [...handles];
+}
 
-  if (handles.size < 2) return null;
+/** split $60 with @a @b — you paid; request each friend's share of the bill. */
+export function parseSplitFromMessage(text: string): {
+  total: string;
+  recipients: string[];
+} | null {
+  const trimmed = text.trim();
+  if (!/\bsplit\b/i.test(trimmed)) return null;
 
-  return { total, recipients: [...handles] };
+  const total = extractAmountFromText(trimmed);
+  if (!total) return null;
+
+  const recipients = extractSplitRecipients(trimmed);
+  if (recipients.length < 2) return null;
+
+  return { total, recipients };
 }
 
 /** Last wallet address the user mentioned in the thread. */

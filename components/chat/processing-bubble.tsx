@@ -2,19 +2,19 @@
 
 import type { ActionSuccessType } from "@/lib/chat-cache";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeftRight, Globe2, Send } from "lucide-react";
+import { ArrowLeftRight, Globe2, HandCoins, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const ICONS = {
+export type ProcessingAction = ActionSuccessType | "request";
+
+const ICONS: Record<ProcessingAction, typeof Send> = {
   send: Send,
   swap: ArrowLeftRight,
   bridge: Globe2,
-} as const;
+  request: HandCoins,
+};
 
-const STAGES: Record<
-  ActionSuccessType,
-  { label: string; hint: string }[]
-> = {
+const STAGES: Record<ProcessingAction, { label: string; hint: string }[]> = {
   send: [
     { label: "Sending", hint: "On Arc testnet" },
     { label: "Confirming", hint: "Almost there" },
@@ -29,9 +29,13 @@ const STAGES: Record<
     { label: "Confirming", hint: "Can take a minute on testnet" },
     { label: "Finishing", hint: "Almost there" },
   ],
+  request: [
+    { label: "Requesting", hint: "Sending pay links to friends" },
+    { label: "Almost done", hint: "They can pay in Glide" },
+  ],
 };
 
-export function ProcessingBubble({ action }: { action: ActionSuccessType }) {
+export function ProcessingBubble({ action }: { action: ProcessingAction }) {
   const reduceMotion = useReducedMotion();
   const Icon = ICONS[action];
   const stages = STAGES[action];

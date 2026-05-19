@@ -16,6 +16,7 @@ import {
   parseExplicitIntentFromMessage,
   parseMultiSendFromMessage,
   parseSendFromMessage,
+  extractSplitRecipients,
   parseSplitFromMessage,
 } from "@/lib/agent-context";
 import { findContactByName } from "@/lib/contacts-db";
@@ -60,6 +61,8 @@ RULES (critical):
 8. "bridge $5 to Base" is ALWAYS bridge JSON with network "base" — never send.
 9. Multiple tokens to one person: {"action":"send_batch","transfers":[{"amount":"1.00","token":"USDC"},{"amount":"1.00","token":"EURC"}],"to":"fifi"} — never only send the first token.
 10. Single-token send: include "token":"USDC" or "token":"EURC" when the user names the token.
+11. "split" means the user ALREADY PAID a bill and wants to REQUEST each friend's equal share — NEVER send money on split. Include the user in the math: share = total ÷ (friends + 1). Only use a total the user stated in this chat — NEVER invent amounts (no default $60).
+12. Split needs total bill + at least two @usernames. If either is missing, use reply JSON to ask once.
 
 Respond with JSON only:
 - {"action":"reply","message":"..."} — only when info is still missing
@@ -201,11 +204,69 @@ export async function reconcileIntentWithHistory(
   const split = parseSplitFromMessage(latestUserMessage);
   if (split) return { action: "split", ...split };
 
+  if (/\bsplit\b/i.test(latestUserMessage)) {
+    const parsedRecipients = extractSplitRecipients(latestUserMessage);
+    const recipients =
+      parsedRecipients.length >= 2
+        ? parsedRecipients
+        : intent?.action === "split"
+          ? intent.recipients
+          : [];
+    const billTotal = extractAmountFromHistory(fullHistory);
+
+    if (billTotal && recipients.length >= 2) {
+      return { action: "split", total: billTotal, recipients };
+    }
+    if (recipients.length >= 2) {
+      return {
+        action: "reply",
+        message: "How much was the total bill?",
+      };
+    }
+    if (billTotal) {
+      return {
+        action: "reply",
+        message: "Who should I split with? Tag at least two @usernames.",
+      };
+    }
+    return {
+      action: "reply",
+      message:
+        'To split a bill, say the total and friends — e.g. "Split $60 with @fifi and @khadee".',
+    };
+  }
+
+  if (intent?.action === "split") {
+    const billTotal = extractAmountFromHistory(fullHistory);
+    if (!billTotal) {
+      if (intent.recipients.length >= 2) {
+        return {
+          action: "reply",
+          message: "How much was the total bill?",
+        };
+      }
+      return {
+        action: "reply",
+        message:
+          'To split a bill, say the total and friends — e.g. "Split $60 with @fifi and @khadee".',
+      };
+    }
+    return { action: "split", total: billTotal, recipients: intent.recipients };
+  }
+
   if (intent?.action === "swap" || intent?.action === "bridge") {
     return intent;
   }
 
   if (isNonSendMoneyMessage(latestUserMessage)) {
+    if (/\brequest\b/i.test(latestUserMessage)) {
+      return (
+        intent ?? {
+          action: "reply",
+          message: "How much should I request, and from who? Use @username.",
+        }
+      );
+    }
     return (
       intent ?? {
         action: "reply",
