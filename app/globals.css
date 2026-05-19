@@ -137,13 +137,9 @@ body {
 }
 
 /* Chat */
-.glide-chat-row {
-  animation: glide-chat-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
 .glide-chat-bubble,
 .glide-chat-card {
-  animation: glide-chat-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: glide-chat-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes glide-chat-in {

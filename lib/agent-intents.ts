@@ -5,6 +5,7 @@ import {
   extractRecipientNameFromHistory,
   extractWalletFromHistory,
 } from "@/lib/agent-context";
+import { findContactByName } from "@/lib/contacts-db";
 
 export type GlideIntent =
   | { action: "reply"; message: string }
@@ -82,11 +83,12 @@ export function parseAgentJson(raw: string): GlideIntent | null {
 }
 
 /** Override vague LLM replies when the thread already has enough to send. */
-export function reconcileIntentWithHistory(
+export async function reconcileIntentWithHistory(
   intent: GlideIntent | null,
   history: AgentHistoryMessage[],
   latestUserMessage: string,
-): GlideIntent | null {
+  userId?: string,
+): Promise<GlideIntent | null> {
   const fullHistory: AgentHistoryMessage[] = [
     ...history,
     { role: "user", content: latestUserMessage },
@@ -100,6 +102,22 @@ export function reconcileIntentWithHistory(
       to: ready.to,
       recipientName: ready.recipientName,
     };
+  }
+
+  if (userId) {
+    const name = extractRecipientNameFromHistory(fullHistory);
+    const amount = extractAmountFromHistory(fullHistory);
+    if (name && amount && !extractWalletFromHistory(fullHistory)) {
+      const contact = await findContactByName(userId, name);
+      if (contact) {
+        return {
+          action: "send",
+          amount,
+          to: contact.walletAddress,
+          recipientName: contact.name,
+        };
+      }
+    }
   }
 
   if (!intent || intent.action !== "reply") return intent;

@@ -1,4 +1,5 @@
 import { createCircleClient } from "@/lib/circle";
+import { notifyIncomingPayment } from "@/lib/push";
 import { arcExplorerUrl, recordTransaction } from "@/lib/transactions-db";
 import { formatRelativeDate } from "@/lib/format";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
@@ -68,7 +69,7 @@ export async function syncCircleTransactionsToDb(
 
   for (const tx of circleTxs) {
     const mapped = mapCircleTransaction(tx);
-    await recordTransaction({
+    const { row, isNew } = await recordTransaction({
       userId,
       kind: mapped.kind ?? "send",
       title: mapped.title,
@@ -80,6 +81,19 @@ export async function syncCircleTransactionsToDb(
       explorerUrl: mapped.explorerUrl,
       chain: tx.blockchain,
     });
+
+    if (
+      isNew &&
+      mapped.kind === "receive" &&
+      !row.pushNotified &&
+      mapped.variant === "credit"
+    ) {
+      try {
+        await notifyIncomingPayment(userId, mapped.amount, row.id);
+      } catch (err) {
+        console.error("[Glide] push notify:", err);
+      }
+    }
   }
 
   return circleTxs.map(mapCircleTransaction);

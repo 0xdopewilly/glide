@@ -23,7 +23,7 @@ export async function recordTransaction(input: RecordTransactionInput) {
       where: { circleTransactionId: input.circleTransactionId },
     });
     if (existing) {
-      return prisma.transaction.update({
+      const row = await prisma.transaction.update({
         where: { id: existing.id },
         data: {
           status: input.status ?? existing.status,
@@ -33,6 +33,7 @@ export async function recordTransaction(input: RecordTransactionInput) {
           title: input.title,
         },
       });
+      return { row, isNew: false };
     }
   }
 
@@ -41,7 +42,7 @@ export async function recordTransaction(input: RecordTransactionInput) {
       where: { userId: input.userId, txHash: input.txHash },
     });
     if (existing) {
-      return prisma.transaction.update({
+      const row = await prisma.transaction.update({
         where: { id: existing.id },
         data: {
           status: input.status ?? existing.status,
@@ -50,10 +51,11 @@ export async function recordTransaction(input: RecordTransactionInput) {
             input.circleTransactionId ?? existing.circleTransactionId,
         },
       });
+      return { row, isNew: false };
     }
   }
 
-  return prisma.transaction.create({
+  const row = await prisma.transaction.create({
     data: {
       userId: input.userId,
       kind: input.kind,
@@ -68,6 +70,7 @@ export async function recordTransaction(input: RecordTransactionInput) {
       metadata: input.metadata,
     },
   });
+  return { row, isNew: true };
 }
 
 function rowToGlide(row: {

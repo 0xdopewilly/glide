@@ -33,6 +33,16 @@ export function extractAmountFromHistory(
       const n = parseMoneyAmount(dollar[1]);
       if (n !== null && n > 0) return n.toFixed(2);
     }
+    const usdc = text.match(/(\d+(?:\.\d{1,2})?)\s*usdc/i);
+    if (usdc) {
+      const n = parseMoneyAmount(usdc[1]);
+      if (n !== null && n > 0) return n.toFixed(2);
+    }
+    const sendAmt = text.match(/send\s+(\d+(?:\.\d{1,2})?)/i);
+    if (sendAmt) {
+      const n = parseMoneyAmount(sendAmt[1]);
+      if (n !== null && n > 0) return n.toFixed(2);
+    }
     const plain = parseMoneyAmount(text.replace(/^\$/, ""));
     if (plain !== null && plain > 0 && text.length < 24) return plain.toFixed(2);
   }

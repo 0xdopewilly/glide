@@ -40,7 +40,10 @@ Add these in **Project → Settings → Environment Variables** for **Production
 | `CIRCLE_API_KEY` | Circle Console |
 | `CIRCLE_ENTITY_SECRET` | Circle Console |
 | `CIRCLE_KIT_KEY` | **Kit Key** for swap/bridge — full value `KIT_KEY:<keyId>:<keySecret>` from [Circle Kit keys](https://developers.circle.com/w3s/keys#kit-keys). **Not** the same as `CIRCLE_API_KEY` (`TEST_API_KEY:...`). Must be from the **same Circle project** as `CIRCLE_API_KEY`. After deploy, open `/api/health/kit` — should return `{ "ok": true }`. |
-| `GROQ_API_KEY` | [Groq](https://console.groq.com/keys) — powers the home-screen Glide assistant |
+| `GROQ_API_KEY` | [Groq](https://console.groq.com/keys) — powers the Ask tab assistant |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Web Push public key (`npx web-push generate-vapid-keys`) |
+| `VAPID_PRIVATE_KEY` | Web Push private key (server only) |
+| `VAPID_SUBJECT` | `mailto:you@yourdomain.com` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk |
 | `CLERK_SECRET_KEY` | Clerk |
 | `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` | e.g. `https://dynamic-turkey-46.clerk.accounts.dev` |

@@ -17,8 +17,15 @@ const WELCOME: StoredChatMessage = {
   id: "welcome",
   role: "assistant",
   kind: "text",
-  text: "Hi — I can send, swap, bridge, or open scan. What do you need?",
+  text: "Hi! I can send, swap, bridge, or open scan. What do you need?",
 };
+
+const QUICK_PROMPTS = [
+  "Send $5",
+  "Swap $10 to EURC",
+  "Open scan",
+  "My balance",
+] as const;
 
 function toAgentHistory(messages: StoredChatMessage[]) {
   return messages
@@ -141,6 +148,64 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     [bridgeMoney, clearError, pushMessage, refresh, router, sendMoney, swapMoney],
   );
 
+  const sendToAgent = useCallback(
+    async (text: string) => {
+      if (!text.trim() || busy) return;
+      pushMessage({
+        id: `user-${Date.now()}`,
+        role: "user",
+        kind: "text",
+        text: text.trim(),
+      });
+      setBusy(true);
+
+      try {
+        const history = toAgentHistory(messages);
+        const res = await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text.trim(), history }),
+        });
+        const data = (await res.json()) as {
+          reply?: string;
+          intent?: GlideIntent;
+          error?: string;
+        };
+
+        if (!res.ok) {
+          pushMessage({
+            id: `err-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: data.error ?? data.reply ?? "Something went wrong.",
+          });
+          return;
+        }
+
+        if (data.intent && data.intent.action !== "reply") {
+          await runIntent(data.intent);
+        } else if (data.reply) {
+          pushMessage({
+            id: `asst-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: data.reply,
+          });
+        }
+      } catch {
+        pushMessage({
+          id: `err-${Date.now()}`,
+          role: "assistant",
+          kind: "text",
+          text: "Couldn't reach Glide assistant. Try again.",
+        });
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, messages, pushMessage, runIntent],
+  );
+
   const saveContact = async (messageId: string) => {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg || msg.kind !== "add_contact" || !msg.contactName || !msg.walletAddress) {
@@ -176,63 +241,12 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const text = message.trim();
-    if (!text || busy) return;
-
+    if (!text) return;
     setMessage("");
-    pushMessage({
-      id: `user-${Date.now()}`,
-      role: "user",
-      kind: "text",
-      text,
-    });
-    setBusy(true);
-
-    try {
-      const history = toAgentHistory(messages);
-      const res = await fetch("/api/agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history }),
-      });
-      const data = (await res.json()) as {
-        reply?: string;
-        intent?: GlideIntent;
-        error?: string;
-      };
-
-      if (!res.ok) {
-        pushMessage({
-          id: `err-${Date.now()}`,
-          role: "assistant",
-          kind: "text",
-          text: data.error ?? data.reply ?? "Something went wrong.",
-        });
-        return;
-      }
-
-      if (data.intent && data.intent.action !== "reply") {
-        await runIntent(data.intent);
-      } else if (data.reply) {
-        pushMessage({
-          id: `asst-${Date.now()}`,
-          role: "assistant",
-          kind: "text",
-          text: data.reply,
-        });
-      }
-    } catch {
-      pushMessage({
-        id: `err-${Date.now()}`,
-        role: "assistant",
-        kind: "text",
-        text: "Couldn't reach Glide assistant. Try again.",
-      });
-    } finally {
-      setBusy(false);
-    }
+    void sendToAgent(text);
   };
 
   useEffect(() => {
@@ -247,71 +261,89 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     <div
       className={
         isPage
-          ? "flex min-h-0 flex-1 flex-col"
-          : "flex w-full max-w-[min(100%,340px)] flex-col overflow-hidden rounded-3xl border border-neutral-200/90 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] dark:border-white/10 dark:bg-[#141416]"
+          ? "flex min-h-0 flex-1 flex-col bg-gradient-to-b from-transparent to-violet-500/[0.03] dark:to-violet-500/[0.06]"
+          : "flex w-full flex-col overflow-hidden rounded-3xl border border-neutral-200/90 bg-white dark:border-white/10 dark:bg-[#141416]"
       }
     >
       {isPage ? (
-        <header className="flex items-center gap-2 border-b border-neutral-100 px-5 py-4 dark:border-white/10">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <div>
-            <p className="text-base font-semibold tracking-tight">Glide</p>
-            <p className="text-xs glide-muted">Send, swap, bridge — just ask</p>
+        <header className="shrink-0 px-5 pb-3 pt-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white shadow-lg shadow-violet-500/25">
+              <Sparkles className="h-[18px] w-[18px]" />
+            </span>
+            <div>
+              <p className="text-base font-semibold tracking-tight">Glide</p>
+              <p className="text-xs glide-muted">Send, swap, bridge. Just ask.</p>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {QUICK_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                disabled={busy}
+                onClick={() => void sendToAgent(prompt)}
+                className="glide-tap shrink-0 rounded-full border border-neutral-200/80 bg-white/80 px-3 py-1.5 text-xs font-semibold text-neutral-700 backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-white/75"
+              >
+                {prompt}
+              </button>
+            ))}
           </div>
         </header>
       ) : null}
 
       <div
         ref={listRef}
-        className={`glide-scroll flex flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 py-4 ${
-          isPage ? "min-h-0" : "max-h-[min(42vh,320px)] min-h-[120px]"
+        className={`glide-scroll flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-3 ${
+          isPage ? "min-h-0 py-2" : "max-h-[min(42vh,320px)] min-h-[120px] py-3"
         }`}
       >
         {messages.map((m) => (
-          <div key={m.id} className="glide-chat-row">
-            <ChatMessageBubble
-              message={m}
-              savingContact={savingContactId === m.id}
-              onSaveContact={saveContact}
-            />
-          </div>
+          <ChatMessageBubble
+            key={m.id}
+            message={m}
+            savingContact={savingContactId === m.id}
+            onSaveContact={saveContact}
+          />
         ))}
         {busy ? (
-          <div className="glide-chat-typing mr-auto flex gap-1 rounded-2xl rounded-bl-md bg-neutral-100 px-4 py-3 dark:bg-[#252528]">
-            <span />
-            <span />
-            <span />
+          <div className="flex justify-start px-1 py-1">
+            <div className="glide-chat-typing flex gap-1.5 rounded-[20px] rounded-bl-[6px] border border-neutral-200/50 bg-white/90 px-4 py-3.5 dark:border-white/[0.06] dark:bg-[#1e1e22]">
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
         ) : null}
       </div>
 
       <form
-        onSubmit={(e) => void handleSubmit(e)}
-        className="flex shrink-0 items-center gap-2 border-t border-neutral-100 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-white/10"
+        onSubmit={handleSubmit}
+        className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
       >
-        <label htmlFor="glide-assistant-input" className="sr-only">
-          Message Glide
-        </label>
-        <input
-          ref={inputRef}
-          id="glide-assistant-input"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Send $1 to Khadee at 0x…"
-          disabled={busy}
-          className="min-w-0 flex-1 rounded-full bg-neutral-100 px-4 py-3 text-[15px] font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-400 focus:outline-none disabled:opacity-60 dark:bg-[#1c1c1e] dark:text-white dark:placeholder:text-white/35"
-          autoComplete="off"
-        />
-        <button
-          type="submit"
-          disabled={busy || !message.trim()}
-          className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white disabled:opacity-40"
-          aria-label="Send"
-        >
-          <ArrowUp className="h-5 w-5" strokeWidth={2.5} />
-        </button>
+        <div className="flex items-center gap-2 rounded-[28px] border border-neutral-200/70 bg-white/90 p-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1a1a1e]/95 dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]">
+          <label htmlFor="glide-assistant-input" className="sr-only">
+            Message Glide
+          </label>
+          <input
+            ref={inputRef}
+            id="glide-assistant-input"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Message Glide…"
+            disabled={busy}
+            className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-[15px] font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-400 focus:outline-none disabled:opacity-60 dark:text-white dark:placeholder:text-white/35"
+            autoComplete="off"
+          />
+          <button
+            type="submit"
+            disabled={busy || !message.trim()}
+            className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md disabled:opacity-40"
+            aria-label="Send"
+          >
+            <ArrowUp className="h-5 w-5" strokeWidth={2.5} />
+          </button>
+        </div>
       </form>
     </div>
   );

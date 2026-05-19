@@ -103,7 +103,12 @@ export async function POST(request: NextRequest) {
 
     const raw = await groqChat(groqMessages, { json: true });
     let intent = parseAgentJson(raw);
-    intent = reconcileIntentWithHistory(intent, history, message);
+    intent = await reconcileIntentWithHistory(
+      intent,
+      history,
+      message,
+      session.userId,
+    );
 
     if (intent?.action === "send") {
       intent = await resolveSendRecipient(session.userId, intent);

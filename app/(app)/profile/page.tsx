@@ -6,6 +6,7 @@ import { FormField, inputClassName } from "@/components/form-field";
 import { GlideButton } from "@/components/glide-button";
 import { PageHeader } from "@/components/page-header";
 import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
+import { PushNotificationsToggle } from "@/components/push-notifications";
 import { shortenAddress } from "@/lib/format";
 import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
@@ -117,7 +118,8 @@ export default function ProfilePage() {
           </GlideButton>
         </div>
 
-        <section className="mt-6">
+        <section className="mt-6 space-y-3">
+          <PushNotificationsToggle />
           <GlideButton
             type="button"
             onClick={() => router.push("/contacts")}
