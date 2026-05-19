@@ -1,5 +1,7 @@
 import { findContactByName } from "@/lib/contacts-db";
-import { findUserByUsername } from "@/lib/usernames";
+import { shortenAddress } from "@/lib/format";
+import { formatUsernameForPush } from "@/lib/push-display";
+import { findUserByUsername, findUserByWalletAddress } from "@/lib/usernames";
 import {
   isValidUsername,
   isValidWalletAddress,
@@ -36,7 +38,7 @@ export async function resolveRecipient(
     if (glideUser?.circleWalletAddress) {
       return {
         address: glideUser.circleWalletAddress,
-        label: `@${glideUser.username}`,
+        label: glideUser.username,
         source: "username",
       };
     }
@@ -52,4 +54,15 @@ export async function resolveRecipient(
   }
 
   return null;
+}
+
+/** Display name for pushes, receipts, and activity titles. */
+export function formatResolvedRecipientLabel(resolved: ResolvedRecipient): string {
+  if (resolved.source === "username") {
+    return formatUsernameForPush(resolved.label);
+  }
+  if (resolved.source === "contact") {
+    return resolved.label;
+  }
+  return resolved.label;
 }

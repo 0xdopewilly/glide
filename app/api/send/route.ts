@@ -3,7 +3,10 @@ import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle
 import { ARC_USDC_TOKEN_ADDRESS } from "@/lib/tokens";
 import { userOwnsWallet } from "@/lib/users";
 import { notifyPaymentSent } from "@/lib/push";
-import { resolveRecipient } from "@/lib/resolve-recipient";
+import {
+  formatResolvedRecipientLabel,
+  resolveRecipient,
+} from "@/lib/resolve-recipient";
 import { parseMoneyAmount } from "@/lib/validation";
 import { arcExplorerUrl, recordTransaction } from "@/lib/transactions-db";
 import {
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
     await recordTransaction({
       userId: session.userId,
       kind: "send",
-      title: `Sent to ${resolved.label.startsWith("0x") ? `${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)}` : resolved.label}`,
+      title: `Sent to ${formatResolvedRecipientLabel(resolved)}`,
       amountLabel: `−$${parsed.toFixed(2)}`,
       variant: "debit",
       status: state,
@@ -112,9 +115,7 @@ export async function POST(request: NextRequest) {
     void notifyPaymentSent(
       session.userId,
       parsed.toFixed(2),
-      resolved.label.startsWith("0x")
-        ? `${destinationAddress.slice(0, 6)}...${destinationAddress.slice(-4)}`
-        : resolved.label,
+      formatResolvedRecipientLabel(resolved),
     ).catch((err) => console.error("[Glide] send push:", err));
 
     return NextResponse.json({
