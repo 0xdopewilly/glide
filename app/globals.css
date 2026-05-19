@@ -136,6 +136,70 @@ body {
   }
 }
 
+/* Chat */
+.glide-chat-row {
+  animation: glide-chat-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.glide-chat-bubble,
+.glide-chat-card {
+  animation: glide-chat-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes glide-chat-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.glide-chat-typing span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--glide-muted);
+  animation: glide-typing 1s ease-in-out infinite;
+}
+
+.glide-chat-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.glide-chat-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes glide-typing {
+  0%,
+  80%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glide-chat-row,
+  .glide-chat-bubble,
+  .glide-chat-card {
+    animation: none;
+  }
+
+  .glide-chat-typing span {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
 .glide-outer-frame {
   position: relative;
   background: var(--glide-bg);

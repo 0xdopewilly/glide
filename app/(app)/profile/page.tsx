@@ -9,9 +9,11 @@ import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
 import { shortenAddress } from "@/lib/format";
 import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const {
     profile,
     updateProfile,
@@ -115,7 +117,18 @@ export default function ProfilePage() {
           </GlideButton>
         </div>
 
-        <section className="mt-10 rounded-2xl p-4 glide-surface-card">
+        <section className="mt-6">
+          <GlideButton
+            type="button"
+            onClick={() => router.push("/contacts")}
+            uppercase={false}
+            className="w-full"
+          >
+            Contacts
+          </GlideButton>
+        </section>
+
+        <section className="mt-6 rounded-2xl p-4 glide-surface-card">
           <h3 className="text-sm font-semibold tracking-tight">Your account</h3>
           <p className="mt-2 break-all font-mono text-xs font-medium leading-relaxed glide-muted">
             {wallet?.address ?? "Setting up"}

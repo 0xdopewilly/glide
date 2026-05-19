@@ -1,7 +1,14 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
-import { AGENT_SYSTEM_PROMPT, parseAgentJson, type GlideIntent } from "@/lib/agent-intents";
+import type { AgentHistoryMessage } from "@/lib/agent-context";
+import {
+  AGENT_SYSTEM_PROMPT,
+  parseAgentJson,
+  reconcileIntentWithHistory,
+  type GlideIntent,
+} from "@/lib/agent-intents";
+import { findContactByName } from "@/lib/contacts-db";
 import { safeApiError } from "@/lib/circle";
-import { groqChat } from "@/lib/groq";
+import { groqChat, type GroqMessage } from "@/lib/groq";
 import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -18,7 +25,7 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
     }
     const amount = parseMoneyAmount(intent.amount);
     if (amount === null || amount <= 0) {
-      return { reply: "What amount should I send?" };
+      return { reply: "How much should I send?" };
     }
     return {
       reply: `Sending $${amount.toFixed(2)}…`,
@@ -48,27 +55,60 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
   return { reply: "How can I help?" };
 }
 
-/** POST { message } — Groq-powered Glide assistant (returns intent for client execution) */
+async function resolveSendRecipient(
+  userId: string,
+  intent: GlideIntent & { action: "send" },
+): Promise<GlideIntent & { action: "send" }> {
+  if (isValidWalletAddress(intent.to)) return intent;
+  const contact = await findContactByName(userId, intent.to);
+  if (contact) {
+    return {
+      ...intent,
+      to: contact.walletAddress,
+      recipientName: intent.recipientName ?? contact.name,
+    };
+  }
+  return intent;
+}
+
+/** POST { message, history? } — Groq assistant with full conversation context */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
 
-  const body = (await request.json()) as { message?: string };
+  const body = (await request.json()) as {
+    message?: string;
+    history?: AgentHistoryMessage[];
+  };
   const message = body.message?.trim();
   if (!message) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
   }
 
-  try {
-    const raw = await groqChat(
-      [
-        { role: "system", content: AGENT_SYSTEM_PROMPT },
-        { role: "user", content: message },
-      ],
-      { json: true },
-    );
+  const history = (body.history ?? []).filter(
+    (m) =>
+      (m.role === "user" || m.role === "assistant") &&
+      typeof m.content === "string",
+  );
 
-    const intent = parseAgentJson(raw);
+  try {
+    const groqMessages: GroqMessage[] = [
+      { role: "system", content: AGENT_SYSTEM_PROMPT },
+      ...history.slice(-24).map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+      { role: "user", content: message },
+    ];
+
+    const raw = await groqChat(groqMessages, { json: true });
+    let intent = parseAgentJson(raw);
+    intent = reconcileIntentWithHistory(intent, history, message);
+
+    if (intent?.action === "send") {
+      intent = await resolveSendRecipient(session.userId, intent);
+    }
+
     if (!intent) {
       return NextResponse.json({
         reply:

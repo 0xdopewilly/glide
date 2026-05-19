@@ -21,6 +21,21 @@ model User {
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   transactions         Transaction[]
+  contacts             Contact[]
+}
+
+/// Saved payees — name + wallet for quick sends.
+model Contact {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  walletAddress String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, walletAddress])
+  @@index([userId, name])
 }
 
 /// On-chain activity mirrored from Circle + App Kit (source of truth: chain).
