@@ -143,9 +143,11 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
       </FormField>
       {frequency === "minutely" ? (
         <p className="mt-2 text-xs leading-relaxed glide-muted">
-          For testing only. Runs when the scheduled-send cron fires (about every
-          minute on Vercel). Set <code className="text-[11px]">CRON_SECRET</code>{" "}
-          in your env.
+          For testing only. Vercel Hobby cron runs once per day — trigger runs
+          yourself:{" "}
+          <code className="text-[11px]">GET /api/cron/scheduled</code> with{" "}
+          <code className="text-[11px]">Authorization: Bearer CRON_SECRET</code>
+          .
         </p>
       ) : null}
       <GlideButton
