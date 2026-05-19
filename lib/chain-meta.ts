@@ -15,6 +15,8 @@ export type ChainMeta = {
   badgeClass: string;
   /** Brand hex for accents */
   color: string;
+  /** Optional logo under /public/chains */
+  logo?: string;
 };
 
 export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
@@ -31,6 +33,7 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
     shortLabel: "ETH",
     badgeClass: "from-[#627EEA] to-[#3C5BD8]",
     color: "#627EEA",
+    logo: "/chains/ethereum.png",
   },
   "base-sepolia": {
     id: "base-sepolia",

@@ -1,6 +1,8 @@
 "use client";
 
 import { getChainMeta, type GlideChainKey } from "@/lib/chain-meta";
+import Image from "next/image";
+import { useState } from "react";
 
 export function ChainIcon({
   chainId,
@@ -10,11 +12,33 @@ export function ChainIcon({
   size?: "sm" | "md";
 }) {
   const meta = getChainMeta(chainId);
-  const dim = size === "sm" ? "h-4 w-4 text-[8px]" : "h-5 w-5 text-[9px]";
+  const dim = size === "sm" ? 16 : 20;
+  const box = size === "sm" ? "h-4 w-4" : "h-5 w-5";
+  const [failed, setFailed] = useState(false);
+
+  if (meta.logo && !failed) {
+    return (
+      <span
+        className={`relative inline-flex shrink-0 overflow-hidden rounded-full bg-white ring-1 ring-black/5 dark:ring-white/10 ${box}`}
+        title={meta.label}
+        aria-hidden
+      >
+        <Image
+          src={meta.logo}
+          alt=""
+          width={dim}
+          height={dim}
+          className="object-cover"
+          onError={() => setFailed(true)}
+          unoptimized
+        />
+      </span>
+    );
+  }
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-bold text-white shadow-sm ${meta.badgeClass} ${dim}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-bold text-white shadow-sm ${meta.badgeClass} ${box} ${size === "sm" ? "text-[8px]" : "text-[9px]"}`}
       title={meta.label}
       aria-hidden
     >
