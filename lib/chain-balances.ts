@@ -1,4 +1,3 @@
-import type { BridgeNetworkKey } from "@/lib/app-kit";
 import { BRIDGE_KEY_TO_CHAIN, CHAIN_META, type GlideChainKey } from "@/lib/chain-meta";
 import type { GlideTokenBalance } from "@/lib/types";
 import {
@@ -34,19 +33,16 @@ const OFF_ARC: {
     usdc: SEPOLIA_USDC,
   },
   {
-    network: "base",
     chainId: BRIDGE_KEY_TO_CHAIN.base,
     chain: baseSepolia,
     usdc: BASE_SEPOLIA_USDC,
   },
   {
-    network: "polygon",
     chainId: BRIDGE_KEY_TO_CHAIN.polygon,
     chain: polygonAmoy,
     usdc: POLYGON_AMOY_USDC,
   },
   {
-    network: "arbitrum",
     chainId: BRIDGE_KEY_TO_CHAIN.arbitrum,
     chain: arbitrumSepolia,
     usdc: ARBITRUM_SEPOLIA_USDC,

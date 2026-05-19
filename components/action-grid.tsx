@@ -13,7 +13,7 @@ const ACTIONS = [
   {
     href: "/send",
     label: "Send",
-    description: "Pay out",
+    description: "Pay a tag or wallet",
     icon: ArrowUpRight,
   },
 ] as const;
