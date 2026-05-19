@@ -75,9 +75,11 @@ export async function notifyPaymentSent(
 ) {
   const parsed = formatAmountForPush(`$${amount}`);
 
+  const target = formatUsernameForPush(toLabel);
+
   await sendPushToUser(userId, {
     title: "Payment sent",
-    body: `You sent ${parsed} to ${toLabel} on Glide.`,
+    body: `You sent ${parsed} to ${target} on Glide.`,
     url: "/activity",
   });
 }
