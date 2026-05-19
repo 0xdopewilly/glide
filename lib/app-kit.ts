@@ -1,5 +1,6 @@
 import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
 import { AppKit } from "@circle-fin/app-kit";
+import { resolveKitKey } from "@/lib/kit-key";
 import {
   ArcTestnet,
   ArbitrumSepolia,
@@ -101,7 +102,7 @@ export async function executeArcSwap(input: {
       throw new Error(message);
     }
     throw new Error(
-      `${message}. If this persists, confirm CIRCLE_KIT_KEY is set on Vercel and your wallet has USDC on Arc testnet.`,
+      `${message} Use a Kit Key (KIT_KEY:keyId:keySecret) from https://developers.circle.com/w3s/keys#kit-keys — not your TEST_API_KEY. Check https://glide-arc.vercel.app/api/health/kit after updating Vercel env.`,
     );
   }
 }

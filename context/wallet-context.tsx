@@ -193,11 +193,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     if (!wallet) return false;
     setError(null);
     try {
-      const res = await fetch("/api/wallet/fund", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ walletId: wallet.id, address: wallet.address }),
-      });
+      const res = await fetch("/api/wallet/fund", { method: "POST" });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Could not add funds");

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { addressesEqual } from "@/lib/tokens";
 import { createGlideWallet, fetchWalletById } from "@/lib/wallet-service";
 import type { GlideWallet } from "@/lib/types";
 
@@ -59,17 +60,21 @@ export async function getOrCreateWalletForUser(input: {
   });
 
   if (user.circleWalletId) {
-    let address = user.circleWalletAddress;
-    if (!address) {
-      const fromCircle = await fetchWalletById(user.circleWalletId);
-      address = fromCircle?.address ?? null;
-      if (address) {
-        user = await prisma.user.update({
-          where: { id: input.userId },
-          data: { circleWalletAddress: address },
-        });
-      }
+    const fromCircle = await fetchWalletById(user.circleWalletId);
+    const circleAddress = fromCircle?.address ?? null;
+    let address = user.circleWalletAddress ?? circleAddress;
+
+    if (
+      circleAddress &&
+      (!address || !addressesEqual(address, circleAddress))
+    ) {
+      address = circleAddress;
+      user = await prisma.user.update({
+        where: { id: input.userId },
+        data: { circleWalletAddress: circleAddress },
+      });
     }
+
     if (address && user.circleWalletId) {
       return {
         user,
