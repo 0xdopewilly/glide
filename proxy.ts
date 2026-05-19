@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/onboarding",
@@ -21,7 +22,7 @@ export default clerkMiddleware(
     const { pathname } = request.nextUrl;
 
     if (!userId && pathname === "/") {
-      return Response.redirect(new URL("/onboarding", request.url));
+      return NextResponse.redirect(new URL("/onboarding", request.url));
     }
 
     if (!isPublicRoute(request)) {
