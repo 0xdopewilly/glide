@@ -50,7 +50,7 @@ function TokenRow({ token }: { token: GlideTokenBalance }) {
     return (
       <Link
         href="/swap"
-        className="block transition-opacity hover:opacity-90 active:scale-[0.99]"
+        className="glide-tap block transition-opacity hover:opacity-90"
       >
         {inner}
       </Link>

@@ -1,8 +1,8 @@
-import { kitKeyHealth } from "@/lib/kit-key";
+import { kitKeyStatus } from "@/lib/kit-key";
 import { NextResponse } from "next/server";
 
-/** GET — whether CIRCLE_KIT_KEY is present and correctly formatted (no secret leaked). */
+/** GET — Kit key config check (no secrets). Use after setting Vercel env vars. */
 export async function GET() {
-  const result = kitKeyHealth();
+  const result = kitKeyStatus();
   return NextResponse.json(result, { status: result.ok ? 200 : 503 });
 }

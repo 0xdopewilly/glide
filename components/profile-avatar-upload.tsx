@@ -1,8 +1,11 @@
 "use client";
 
+import { compressAvatarFile } from "@/lib/image-compress";
 import { Camera } from "lucide-react";
 import Image from "next/image";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 export function ProfileAvatarUpload({
   displayName,
@@ -16,28 +19,33 @@ export function ProfileAvatarUpload({
   disabled?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
   const initial = displayName.trim().charAt(0).toUpperCase() || "G";
 
-  const handleFile = (file: File | undefined) => {
+  const handleFile = async (file: File | undefined) => {
     if (!file || !file.type.startsWith("image/")) return;
-    if (file.size > 200_000) {
-      alert("Please choose an image under 200KB");
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert("Please choose an image under 8MB");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") onPick(reader.result);
-    };
-    reader.readAsDataURL(file);
+    setBusy(true);
+    try {
+      const dataUrl = await compressAvatarFile(file);
+      onPick(dataUrl);
+    } catch {
+      alert("Could not process that image. Try a different photo.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <div className="relative">
       <button
         type="button"
-        disabled={disabled}
+        disabled={disabled || busy}
         onClick={() => inputRef.current?.click()}
-        className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-neutral-200 dark:bg-[#2c2c2e]"
+        className="glide-tap relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-neutral-200 dark:bg-[#2c2c2e]"
         aria-label="Change profile photo"
       >
         {avatarUrl ? (
@@ -63,7 +71,7 @@ export function ProfileAvatarUpload({
         accept="image/*"
         className="sr-only"
         onChange={(e) => {
-          handleFile(e.target.files?.[0]);
+          void handleFile(e.target.files?.[0]);
           e.target.value = "";
         }}
       />

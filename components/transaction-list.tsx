@@ -89,7 +89,7 @@ function TransactionRow({
           onSelect();
         }
       }}
-      className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-opacity hover:opacity-90 active:scale-[0.99] ${
+      className={`glide-tap flex cursor-pointer items-center justify-between gap-3 rounded-2xl px-4 py-3.5 transition-opacity hover:opacity-90 ${
         isCredit
           ? "bg-emerald-500/10 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10"
           : "bg-neutral-100 dark:bg-[#1c1c1e]"

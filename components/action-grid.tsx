@@ -43,7 +43,7 @@ function ActionLink({
   return (
     <Link
       href={href}
-      className="group flex flex-col items-center gap-2.5 transition-transform active:scale-95"
+      className="glide-tap group flex flex-col items-center gap-2.5"
     >
       <span className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full bg-neutral-100 text-neutral-900 ring-1 ring-black/[0.04] transition-colors group-hover:bg-neutral-200 dark:bg-[#1c1c1e] dark:text-white dark:ring-white/10 dark:group-hover:bg-[#2a2a2e] sm:h-14 sm:w-14">
         {icon}

@@ -23,7 +23,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
   return (
     <>
       <div
-        className={`absolute inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out ${
+        className={`absolute inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ease-out will-change-[opacity] ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -34,7 +34,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
         aria-modal="true"
         aria-labelledby="bottom-sheet-title"
         aria-hidden={!open}
-        className={`absolute inset-x-0 bottom-0 z-50 flex max-h-[min(88%,560px)] flex-col rounded-t-[28px] border-t border-slate-200/80 bg-white shadow-[0_-24px_80px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] dark:border-zinc-700/60 dark:bg-zinc-900 dark:shadow-[0_-24px_80px_rgba(0,0,0,0.45)] ${
+        className={`absolute inset-x-0 bottom-0 z-50 flex max-h-[min(88%,560px)] flex-col rounded-t-[28px] border-t border-slate-200/80 bg-white shadow-[0_-24px_80px_rgba(0,0,0,0.12)] transition-transform duration-250 ease-[cubic-bezier(0.32,0.72,0,1)] will-change-transform dark:border-zinc-700/60 dark:bg-zinc-900 dark:shadow-[0_-24px_80px_rgba(0,0,0,0.45)] ${
           open ? "translate-y-0" : "pointer-events-none translate-y-full"
         }`}
       >
@@ -52,7 +52,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 active:scale-95 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
             aria-label="Close"
           >
             <X className="h-5 w-5" strokeWidth={2} />

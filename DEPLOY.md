@@ -50,6 +50,16 @@ Add these in **Project → Settings → Environment Variables** for **Production
 
 URL-encode special characters in database passwords (`@` → `%40`).
 
+### Where env vars live (swap kit key)
+
+| Environment | Where to set `CIRCLE_KIT_KEY` |
+|-------------|-------------------------------|
+| Local `npm run dev` | `.env.local` in the repo root (not committed) |
+| Production | Vercel → Project → **Settings → Environment Variables** → scope **Production** |
+| Preview deploys | Same page, scope **Preview** (optional; uses Production vars if unset) |
+
+There is **no other place** in this repo to paste the kit key — swap reads `process.env.CIRCLE_KIT_KEY` (or alias `KIT_KEY`) at runtime only. After changing Vercel vars you must **Redeploy** (env is baked in at build/deploy). Verify: `https://glide-arc.vercel.app/api/health/kit` → `{ "ok": true, "source": "CIRCLE_KIT_KEY", ... }`.
+
 ## 4. Clerk
 
 **`glide-arc.vercel.app` cannot be Clerk Production “Primary domain”** (stays Pending — no DNS on `vercel.app`).

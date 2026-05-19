@@ -1,6 +1,6 @@
 import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
 import { AppKit } from "@circle-fin/app-kit";
-import { resolveKitKey } from "@/lib/kit-key";
+import { kitKeyStatus, resolveKitKey } from "@/lib/kit-key";
 import {
   ArcTestnet,
   ArbitrumSepolia,
@@ -104,7 +104,13 @@ export async function executeArcSwap(input: {
       message.toLowerCase().includes("api key") ||
       message.toLowerCase().includes("authorization")
     ) {
-      throw new Error("Swap unavailable — server kit key is missing or invalid.");
+      const status = kitKeyStatus();
+      if (!status.ok) {
+        throw new Error(status.hint ?? "Swap unavailable — kit key not configured.");
+      }
+      throw new Error(
+        "Circle rejected the kit key. Use a Kit Key from the same Circle project as CIRCLE_API_KEY, set CIRCLE_KIT_KEY on Vercel (Production), then redeploy. Check /api/health/kit.",
+      );
     }
     throw new Error("Swap could not be completed. Try again in a moment.");
   }

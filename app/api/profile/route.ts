@@ -2,7 +2,8 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-const MAX_AVATAR_BYTES = 280_000;
+/** Stored as data URL in Postgres — client compresses before upload. */
+const MAX_AVATAR_BYTES = 1_500_000;
 
 /** GET — current profile from Supabase */
 export async function GET() {
@@ -51,7 +52,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Avatar must be an image" }, { status: 400 });
     } else if (body.avatarUrl.length > MAX_AVATAR_BYTES) {
       return NextResponse.json(
-        { error: "Image is too large (max ~200KB)" },
+        { error: "Image is too large (max ~1.5MB after compression)" },
         { status: 400 },
       );
     } else {

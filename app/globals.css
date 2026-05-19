@@ -49,6 +49,39 @@ body {
   color: var(--glide-text);
 }
 
+/* Route transitions — opacity only, GPU-friendly */
+.page-motion-shell {
+  animation: glide-page-in 0.18s ease-out both;
+  contain: layout style;
+  backface-visibility: hidden;
+}
+
+@keyframes glide-page-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-motion-shell {
+    animation: none;
+  }
+}
+
+/* Tap feedback without layout shift */
+.glide-tap {
+  transition: transform 0.12s ease-out, opacity 0.12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.glide-tap:active:not(:disabled) {
+  transform: scale(0.97);
+  opacity: 0.92;
+}
+
 .glide-outer-frame {
   position: relative;
   background: var(--glide-bg);
