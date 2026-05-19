@@ -20,7 +20,9 @@ export default function HomePage() {
     fundWallet,
     transactions,
     error,
+    notice,
     clearError,
+    clearNotice,
     refresh,
   } = useWallet();
 
@@ -34,6 +36,14 @@ export default function HomePage() {
           <div className="mt-3 rounded-2xl bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-300">
             <span className="truncate">{error}</span>
             <button type="button" onClick={clearError} className="ml-2 underline">
+              Dismiss
+            </button>
+          </div>
+        ) : null}
+        {notice && !error ? (
+          <div className="mt-3 rounded-2xl bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-800 dark:text-emerald-300">
+            <span>{notice}</span>
+            <button type="button" onClick={clearNotice} className="ml-2 underline">
               Dismiss
             </button>
           </div>

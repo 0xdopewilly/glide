@@ -62,8 +62,12 @@ export function BalanceHero({
         className="mt-6"
         icon={<Plus className="h-4 w-4" strokeWidth={2.5} />}
       >
-        Add Cash
+        Get testnet USDC
       </GlidePillButton>
+      <p className="mt-2 max-w-[18rem] text-xs leading-relaxed text-neutral-500 dark:text-white/40">
+        Requests free test USDC from Circle&apos;s Arc faucet to your wallet (not a card
+        deposit). Balance may take ~30s to update — tap refresh.
+      </p>
     </section>
   );
 }

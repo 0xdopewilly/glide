@@ -32,13 +32,10 @@ export function getGlideAppKit(): GlideAppKit {
 
   const apiKey = process.env.CIRCLE_API_KEY?.trim();
   const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();
-  const kitKey = process.env.CIRCLE_KIT_KEY?.trim();
+  const kitKey = resolveKitKey();
 
   if (!apiKey || !entitySecret) {
     throw new Error("Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET");
-  }
-  if (!kitKey) {
-    throw new Error("Missing CIRCLE_KIT_KEY (Arc App Kit key from Circle Console)");
   }
 
   const adapter = createCircleWalletsAdapter({ apiKey, entitySecret });
@@ -73,6 +70,8 @@ export async function executeArcSwap(input: {
       config: {
         slippageBps: 300,
         kitKey,
+        // Circle SCAs may be undeployed until first tx — permit fails; approve works.
+        allowanceStrategy: "approve",
       },
     });
 

@@ -32,6 +32,7 @@ type WalletContextValue = {
   loading: boolean;
   refreshing: boolean;
   error: string | null;
+  notice: string | null;
   refresh: () => Promise<void>;
   ensureWallet: () => Promise<GlideWallet | null>;
   createNewWallet: () => Promise<GlideWallet | null>;
@@ -40,6 +41,7 @@ type WalletContextValue = {
   swapMoney: (amount: string) => Promise<boolean>;
   bridgeMoney: (amount: string, network: string) => Promise<boolean>;
   clearError: () => void;
+  clearNotice: () => void;
 };
 
 const WalletContext = createContext<WalletContextValue | null>(null);
@@ -96,6 +98,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const updateProfile = useCallback((patch: Partial<GlideProfile>) => {
     setProfile((prev) => ({ ...prev, ...patch }));
@@ -192,16 +195,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const fundWallet = useCallback(async () => {
     if (!wallet) return false;
     setError(null);
+    setNotice(null);
     try {
       const res = await fetch("/api/wallet/fund", { method: "POST" });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        throw new Error(data.error ?? "Could not add funds");
+        throw new Error(data.error ?? "Could not request testnet USDC");
       }
+      setNotice(
+        "Testnet USDC requested from Circle. Tap refresh in ~30 seconds to see your balance.",
+      );
       window.setTimeout(() => void refresh(), 3000);
+      window.setTimeout(() => void refresh(), 8000);
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not add funds");
+      setError(e instanceof Error ? e.message : "Could not request testnet USDC");
       return false;
     }
   }, [wallet, refresh]);
@@ -352,6 +360,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       loading,
       refreshing,
       error,
+      notice,
       refresh,
       ensureWallet,
       createNewWallet,
@@ -360,6 +369,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       swapMoney,
       bridgeMoney,
       clearError: () => setError(null),
+      clearNotice: () => setNotice(null),
     }),
     [
       profile,
@@ -372,6 +382,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       loading,
       refreshing,
       error,
+      notice,
       refresh,
       ensureWallet,
       createNewWallet,
