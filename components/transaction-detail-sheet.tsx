@@ -24,7 +24,8 @@ export function TransactionDetailSheet({
 
   if (!transaction) return null;
 
-  const { title, amount, variant, meta, status, explorerUrl, txHash } = transaction;
+  const { title, amount, variant, meta, status, explorerUrl, txHash, note } =
+    transaction;
   const isCredit = variant === "credit";
 
   const shareText = [title, amount, txHash ? `Tx: ${txHash}` : null, explorerUrl ?? null]
@@ -91,6 +92,11 @@ export function TransactionDetailSheet({
           {meta}
           {status ? ` · ${status}` : ""}
         </p>
+        {note ? (
+          <p className="mt-3 rounded-xl bg-neutral-100 px-4 py-3 text-sm dark:bg-[#1c1c1e]">
+            &ldquo;{note}&rdquo;
+          </p>
+        ) : null}
 
         {txHash ? (
           <div className="mt-5 rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-[#1c1c1e]">

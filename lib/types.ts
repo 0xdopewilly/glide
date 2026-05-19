@@ -27,6 +27,7 @@ export type GlideTransaction = {
   meta: string;
   kind?: TransactionKind;
   status?: string;
+  note?: string;
   /** On-chain transaction hash when available */
   txHash?: string;
   /** Block explorer link for sharing */

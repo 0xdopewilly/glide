@@ -1,6 +1,7 @@
 "use client";
 
 import { TransactionDetailSheet } from "@/components/transaction-detail-sheet";
+import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction } from "@/lib/types";
 import { Share2 } from "lucide-react";
 import { useState } from "react";
@@ -65,8 +66,9 @@ function TransactionRow({
   tx: GlideTransaction;
   onSelect: () => void;
 }) {
-  const { title, amount, variant, meta, status, explorerUrl, txHash } = tx;
+  const { title, amount, variant, meta, status, explorerUrl, txHash, note } = tx;
   const isCredit = variant === "credit";
+  const { blurAmounts } = usePrivacy();
   const [shareLabel, setShareLabel] = useState("Share");
 
   const shareText = [title, amount, txHash ? `Tx: ${txHash}` : null, explorerUrl ?? null]
@@ -122,15 +124,20 @@ function TransactionRow({
           {meta}
           {status ? ` · ${status}` : ""}
         </p>
+        {note ? (
+          <p className="mt-0.5 truncate text-xs text-neutral-400 dark:text-white/35">
+            {note}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex shrink-0 flex-col items-end gap-2">
         <p
           className={`text-[15px] font-semibold tracking-tight ${
             isCredit ? "text-emerald-600 dark:text-emerald-400" : "text-neutral-950 dark:text-white"
-          }`}
+          } ${blurAmounts ? "glide-amount-blur" : ""}`}
         >
-          {amount}
+          {blurAmounts ? "•••" : amount}
         </p>
         {canShare ? (
           <button

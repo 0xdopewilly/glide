@@ -1,17 +1,27 @@
 "use client";
 
+import { ActivityFilters } from "@/components/activity-filters";
 import { PageHeader } from "@/components/page-header";
 import { TransactionList } from "@/components/transaction-list";
 import { useWallet } from "@/context/wallet-context";
+import type { TransactionKind } from "@/lib/types";
 import { RefreshCw } from "lucide-react";
+import { useMemo, useState } from "react";
 
 export default function ActivityPage() {
   const { transactions, transactionsLoading, refresh, refreshing } = useWallet();
+  const [filter, setFilter] = useState<"all" | TransactionKind>("all");
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return transactions;
+    return transactions.filter((t) => t.kind === filter);
+  }, [transactions, filter]);
 
   return (
     <>
       <PageHeader title="Activity" />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pb-6">
+        <ActivityFilters value={filter} onChange={setFilter} />
         <div className="mb-4 flex justify-end">
           <button
             type="button"
@@ -25,7 +35,7 @@ export default function ActivityPage() {
             Refresh
           </button>
         </div>
-        <TransactionList transactions={transactions} loading={transactionsLoading} />
+        <TransactionList transactions={filtered} loading={transactionsLoading} />
       </div>
     </>
   );

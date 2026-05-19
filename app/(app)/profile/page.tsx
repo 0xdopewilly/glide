@@ -8,7 +8,10 @@ import { PageHeader } from "@/components/page-header";
 import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
 import { PushNotificationsToggle } from "@/components/push-notifications";
 import { shortenAddress } from "@/lib/format";
+import { PrivacySettings } from "@/components/privacy-settings";
+import { ScheduledTransfersCard } from "@/components/scheduled-transfers-card";
 import { useAuth } from "@/context/auth-context";
+import { usePrivacy } from "@/context/privacy-context";
 import { useWallet } from "@/context/wallet-context";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -27,6 +30,7 @@ export default function ProfilePage() {
     clearError,
   } = useWallet();
   const { signOut } = useAuth();
+  const { hideBalance } = usePrivacy();
 
   const [name, setName] = useState(profile.displayName);
   const [email, setEmail] = useState(profile.email);
@@ -90,7 +94,7 @@ export default function ProfilePage() {
             </p>
           ) : null}
           <p className="mt-1 text-sm font-medium glide-muted">
-            Balance ${balance.toFixed(2)}
+            Balance {hideBalance ? "••••" : `$${balance.toFixed(2)}`}
           </p>
         </div>
 
@@ -125,6 +129,8 @@ export default function ProfilePage() {
         </div>
 
         <section className="mt-6 space-y-3">
+          <PrivacySettings />
+          <ScheduledTransfersCard />
           <PushNotificationsToggle />
           <GlideButton
             type="button"

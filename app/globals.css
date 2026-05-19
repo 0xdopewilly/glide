@@ -143,6 +143,31 @@ body {
   }
 }
 
+/* QR scan — square viewfinder */
+.glide-qr-frame {
+  border: 3px solid color-mix(in srgb, var(--glide-accent) 85%, white);
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 9999px rgba(0, 0, 0, 0.45),
+    0 0 24px color-mix(in srgb, var(--glide-accent) 40%, transparent);
+  animation: glide-qr-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glide-qr-pulse {
+  0%,
+  100% {
+    opacity: 0.92;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.glide-amount-blur {
+  filter: blur(7px);
+  user-select: none;
+}
+
 /* Numeric keypad — GPU transform only, no layout thrash */
 .glide-key {
   -webkit-tap-highlight-color: transparent;

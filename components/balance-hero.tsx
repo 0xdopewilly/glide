@@ -1,6 +1,7 @@
 "use client";
 
 import { GlidePillButton } from "@/components/glide-pill-button";
+import { usePrivacy } from "@/context/privacy-context";
 import { formatUsd } from "@/lib/format";
 import { Plus, RefreshCw } from "lucide-react";
 
@@ -20,6 +21,7 @@ export function BalanceHero({
   refreshing?: boolean;
 }) {
   const displayTotal = totalUsd ?? balance;
+  const { hideBalance } = usePrivacy();
 
   return (
     <section className="flex flex-col items-start px-0 pb-2 pt-4 text-left">
@@ -43,9 +45,10 @@ export function BalanceHero({
       <h1
         className={`mt-4 text-[3.25rem] font-bold leading-[1.05] tracking-[-0.035em] text-neutral-950 dark:text-white sm:text-[3.5rem] ${
           loading ? "opacity-50" : ""
-        }`}
+        } ${hideBalance ? "select-none blur-md" : ""}`}
+        aria-hidden={hideBalance}
       >
-        ${formatUsd(displayTotal)}
+        {hideBalance ? "••••" : `$${formatUsd(displayTotal)}`}
       </h1>
       <p className="mt-2 text-[15px] leading-relaxed text-neutral-500 dark:text-white/45">
         Your balance on Glide

@@ -5,7 +5,7 @@ import { GlideGradient } from "@/components/glide-gradient";
 import { PageMotion } from "@/components/page-motion";
 import { usePathname } from "next/navigation";
 
-const FULL_BLEED_ROUTES = ["/send", "/receive", "/swap", "/bridge"];
+const FULL_BLEED_ROUTES = ["/send", "/receive", "/swap", "/bridge", "/request", "/pay"];
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
 

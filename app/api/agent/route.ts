@@ -52,6 +52,19 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
       intent: { ...intent, amount: amount.toFixed(2) },
     };
   }
+  if (intent.action === "split") {
+    const total = parseMoneyAmount(intent.total);
+    if (total === null || total <= 0) {
+      return { reply: "How much should I split?" };
+    }
+    if (intent.recipients.length < 2) {
+      return { reply: "Who should I split with? Tag at least two @usernames." };
+    }
+    return {
+      reply: `Splitting $${total.toFixed(2)} between ${intent.recipients.length} people…`,
+      intent: { ...intent, total: total.toFixed(2) },
+    };
+  }
   return { reply: "How can I help?" };
 }
 

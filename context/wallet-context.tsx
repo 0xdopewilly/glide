@@ -50,7 +50,11 @@ type WalletContextValue = {
   ensureWallet: () => Promise<GlideWallet | null>;
   createNewWallet: () => Promise<GlideWallet | null>;
   fundWallet: () => Promise<boolean>;
-  sendMoney: (destinationAddress: string, amount: string) => Promise<boolean>;
+  sendMoney: (
+    destinationAddress: string,
+    amount: string,
+    options?: { note?: string; requestCode?: string },
+  ) => Promise<boolean>;
   swapMoney: (amount: string) => Promise<boolean>;
   bridgeMoney: (amount: string, network: string) => Promise<boolean>;
   clearError: () => void;
@@ -268,7 +272,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [wallet, refresh]);
 
   const sendMoney = useCallback(
-    async (destinationAddress: string, amount: string) => {
+    async (
+      destinationAddress: string,
+      amount: string,
+      options?: { note?: string; requestCode?: string },
+    ) => {
       if (!wallet) return false;
       setError(null);
       try {
@@ -279,6 +287,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             walletId: wallet.id,
             destinationAddress,
             amount,
+            note: options?.note,
+            requestCode: options?.requestCode,
           }),
         });
         const data = (await res.json()) as {

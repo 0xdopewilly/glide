@@ -5,8 +5,10 @@ import {
   extractRecipientNameFromHistory,
   extractUsernameFromHistory,
   extractWalletFromHistory,
+  isNonSendMoneyMessage,
   isSwapOrBridgeMessage,
   parseExplicitIntentFromMessage,
+  parseSplitFromMessage,
 } from "@/lib/agent-context";
 import { findContactByName } from "@/lib/contacts-db";
 import { findUserByUsername } from "@/lib/usernames";
@@ -17,6 +19,7 @@ export type GlideIntent =
   | { action: "send"; amount: string; to: string; recipientName?: string }
   | { action: "swap"; amount: string }
   | { action: "bridge"; amount: string; network: BridgeNetwork }
+  | { action: "split"; total: string; recipients: string[] }
   | { action: "navigate"; path: string };
 
 export type { BridgeNetwork } from "@/lib/agent-context";
@@ -41,7 +44,8 @@ Respond with JSON only:
 - {"action":"send","amount":"1.00","to":"0x..."} OR {"action":"send","amount":"1.00","to":"khadee","recipientName":"Khadee"}
 - {"action":"swap","amount":"5.00"}
 - {"action":"bridge","amount":"10.00","network":"base"|"ethereum"|"polygon"|"arbitrum"}
-- {"action":"navigate","path":"/scan"|"/receive"|"/activity"|"/profile"|"/contacts"}`;
+- {"action":"split","total":"60.00","recipients":["khadee","tom"]} — equal shares, usernames only
+- {"action":"navigate","path":"/scan"|"/receive"|"/activity"|"/profile"|"/contacts"|"/request"}`;
 
 const BRIDGE_NETWORKS = new Set(["ethereum", "base", "polygon", "arbitrum"]);
 
@@ -81,6 +85,19 @@ export function parseAgentJson(raw: string): GlideIntent | null {
         network: data.network as BridgeNetwork,
       };
     }
+    if (
+      action === "split" &&
+      typeof data.total === "string" &&
+      Array.isArray(data.recipients)
+    ) {
+      const recipients = data.recipients
+        .filter((r): r is string => typeof r === "string")
+        .map((r) => r.trim().replace(/^@/, ""))
+        .filter(Boolean);
+      if (recipients.length >= 2) {
+        return { action: "split", total: data.total.trim(), recipients };
+      }
+    }
     if (action === "navigate" && typeof data.path === "string") {
       return { action: "navigate", path: data.path.trim() };
     }
@@ -105,11 +122,14 @@ export async function reconcileIntentWithHistory(
   const explicit = parseExplicitIntentFromMessage(latestUserMessage);
   if (explicit) return explicit;
 
+  const split = parseSplitFromMessage(latestUserMessage);
+  if (split) return { action: "split", ...split };
+
   if (intent?.action === "swap" || intent?.action === "bridge") {
     return intent;
   }
 
-  if (isSwapOrBridgeMessage(latestUserMessage)) {
+  if (isNonSendMoneyMessage(latestUserMessage)) {
     return (
       intent ?? {
         action: "reply",
@@ -119,7 +139,7 @@ export async function reconcileIntentWithHistory(
   }
 
   const ready = canExecuteSendFromHistory(fullHistory);
-  if (ready && !isSwapOrBridgeMessage(latestUserMessage)) {
+  if (ready && !isNonSendMoneyMessage(latestUserMessage)) {
     return {
       action: "send",
       amount: ready.amount,
@@ -128,7 +148,7 @@ export async function reconcileIntentWithHistory(
     };
   }
 
-  if (userId && !isSwapOrBridgeMessage(latestUserMessage)) {
+  if (userId && !isNonSendMoneyMessage(latestUserMessage)) {
     const amount = extractAmountFromHistory(fullHistory);
     const handle = extractUsernameFromHistory(fullHistory);
     if (handle && amount && !extractWalletFromHistory(fullHistory)) {

@@ -25,6 +25,42 @@ model User {
   transactions         Transaction[]
   contacts             Contact[]
   pushSubscriptions    PushSubscription[]
+  paymentRequests      PaymentRequest[]
+  scheduledTransfers   ScheduledTransfer[]
+}
+
+/// Shareable payment request (link + QR).
+model PaymentRequest {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount       String
+  note         String?
+  code         String   @unique
+  status       String   @default("pending")
+  paidByUserId String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+/// Recurring / scheduled send (processed by cron).
+model ScheduledTransfer {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination     String
+  recipientLabel  String?
+  amount          String
+  note            String?
+  frequency       String
+  nextRunAt       DateTime
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, active, nextRunAt])
 }
 
 model PushSubscription {

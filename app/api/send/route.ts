@@ -25,11 +25,15 @@ export async function POST(request: NextRequest) {
     walletId?: string;
     destinationAddress?: string;
     amount?: string;
+    note?: string;
+    requestCode?: string;
   };
 
   const walletId = body.walletId?.trim();
   const recipientRaw = body.destinationAddress?.trim();
   const amount = body.amount?.trim();
+  const note = body.note?.trim().slice(0, 140) || undefined;
+  const requestCode = body.requestCode?.trim().toLowerCase();
 
   if (!walletId || !recipientRaw || !amount) {
     return NextResponse.json(
@@ -108,7 +112,13 @@ export async function POST(request: NextRequest) {
       txHash,
       explorerUrl: txHash ? arcExplorerUrl(txHash) : undefined,
       chain: GLIDE_BLOCKCHAIN,
+      metadata: note ? { note } : undefined,
     });
+
+    if (requestCode) {
+      const { markPaymentRequestPaid } = await import("@/lib/payment-requests");
+      await markPaymentRequestPaid(requestCode, session.userId);
+    }
 
     const balance = await fetchWalletBalance(walletId);
 

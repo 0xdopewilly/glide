@@ -73,6 +73,12 @@ export async function recordTransaction(input: RecordTransactionInput) {
   return { row, isNew: true };
 }
 
+function metadataNote(metadata: unknown): string | undefined {
+  if (!metadata || typeof metadata !== "object") return undefined;
+  const note = (metadata as { note?: unknown }).note;
+  return typeof note === "string" && note.trim() ? note.trim() : undefined;
+}
+
 function rowToGlide(row: {
   id: string;
   kind: string;
@@ -82,6 +88,7 @@ function rowToGlide(row: {
   status: string | null;
   txHash: string | null;
   explorerUrl: string | null;
+  metadata: unknown;
   createdAt: Date;
 }): GlideTransaction {
   return {
@@ -92,6 +99,7 @@ function rowToGlide(row: {
     meta: formatRelativeDate(row.createdAt.toISOString()),
     kind: row.kind as TransactionKind,
     status: row.status ?? undefined,
+    note: metadataNote(row.metadata),
     txHash: row.txHash ?? undefined,
     explorerUrl: row.explorerUrl ?? undefined,
   };

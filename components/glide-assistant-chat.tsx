@@ -187,6 +187,40 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             text: "Bridge didn't complete. Try again in a moment.",
           });
         }
+        return;
+      }
+      if (intent.action === "split") {
+        setProcessingAction("send");
+        const total = parseFloat(intent.total);
+        const each = (total / intent.recipients.length).toFixed(2);
+        let sent = 0;
+        for (const to of intent.recipients) {
+          const ok = await sendMoney(to, each);
+          if (ok) sent++;
+        }
+        if (sent === intent.recipients.length) {
+          pushMessage({
+            id: `split-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: `Split $${intent.total} — sent $${each} to ${intent.recipients.map((r) => `@${r}`).join(", ")}.`,
+          });
+          await refresh();
+        } else if (sent > 0) {
+          pushMessage({
+            id: `split-partial-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: `Sent ${sent} of ${intent.recipients.length} payments. Check balance and try the rest on Send.`,
+          });
+        } else {
+          pushMessage({
+            id: `split-err-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: "Split didn't go through. Check your balance.",
+          });
+        }
       }
       } finally {
         setProcessingAction(null);

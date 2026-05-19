@@ -2,7 +2,15 @@
 const TAB_ORDER = ["/", "/scan", "/ask", "/activity", "/profile"] as const;
 
 /** Full-screen flows — treated as “forward” from home. */
-const FLOW_ROUTES = ["/send", "/receive", "/swap", "/bridge", "/contacts"] as const;
+const FLOW_ROUTES = [
+  "/send",
+  "/receive",
+  "/swap",
+  "/bridge",
+  "/request",
+  "/pay",
+  "/contacts",
+] as const;
 
 function tabIndex(path: string): number {
   const base = path.split("?")[0] ?? path;

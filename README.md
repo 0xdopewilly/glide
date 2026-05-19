@@ -25,17 +25,17 @@ Glide is a mobile-first crypto wallet: USDC on [Arc testnet](https://testnet.arc
 
 ---
 
-## Building next
+## Recently shipped
 
-| Feature | Plan |
-|--------|------|
-| **Request money** | “Request $20 from @khadee” + shareable link / QR |
-| **Payment notes** | Memos on send (“for pizza”) + show in activity |
-| **Activity feed** | Full history with filters (base `/activity` exists) |
-| **QR pay polish** | Square scan frame + more reliable decode (current box is rectangular) |
-| **Split a bill** | Agent or UI: “split $60 with 3 people” on Ask tab |
-| **Recurring sends** | Rent, allowances — scheduled transfers |
-| **Privacy controls** | Hide balance, blur amounts — Cash App–style |
+| Feature | How to use |
+|--------|------------|
+| **Request money** | `/request` — amount + note → share link & square QR |
+| **Payment notes** | Optional note on Send review → shows in Activity |
+| **Activity filters** | `/activity` — All / Sent / Received / Swap / Bridge |
+| **QR pay** | `/scan` — square viewfinder; supports pay links & requests |
+| **Split a bill** | Ask: `split $60 with @a @b @c` (equal shares) |
+| **Scheduled sends** | Profile → weekly/monthly (needs `CRON_SECRET` + Vercel cron) |
+| **Privacy** | Profile → hide balance / blur activity amounts |
 
 ---
 

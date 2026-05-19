@@ -37,6 +37,10 @@ export function isSwapOrBridgeMessage(text: string): boolean {
   return /\b(swap|convert|bridge)\b/i.test(text);
 }
 
+export function isNonSendMoneyMessage(text: string): boolean {
+  return isSwapOrBridgeMessage(text) || /\b(split|request)\b/i.test(text);
+}
+
 export function extractAmountFromText(text: string): string | null {
   const dollar = text.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
   if (dollar) {
@@ -89,6 +93,48 @@ export function parseExplicitIntentFromMessage(
   }
 
   return null;
+}
+
+/** split $60 with @a @b @c or split $60 between khadee, tom */
+export function parseSplitFromMessage(text: string): {
+  total: string;
+  recipients: string[];
+} | null {
+  const trimmed = text.trim();
+  if (!/\bsplit\b/i.test(trimmed)) return null;
+
+  const total = extractAmountFromText(trimmed);
+  if (!total) return null;
+
+  const handles = new Set<string>();
+  const atMentions = trimmed.matchAll(/@([a-z][a-z0-9_]{2,19})/gi);
+  for (const m of atMentions) {
+    const u = normalizeUsername(m[1]);
+    if (isValidUsername(u) && !NOT_A_USERNAME.has(u)) handles.add(u);
+  }
+
+  if (handles.size === 0) {
+    const between = trimmed.match(
+      /\b(?:between|with)\s+([a-z0-9@,\s]+)/i,
+    )?.[1];
+    if (between) {
+      for (const part of between.split(/[,]+|\s+and\s+/i)) {
+        const name = part.trim().replace(/^@/, "");
+        if (name.length >= 2 && isValidUsername(normalizeUsername(name))) {
+          handles.add(normalizeUsername(name));
+        }
+      }
+    }
+  }
+
+  const peopleMatch = trimmed.match(/\b(\d+)\s+people?\b/i);
+  if (handles.size === 0 && peopleMatch) {
+    return null;
+  }
+
+  if (handles.size < 2) return null;
+
+  return { total, recipients: [...handles] };
 }
 
 /** Last wallet address the user mentioned in the thread. */

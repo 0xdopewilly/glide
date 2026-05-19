@@ -49,6 +49,13 @@ export default function SendPage() {
   useEffect(() => {
     const to = searchParams.get("to")?.trim();
     if (to) setRecipient(to);
+    const amt = searchParams.get("amount")?.trim();
+    if (amt) {
+      const n = parseFloat(amt);
+      if (!Number.isNaN(n) && n > 0) setAmount(n.toFixed(2).replace(/\.?0+$/, "") || "0");
+    }
+    const n = searchParams.get("note")?.trim();
+    if (n) setNote(n);
   }, [searchParams]);
 
   useEffect(() => {
@@ -147,7 +154,10 @@ export default function SendPage() {
     setSubmitting(true);
     setLocalError(null);
     clearError();
-    const ok = await sendMoney(recipient.trim(), amount);
+    const ok = await sendMoney(recipient.trim(), amount, {
+      note: note.trim() || undefined,
+      requestCode: searchParams.get("request")?.trim() || undefined,
+    });
     setSubmitting(false);
     if (ok) setStep("success");
     else setLocalError("Payment could not be completed. Try again.");
@@ -208,6 +218,9 @@ export default function SendPage() {
             ${parsed.toFixed(2)}
           </p>
           <p className="mt-3 text-lg font-semibold">{recipientLabel}</p>
+          {note.trim() ? (
+            <p className="mt-2 text-sm glide-muted">&ldquo;{note.trim()}&rdquo;</p>
+          ) : null}
           <GlideButton
             onClick={() => router.push("/")}
             className="mt-auto mb-8 max-w-sm"
