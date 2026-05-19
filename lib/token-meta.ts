@@ -3,8 +3,8 @@ export const TOKEN_LOGOS: Record<string, string> = {
   USDC: "/tokens/usdc.png",
   USDCE: "/tokens/usdc.png",
   "USDC.E": "/tokens/usdc.png",
-  EURC: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1aBaEA1f781339c5bbD94289B7eB04a535A97a49/logo.png",
-  "EURC.E": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1aBaEA1f781339c5bbD94289B7eB04a535A97a49/logo.png",
+  EURC: "/tokens/eurc.png",
+  "EURC.E": "/tokens/eurc.png",
 };
 
 export function getTokenLogo(symbol: string): string | undefined {
