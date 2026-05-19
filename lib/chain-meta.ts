@@ -48,6 +48,7 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
     shortLabel: "POL",
     badgeClass: "from-[#8247E5] to-[#6C3BB8]",
     color: "#8247E5",
+    logo: "/chains/polygon.png",
   },
   "arbitrum-sepolia": {
     id: "arbitrum-sepolia",
