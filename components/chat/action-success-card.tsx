@@ -73,7 +73,7 @@ export function ActionSuccessCard({
       <div
         className={`glide-chat-card flex aspect-square w-[min(100%,300px)] max-w-[300px] shrink-0 flex-col items-center justify-center rounded-[28px] rounded-br-md bg-gradient-to-br ${gradient} p-6 text-center text-white`}
         role="status"
-        aria-label={`${label}${amount ? `: $${amount}` : ""}`}
+        aria-label={`${label}${amount ? `: ${formatStableAmount(amount, action === "swap" ? "USDC" : token)}` : ""}`}
       >
         <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/25">
           <Icon className="h-7 w-7" strokeWidth={2.25} />
@@ -83,7 +83,10 @@ export function ActionSuccessCard({
         </p>
         {amount ? (
           <p className="mt-2 text-4xl font-bold tracking-tight tabular-nums">
-            {formatStableAmount(amount, token)}
+            {formatStableAmount(
+              amount,
+              action === "swap" ? "USDC" : token,
+            )}
           </p>
         ) : null}
         {detail ? (

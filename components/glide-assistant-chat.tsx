@@ -228,6 +228,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
       }
       if (intent.action === "swap") {
         const ok = await swapMoney(intent.amount);
+        setProcessingAction(null);
         if (ok) {
           pushMessage({
             id: `swap-${Date.now()}`,
@@ -237,7 +238,6 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             amount: intent.amount,
             targetToken: "EURC",
           });
-          void refresh();
         } else {
           pushMessage({
             id: `swap-err-${Date.now()}`,
@@ -250,6 +250,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
       }
       if (intent.action === "bridge") {
         const ok = await bridgeMoney(intent.amount, intent.network);
+        setProcessingAction(null);
         if (ok) {
           pushMessage({
             id: `bridge-${Date.now()}`,
@@ -259,7 +260,6 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             amount: intent.amount,
             network: intent.network,
           });
-          void refresh();
         } else {
           pushMessage({
             id: `bridge-err-${Date.now()}`,
@@ -360,6 +360,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         const data = (await res.json()) as {
           reply?: string;
           intent?: GlideIntent;
+          action?: string;
           error?: string;
         };
 
@@ -373,8 +374,14 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           return;
         }
 
-        if (data.intent && data.intent.action !== "reply") {
-          await runIntent(data.intent);
+        const intent =
+          data.intent ??
+          (typeof data.action === "string" && data.action !== "reply"
+            ? (data as GlideIntent)
+            : null);
+
+        if (intent && intent.action !== "reply") {
+          await runIntent(intent);
         } else if (data.reply) {
           pushMessage({
             id: `asst-${Date.now()}`,

@@ -337,8 +337,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         };
         if (!res.ok) throw new Error(data.error ?? "Swap failed");
         if (typeof data.balance === "number") setBalance(data.balance);
-        await refresh();
         playSuccessChime();
+        void refresh();
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Swap failed");
@@ -364,8 +364,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         };
         if (!res.ok) throw new Error(data.error ?? "Bridge failed");
         if (typeof data.balance === "number") setBalance(data.balance);
-        await refresh();
         playSuccessChime();
+        void refresh();
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Bridge failed");
