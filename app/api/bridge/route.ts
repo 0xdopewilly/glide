@@ -5,6 +5,7 @@ import {
   type BridgeNetworkKey,
 } from "@/lib/app-kit";
 import { safeApiError } from "@/lib/circle";
+import { notifyBridgeComplete } from "@/lib/push";
 import { recordTransaction } from "@/lib/transactions-db";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
@@ -92,6 +93,10 @@ export async function POST(request: NextRequest) {
     });
 
     const balance = await fetchWalletBalance(walletId);
+
+    void notifyBridgeComplete(session.userId, parsed.toFixed(2), label).catch(
+      (err) => console.error("[Glide] bridge push:", err),
+    );
 
     return NextResponse.json({
       ok: true,

@@ -10,6 +10,7 @@ type CircleTx = {
   createDate?: string;
   amounts?: string[];
   destinationAddress?: string;
+  sourceAddress?: string;
   transactionType?: string;
   txHash?: string;
   blockchain?: string;
@@ -80,6 +81,10 @@ export async function syncCircleTransactionsToDb(
       txHash: mapped.txHash,
       explorerUrl: mapped.explorerUrl,
       chain: tx.blockchain,
+      metadata:
+        mapped.kind === "receive" && tx.sourceAddress
+          ? { fromAddress: tx.sourceAddress }
+          : undefined,
     });
 
     if (
@@ -89,7 +94,12 @@ export async function syncCircleTransactionsToDb(
       mapped.variant === "credit"
     ) {
       try {
-        await notifyIncomingPayment(userId, mapped.amount, row.id);
+        await notifyIncomingPayment(
+          userId,
+          mapped.amount,
+          row.id,
+          tx.sourceAddress,
+        );
       } catch (err) {
         console.error("[Glide] push notify:", err);
       }

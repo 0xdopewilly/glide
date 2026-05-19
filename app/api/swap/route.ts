@@ -1,6 +1,7 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { executeArcSwap } from "@/lib/app-kit";
 import { safeApiError } from "@/lib/circle";
+import { notifySwapComplete } from "@/lib/push";
 import { recordTransaction } from "@/lib/transactions-db";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
@@ -70,6 +71,10 @@ export async function POST(request: NextRequest) {
     });
 
     const balance = await fetchWalletBalance(walletId);
+
+    void notifySwapComplete(session.userId, parsed.toFixed(2)).catch((err) =>
+      console.error("[Glide] swap push:", err),
+    );
 
     return NextResponse.json({
       ok: true,

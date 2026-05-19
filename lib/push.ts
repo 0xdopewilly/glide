@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { formatAmountForPush, formatUserForPush } from "@/lib/push-display";
 import webpush from "web-push";
 
 export function configureWebPush() {
@@ -46,15 +47,57 @@ export async function notifyIncomingPayment(
   userId: string,
   amountLabel: string,
   transactionId: string,
+  fromWalletAddress?: string | null,
 ) {
+  const amount = formatAmountForPush(amountLabel);
+  const from = await formatUserForPush(fromWalletAddress);
+
   await sendPushToUser(userId, {
     title: "Money received",
-    body: `You received ${amountLabel} on Glide`,
+    body: `You received ${amount} from ${from} on Glide.`,
     url: "/activity",
   });
 
   await prisma.transaction.update({
     where: { id: transactionId },
     data: { pushNotified: true },
+  });
+}
+
+export async function notifyPaymentSent(
+  userId: string,
+  amount: string,
+  toLabel: string,
+) {
+  const parsed = formatAmountForPush(`$${amount}`);
+
+  await sendPushToUser(userId, {
+    title: "Payment sent",
+    body: `You sent ${parsed} to ${toLabel} on Glide.`,
+    url: "/activity",
+  });
+}
+
+export async function notifySwapComplete(userId: string, amount: string) {
+  const parsed = formatAmountForPush(`$${amount}`);
+
+  await sendPushToUser(userId, {
+    title: "Swap complete",
+    body: `You swapped ${parsed} to EURC on Glide.`,
+    url: "/activity",
+  });
+}
+
+export async function notifyBridgeComplete(
+  userId: string,
+  amount: string,
+  networkLabel: string,
+) {
+  const parsed = formatAmountForPush(`$${amount}`);
+
+  await sendPushToUser(userId, {
+    title: "Bridge complete",
+    body: `You bridged ${parsed} to ${networkLabel} on Glide.`,
+    url: "/activity",
   });
 }
