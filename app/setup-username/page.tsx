@@ -125,7 +125,7 @@ export default function SetupUsernamePage() {
         onSubmit={(e) => void handleSubmit(e)}
         className="flex flex-1 flex-col px-7 pb-10 pt-14"
       >
-        <h1 className="text-2xl font-bold tracking-tight">Pick your username</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Pick your Glide Tag</h1>
         <p className="mt-2 text-sm leading-relaxed glide-muted">
           Friends can send you USDC with{" "}
           <span className="font-semibold text-violet-500">@you</span> — no wallet
@@ -133,7 +133,7 @@ export default function SetupUsernamePage() {
         </p>
 
         <div className="mt-8">
-          <FormField id="username" label="Glide username">
+          <FormField id="username" label="Glide Tag">
             <div className="relative">
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base font-medium glide-muted">
                 @
@@ -184,7 +184,7 @@ export default function SetupUsernamePage() {
             {submitting ? "Saving…" : "Continue"}
           </GlideButton>
           <p className="mt-3 text-center text-[11px] glide-muted">
-            Usernames are permanent and unique on Glide.
+            Glide Tags are permanent and unique on Glide.
           </p>
         </div>
       </form>

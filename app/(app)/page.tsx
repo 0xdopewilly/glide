@@ -44,7 +44,7 @@ export default function HomePage() {
           totalUsd={totalUsd}
           loading={loading}
           refreshing={refreshing}
-          onAddCash={() => router.push("/receive")}
+          onRequestCash={() => router.push("/request")}
           onRefresh={() => void refresh()}
         />
         <ActionGrid />

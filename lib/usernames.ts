@@ -60,6 +60,32 @@ export async function findUserByWalletAddress(
   };
 }
 
+export async function findUserByEmail(
+  email: string,
+): Promise<GlideUserByUsername | null> {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized.includes("@")) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalized },
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      circleWalletAddress: true,
+    },
+  });
+
+  if (!user?.circleWalletAddress) return null;
+
+  return {
+    id: user.id,
+    username: user.username ?? "",
+    displayName: user.displayName,
+    circleWalletAddress: user.circleWalletAddress,
+  };
+}
+
 export async function isUsernameAvailable(raw: string): Promise<boolean> {
   const username = normalizeUsername(raw);
   if (!isValidUsername(username)) return false;

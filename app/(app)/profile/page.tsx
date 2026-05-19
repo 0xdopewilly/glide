@@ -90,7 +90,7 @@ export default function ProfilePage() {
           </p>
           {profile.username ? (
             <p className="mt-0.5 text-sm font-medium text-violet-500 dark:text-violet-300">
-              @{profile.username}
+              Glide Tag: {profile.username}
             </p>
           ) : null}
           <p className="mt-1 text-sm font-medium glide-muted">

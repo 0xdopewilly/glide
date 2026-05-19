@@ -22,7 +22,7 @@ export default function ReceivePage() {
   };
 
   return (
-    <FlowPage title="Add cash" backHref="/">
+    <FlowPage title="Receive" backHref="/">
       <div className="flex flex-col px-5 pb-8">
         <div className="mt-6 flex flex-col items-center text-center">
           <UserAvatar size="lg" />

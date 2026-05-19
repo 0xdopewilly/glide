@@ -3,19 +3,19 @@
 import { GlidePillButton } from "@/components/glide-pill-button";
 import { usePrivacy } from "@/context/privacy-context";
 import { formatUsd } from "@/lib/format";
-import { Plus, RefreshCw } from "lucide-react";
+import { ArrowDownLeft, RefreshCw } from "lucide-react";
 
 export function BalanceHero({
   balance,
   totalUsd,
-  onAddCash,
+  onRequestCash,
   onRefresh,
   loading,
   refreshing,
 }: {
   balance: number;
   totalUsd?: number;
-  onAddCash: () => void;
+  onRequestCash: () => void;
   onRefresh: () => void;
   loading?: boolean;
   refreshing?: boolean;
@@ -55,12 +55,12 @@ export function BalanceHero({
       </p>
       <GlidePillButton
         type="button"
-        onClick={onAddCash}
+        onClick={onRequestCash}
         disabled={loading}
         className="mt-6"
-        icon={<Plus className="h-4 w-4" strokeWidth={2.5} />}
+        icon={<ArrowDownLeft className="h-4 w-4" strokeWidth={2.5} />}
       >
-        Add Cash
+        Request Cash
       </GlidePillButton>
     </section>
   );

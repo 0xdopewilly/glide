@@ -171,7 +171,7 @@ export default function SendPage() {
     if (resolveState === "fail" && resolveMessage) return resolveMessage;
     if (overBalance) return `You only have $${balance.toFixed(2)} USDC`;
     if (recipientOk) return null;
-    return "Use a wallet address (0x…), @username, or contact name";
+    return "Use a wallet address (0x…), Glide Tag, or contact name";
   }, [
     recipient,
     resolveState,
@@ -312,7 +312,7 @@ export default function SendPage() {
                 onChange={(e) => setRecipient(e.target.value)}
                 onFocus={() => setRecipientFocused(true)}
                 onBlur={() => setRecipientFocused(false)}
-                placeholder="Wallet address or @username"
+                placeholder="Wallet address or Glide Tag"
                 autoComplete="off"
                 autoCapitalize="off"
                 autoCorrect="off"
@@ -342,7 +342,7 @@ export default function SendPage() {
                 {kind === "wallet"
                   ? "Wallet address"
                   : kind === "username"
-                    ? "Glide username"
+                    ? "Glide Tag"
                     : "Contact name"}
               </div>
             ) : null}

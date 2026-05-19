@@ -629,17 +629,20 @@ body {
     filter: brightness(0.98);
   }
 
+  :root:not(.dark) .glide-btn-notch__accent {
+    background: var(--glide-accent);
+  }
+
   :root:not(.dark) .glide-btn-notch:not(:disabled) .glide-btn-notch__inner {
-    box-shadow:
-      0 10px 32px rgba(59, 127, 212, 0.2),
-      0 2px 8px rgba(15, 23, 42, 0.06);
+    background: #0a0a0a;
+    color: #ffffff;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
   }
 
   :root:not(.dark) .glide-btn-notch:not(:disabled):hover .glide-btn-notch__inner {
-    box-shadow:
-      0 14px 40px rgba(59, 127, 212, 0.28),
-      0 2px 8px rgba(15, 23, 42, 0.08);
-    filter: brightness(1);
+    background: #171717;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+    filter: none;
   }
 
   .glide-btn-simple {
@@ -668,6 +671,17 @@ body {
 
   .glide-btn-simple:not(:disabled):active {
     transform: scale(0.985);
+  }
+
+  :root:not(.dark) .glide-btn-simple {
+    background: #0a0a0a;
+    color: #ffffff;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+  }
+
+  :root:not(.dark) .glide-btn-simple:not(:disabled):hover {
+    background: #171717;
+    filter: none;
   }
 
   .dark .glide-btn-simple {

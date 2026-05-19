@@ -1,8 +1,8 @@
 "use client";
 
 import {
+  ArrowDownLeft,
   ArrowLeftRight,
-  Download,
   Link2,
   Send,
 } from "lucide-react";
@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 
 const ACTIONS = [
   { href: "/send", label: "Send", icon: Send },
-  { href: "/receive", label: "Receive", icon: Download },
+  { href: "/request", label: "Request", icon: ArrowDownLeft },
   { href: "/swap", label: "Swap", icon: ArrowLeftRight },
   { href: "/bridge", label: "Bridge", icon: Link2 },
 ] as const;

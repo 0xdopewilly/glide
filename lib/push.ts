@@ -94,6 +94,23 @@ export async function notifySwapComplete(userId: string, amount: string) {
   });
 }
 
+/** Notify payer that someone requested money from them. */
+export async function notifyPaymentRequest(
+  targetUserId: string,
+  amount: string,
+  fromLabel: string,
+  payUrl: string,
+) {
+  const parsed = formatAmountForPush(`$${amount}`);
+  const from = formatUsernameForPush(fromLabel);
+
+  await sendPushToUser(targetUserId, {
+    title: "Payment request",
+    body: `${from} requested ${parsed} on Glide.`,
+    url: payUrl.startsWith("/") ? payUrl : `/pay/${payUrl}`,
+  });
+}
+
 export async function notifyBridgeComplete(
   userId: string,
   amount: string,

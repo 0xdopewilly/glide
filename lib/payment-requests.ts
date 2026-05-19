@@ -17,6 +17,9 @@ export async function createPaymentRequest(input: {
   userId: string;
   amount: string;
   note?: string;
+  targetUserId?: string;
+  requestFromEmail?: string;
+  requestFromGlideTag?: string;
 }) {
   for (let i = 0; i < 5; i++) {
     const code = newCode();
@@ -27,6 +30,9 @@ export async function createPaymentRequest(input: {
           amount: input.amount,
           note: input.note?.trim() || null,
           code,
+          targetUserId: input.targetUserId ?? null,
+          requestFromEmail: input.requestFromEmail?.trim().toLowerCase() || null,
+          requestFromGlideTag: input.requestFromGlideTag?.trim().toLowerCase() || null,
         },
         include: {
           user: { select: { username: true, displayName: true } },

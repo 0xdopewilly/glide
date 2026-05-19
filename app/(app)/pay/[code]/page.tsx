@@ -41,7 +41,7 @@ export default function PayRequestPage({
 
   const label =
     info?.requester.username != null
-      ? `@${info.requester.username}`
+      ? info.requester.username
       : info?.requester.displayName ?? "Someone";
 
   const goPay = () => {
@@ -65,7 +65,14 @@ export default function PayRequestPage({
           <p className="text-sm glide-muted">This request was already paid.</p>
         ) : (
           <>
-            <p className="text-sm font-medium glide-muted">Pay {label}</p>
+            <p className="text-sm font-medium glide-muted">
+              Pay {label}
+              {info.requester.username ? (
+                <span className="block text-xs font-normal glide-muted">
+                  Glide Tag
+                </span>
+              ) : null}
+            </p>
             <p className="mt-4 text-5xl font-bold tabular-nums">${info.amount}</p>
             {info.note ? (
               <p className="mt-2 text-base glide-muted">&ldquo;{info.note}&rdquo;</p>

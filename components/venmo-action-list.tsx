@@ -72,7 +72,7 @@ export function VenmoActionList() {
           <Plus className="h-5 w-5" strokeWidth={2.5} />
         </span>
         <span className="min-w-0 flex-1 text-left text-[17px] font-medium tracking-tight">
-          Add cash
+          Get testnet USDC
         </span>
         <ChevronRight className="h-5 w-5 shrink-0 opacity-40" strokeWidth={2} />
       </button>
