@@ -15,8 +15,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const NETWORKS = [
-  { value: "ethereum", label: "Ethereum" },
   { value: "base", label: "Base" },
+  { value: "ethereum", label: "Ethereum" },
   { value: "polygon", label: "Polygon" },
   { value: "arbitrum", label: "Arbitrum" },
 ];
@@ -26,7 +26,7 @@ type Step = "form" | "success";
 export default function BridgePage() {
   const router = useRouter();
   const { bridgeMoney, balance, error, clearError } = useWallet();
-  const [network, setNetwork] = useState(NETWORKS[0].value);
+  const [network, setNetwork] = useState("base");
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>("form");

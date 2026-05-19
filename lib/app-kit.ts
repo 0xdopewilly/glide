@@ -1,5 +1,6 @@
 import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
 import { AppKit } from "@circle-fin/app-kit";
+import { createGlideBridgeAdapter } from "@/lib/glide-bridge-adapter";
 import { kitKeyStatus, resolveKitKey } from "@/lib/kit-key";
 import {
   ArcTestnet,
@@ -128,14 +129,32 @@ export async function executeArcBridge(input: {
     throw new Error("Unsupported destination network");
   }
 
-  const { kit, adapter } = getGlideAppKit();
+  const { kit } = getGlideAppKit();
+  const apiKey = process.env.CIRCLE_API_KEY?.trim();
+  const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();
+  if (!apiKey || !entitySecret) {
+    throw new Error("Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET");
+  }
+
+  const bridgeAdapter = createGlideBridgeAdapter({ apiKey, entitySecret });
 
   try {
     const result = await kit.bridge({
-      from: { adapter, chain: ArcTestnet, address: input.walletAddress },
-      to: { adapter, chain: dest.chain, address: input.walletAddress },
+      from: {
+        adapter: bridgeAdapter,
+        chain: ArcTestnet,
+        address: input.walletAddress,
+      },
+      to: {
+        adapter: bridgeAdapter,
+        chain: dest.chain,
+        address: input.walletAddress,
+      },
       amount: input.amount,
       token: "USDC",
+      config: {
+        batchTransactions: false,
+      },
     });
 
     return {
@@ -160,6 +179,15 @@ export async function executeArcBridge(input: {
     ) {
       throw new Error(
         "Your wallet needs a small on-chain transaction first. Try sending USDC once, then bridge again.",
+      );
+    }
+    if (
+      message.toLowerCase().includes("native balance") ||
+      message.includes("156001") ||
+      message.toLowerCase().includes("unknown rpc")
+    ) {
+      throw new Error(
+        "Could not reach the destination network RPC. Try Base instead of Ethereum, or retry in a minute.",
       );
     }
     if (
