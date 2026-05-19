@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/db";
-import { formatAmountForPush, formatUserForPush } from "@/lib/push-display";
+import {
+  formatAmountForPush,
+  formatUserForPush,
+  formatUsernameForPush,
+} from "@/lib/push-display";
 import webpush from "web-push";
 
 export function configureWebPush() {
