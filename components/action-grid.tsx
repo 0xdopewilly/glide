@@ -7,7 +7,7 @@ const ACTIONS = [
   {
     href: "/receive",
     label: "Receive",
-    description: "Add cash",
+    description: "Get USDC on Arc",
     icon: Download,
   },
   {
