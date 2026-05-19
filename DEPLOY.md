@@ -39,7 +39,8 @@ Add these in **Project → Settings → Environment Variables** for **Production
 | `DIRECT_URL` | Supabase **direct** URL (port 5432) — required for migrations |
 | `CIRCLE_API_KEY` | Circle Console |
 | `CIRCLE_ENTITY_SECRET` | Circle Console |
-| `CIRCLE_KIT_KEY` | **Kit Key** for swap/bridge — full value `KIT_KEY:<keyId>:<keySecret>` from [Circle Kit keys](https://developers.circle.com/w3s/keys#kit-keys). **Not** the same as `CIRCLE_API_KEY` (`TEST_API_KEY:...`). After deploy, open `/api/health/kit` — should return `{ "ok": true }`. |
+| `CIRCLE_KIT_KEY` | **Kit Key** for swap/bridge — full value `KIT_KEY:<keyId>:<keySecret>` from [Circle Kit keys](https://developers.circle.com/w3s/keys#kit-keys). **Not** the same as `CIRCLE_API_KEY` (`TEST_API_KEY:...`). Must be from the **same Circle project** as `CIRCLE_API_KEY`. After deploy, open `/api/health/kit` — should return `{ "ok": true }`. |
+| `GROQ_API_KEY` | [Groq](https://console.groq.com/keys) — powers the home-screen Glide assistant |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk |
 | `CLERK_SECRET_KEY` | Clerk |
 | `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` | e.g. `https://dynamic-turkey-46.clerk.accounts.dev` |

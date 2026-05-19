@@ -28,7 +28,7 @@ export function BottomNav() {
               <Link
                 href={href}
                 prefetch
-                className={`flex flex-col items-center gap-0.5 rounded-full px-3 py-2 transition-colors sm:px-4 ${
+                className={`glide-tap flex flex-col items-center gap-0.5 rounded-full px-3 py-2 transition-[background-color,color,transform] duration-200 ease-out sm:px-4 ${
                   active
                     ? "bg-white text-neutral-950 shadow-sm dark:bg-white dark:text-[#0a0a0a]"
                     : "text-neutral-500 dark:text-white/45"

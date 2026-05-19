@@ -102,17 +102,19 @@ export async function executeArcSwap(input: {
     }
     if (
       message.toLowerCase().includes("api key") ||
-      message.toLowerCase().includes("authorization")
+      message.toLowerCase().includes("authorization") ||
+      message.includes("401") ||
+      message.includes("403")
     ) {
       const status = kitKeyStatus();
       if (!status.ok) {
         throw new Error(status.hint ?? "Swap unavailable — kit key not configured.");
       }
       throw new Error(
-        "Circle rejected the kit key. Use a Kit Key from the same Circle project as CIRCLE_API_KEY, set CIRCLE_KIT_KEY on Vercel (Production), then redeploy. Check /api/health/kit.",
+        "Circle rejected your Kit Key (wrong project or revoked). In Circle Console, create a new Kit Key under the same app as CIRCLE_API_KEY, update CIRCLE_KIT_KEY on Vercel, redeploy, then check /api/health/kit.",
       );
     }
-    throw new Error("Swap could not be completed. Try again in a moment.");
+    throw new Error(message.length < 200 ? message : "Swap could not be completed. Try again.");
   }
 }
 

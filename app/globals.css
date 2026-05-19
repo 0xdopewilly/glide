@@ -47,21 +47,37 @@
 body {
   background: var(--glide-bg);
   color: var(--glide-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.glide-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glide-scroll {
+    scroll-behavior: auto;
+  }
 }
 
 /* Route transitions — opacity only, GPU-friendly */
 .page-motion-shell {
-  animation: glide-page-in 0.18s ease-out both;
+  animation: glide-page-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
   contain: layout style;
   backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 @keyframes glide-page-in {
   from {
     opacity: 0;
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 

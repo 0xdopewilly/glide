@@ -3,33 +3,50 @@ const KIT_KEY_PATTERN = /^KIT_KEY:[a-zA-Z0-9._-]+:[a-zA-Z0-9._-]+$/;
 export type KitKeyStatus = {
   ok: boolean;
   hint?: string;
-  /** Where the key was read from (for debugging deploy). */
-  source?: "CIRCLE_KIT_KEY" | "KIT_KEY" | "none";
-  /** First segment only, e.g. KIT_KEY — never includes secrets. */
+  source?: "CIRCLE_KIT_KEY" | "KIT_KEY" | "STABLECOIN_KIT_API_KEY" | "none";
   prefix?: string;
   circleApiKeySet: boolean;
   circleEntitySecretSet: boolean;
 };
 
+function readRawKitKey(): string | null {
+  const keys = [
+    process.env.CIRCLE_KIT_KEY,
+    process.env.KIT_KEY,
+    process.env.STABLECOIN_KIT_API_KEY,
+  ];
+  for (const k of keys) {
+    const trimmed = k?.trim();
+    if (trimmed) return trimmed;
+  }
+  return null;
+}
+
+function normalizeKitKey(raw: string): string | null {
+  if (KIT_KEY_PATTERN.test(raw)) return raw;
+  const parts = raw.split(":");
+  if (parts.length === 2 && parts[0] && parts[1]) {
+    const normalized = `KIT_KEY:${parts[0]}:${parts[1]}`;
+    if (KIT_KEY_PATTERN.test(normalized)) return normalized;
+  }
+  return null;
+}
+
 /**
- * Resolve Circle App Kit / Stablecoin Service key from env.
- * Must be a Kit Key (KIT_KEY:id:secret), not CIRCLE_API_KEY (TEST_API_KEY:...).
- * @see https://developers.circle.com/w3s/keys#kit-keys
+ * Resolved kit key always in KIT_KEY:id:secret form for App Kit.
  */
 export function resolveKitKey(): string {
   const status = kitKeyStatus();
   if (!status.ok) {
     throw new Error(status.hint ?? "Invalid CIRCLE_KIT_KEY");
   }
-  return readRawKitKey()!;
-}
-
-function readRawKitKey(): string | null {
-  const fromCircle = process.env.CIRCLE_KIT_KEY?.trim();
-  if (fromCircle) return fromCircle;
-  const fromKit = process.env.KIT_KEY?.trim();
-  if (fromKit) return fromKit;
-  return null;
+  const normalized = normalizeKitKey(readRawKitKey()!);
+  if (!normalized) {
+    throw new Error(
+      "CIRCLE_KIT_KEY has invalid format. Use KIT_KEY:<keyId>:<keySecret> from Circle Console.",
+    );
+  }
+  return normalized;
 }
 
 export function kitKeyStatus(): KitKeyStatus {
@@ -44,13 +61,15 @@ export function kitKeyStatus(): KitKeyStatus {
       circleApiKeySet,
       circleEntitySecretSet,
       hint:
-        "Missing CIRCLE_KIT_KEY. Add it in .env.local for local dev, or Vercel → Settings → Environment Variables (Production), then redeploy.",
+        "Missing CIRCLE_KIT_KEY. Add it in .env.local (local) or Vercel Production env vars, then redeploy.",
     };
   }
 
   const source = process.env.CIRCLE_KIT_KEY?.trim()
     ? "CIRCLE_KIT_KEY"
-    : "KIT_KEY";
+    : process.env.KIT_KEY?.trim()
+      ? "KIT_KEY"
+      : "STABLECOIN_KIT_API_KEY";
 
   if (raw.startsWith("TEST_API_KEY:") || raw.startsWith("LIVE_API_KEY:")) {
     return {
@@ -60,20 +79,12 @@ export function kitKeyStatus(): KitKeyStatus {
       circleApiKeySet,
       circleEntitySecretSet,
       hint:
-        "CIRCLE_KIT_KEY must be a Kit Key (KIT_KEY:keyId:keySecret), not your Developer API key (TEST_API_KEY:...). Create one under Circle Console → Keys → Kit keys.",
+        "CIRCLE_KIT_KEY must be a Kit Key (KIT_KEY:keyId:keySecret), not your Developer API key (TEST_API_KEY:...).",
     };
   }
 
-  if (KIT_KEY_PATTERN.test(raw)) {
+  if (normalizeKitKey(raw)) {
     return { ok: true, source, prefix: "KIT_KEY", circleApiKeySet, circleEntitySecretSet };
-  }
-
-  const parts = raw.split(":");
-  if (parts.length === 2 && parts[0] && parts[1]) {
-    const normalized = `KIT_KEY:${parts[0]}:${parts[1]}`;
-    if (KIT_KEY_PATTERN.test(normalized)) {
-      return { ok: true, source, prefix: "KIT_KEY", circleApiKeySet, circleEntitySecretSet };
-    }
   }
 
   return {
@@ -83,7 +94,7 @@ export function kitKeyStatus(): KitKeyStatus {
     circleApiKeySet,
     circleEntitySecretSet,
     hint:
-      "CIRCLE_KIT_KEY has invalid format. Use the full value from Circle Console: KIT_KEY:<keyId>:<keySecret>",
+      "CIRCLE_KIT_KEY has invalid format. Paste the full Kit Key from Circle Console: KIT_KEY:<keyId>:<keySecret>",
   };
 }
 
