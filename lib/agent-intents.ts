@@ -1,13 +1,20 @@
-import type { AgentHistoryMessage, BridgeNetwork } from "@/lib/agent-context";
+import type {
+  AgentHistoryMessage,
+  BridgeNetwork,
+  SendTransfer,
+  StableSendToken,
+} from "@/lib/agent-context";
 import {
   canExecuteSendFromHistory,
   extractAmountFromHistory,
   extractRecipientNameFromHistory,
+  extractTokenFromText,
   extractUsernameFromHistory,
   extractWalletFromHistory,
   isNonSendMoneyMessage,
   isSwapOrBridgeMessage,
   parseExplicitIntentFromMessage,
+  parseMultiSendFromMessage,
   parseSplitFromMessage,
 } from "@/lib/agent-context";
 import { findContactByName } from "@/lib/contacts-db";
@@ -16,7 +23,19 @@ import { normalizeUsername } from "@/lib/validation";
 
 export type GlideIntent =
   | { action: "reply"; message: string }
-  | { action: "send"; amount: string; to: string; recipientName?: string }
+  | {
+      action: "send";
+      amount: string;
+      to: string;
+      token?: StableSendToken;
+      recipientName?: string;
+    }
+  | {
+      action: "send_batch";
+      transfers: SendTransfer[];
+      to: string;
+      recipientName?: string;
+    }
   | { action: "swap"; amount: string }
   | { action: "bridge"; amount: string; network: BridgeNetwork }
   | { action: "split"; total: string; recipients: string[] }
@@ -38,10 +57,13 @@ RULES (critical):
 6. For Glide users, "to" can be @username (e.g. "khadee") or a saved contact name — not only 0x addresses.
 7. "swap 1 USDC to EURC" is ALWAYS {"action":"swap","amount":"1.00"} — EURC is a token, NOT a person. Never send when user said swap or bridge.
 8. "bridge $5 to Base" is ALWAYS bridge JSON with network "base" — never send.
+9. Multiple tokens to one person: {"action":"send_batch","transfers":[{"amount":"1.00","token":"USDC"},{"amount":"1.00","token":"EURC"}],"to":"fifi"} — never only send the first token.
+10. Single-token send: include "token":"USDC" or "token":"EURC" when the user names the token.
 
 Respond with JSON only:
 - {"action":"reply","message":"..."} — only when info is still missing
-- {"action":"send","amount":"1.00","to":"0x..."} OR {"action":"send","amount":"1.00","to":"khadee","recipientName":"Khadee"}
+- {"action":"send","amount":"1.00","token":"USDC","to":"0x..."} OR {"action":"send","amount":"1.00","token":"EURC","to":"khadee","recipientName":"Khadee"}
+- {"action":"send_batch","transfers":[{"amount":"1.00","token":"USDC"},{"amount":"1.00","token":"EURC"}],"to":"fifi"}
 - {"action":"swap","amount":"5.00"}
 - {"action":"bridge","amount":"10.00","network":"base"|"ethereum"|"polygon"|"arbitrum"}
 - {"action":"split","total":"60.00","recipients":["khadee","tom"]} — equal shares, usernames only
@@ -61,14 +83,48 @@ export function parseAgentJson(raw: string): GlideIntent | null {
       return { action: "reply", message: data.message.trim() };
     }
     if (action === "send" && typeof data.amount === "string" && typeof data.to === "string") {
+      const token =
+        typeof data.token === "string" &&
+        data.token.trim().toUpperCase() === "EURC"
+          ? "EURC"
+          : "USDC";
       return {
         action: "send",
         amount: data.amount.trim(),
         to: data.to.trim(),
+        token,
         ...(typeof data.recipientName === "string" && data.recipientName.trim()
           ? { recipientName: data.recipientName.trim() }
           : {}),
       };
+    }
+    if (
+      action === "send_batch" &&
+      Array.isArray(data.transfers) &&
+      typeof data.to === "string"
+    ) {
+      const transfers: SendTransfer[] = [];
+      for (const row of data.transfers) {
+        if (!row || typeof row !== "object") continue;
+        const r = row as Record<string, unknown>;
+        if (typeof r.amount !== "string" || typeof r.token !== "string") continue;
+        const token = r.token.trim().toUpperCase();
+        if (token !== "USDC" && token !== "EURC") continue;
+        transfers.push({
+          amount: r.amount.trim(),
+          token,
+        });
+      }
+      if (transfers.length >= 2) {
+        return {
+          action: "send_batch",
+          transfers,
+          to: data.to.trim(),
+          ...(typeof data.recipientName === "string" && data.recipientName.trim()
+            ? { recipientName: data.recipientName.trim() }
+            : {}),
+        };
+      }
     }
     if (action === "swap" && typeof data.amount === "string") {
       return { action: "swap", amount: data.amount.trim() };
@@ -122,6 +178,15 @@ export async function reconcileIntentWithHistory(
   const explicit = parseExplicitIntentFromMessage(latestUserMessage);
   if (explicit) return explicit;
 
+  const multiSend = parseMultiSendFromMessage(latestUserMessage);
+  if (multiSend) {
+    return {
+      action: "send_batch",
+      transfers: multiSend.transfers,
+      to: multiSend.to,
+    };
+  }
+
   const split = parseSplitFromMessage(latestUserMessage);
   if (split) return { action: "split", ...split };
 
@@ -140,10 +205,12 @@ export async function reconcileIntentWithHistory(
 
   const ready = canExecuteSendFromHistory(fullHistory);
   if (ready && !isNonSendMoneyMessage(latestUserMessage)) {
+    const token = extractTokenFromText(latestUserMessage) ?? "USDC";
     return {
       action: "send",
       amount: ready.amount,
       to: ready.to,
+      token,
       recipientName: ready.recipientName,
     };
   }
@@ -154,10 +221,12 @@ export async function reconcileIntentWithHistory(
     if (handle && amount && !extractWalletFromHistory(fullHistory)) {
       const glideUser = await findUserByUsername(handle);
       if (glideUser?.circleWalletAddress) {
+        const token = extractTokenFromText(latestUserMessage) ?? "USDC";
         return {
           action: "send",
           amount,
           to: glideUser.circleWalletAddress,
+          token,
           recipientName: glideUser.displayName ?? glideUser.username,
         };
       }
@@ -165,12 +234,14 @@ export async function reconcileIntentWithHistory(
 
     const name = extractRecipientNameFromHistory(fullHistory);
     if (name && amount && !extractWalletFromHistory(fullHistory)) {
+      const token = extractTokenFromText(latestUserMessage) ?? "USDC";
       const contact = await findContactByName(userId, name);
       if (contact) {
         return {
           action: "send",
           amount,
           to: contact.walletAddress,
+          token,
           recipientName: contact.name,
         };
       }
@@ -180,6 +251,7 @@ export async function reconcileIntentWithHistory(
           action: "send",
           amount,
           to: glideUser.circleWalletAddress,
+          token,
           recipientName: glideUser.displayName ?? glideUser.username,
         };
       }

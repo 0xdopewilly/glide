@@ -1,6 +1,16 @@
 /** Arc testnet USDC — Circle native token uses empty address on transfers. */
 export const ARC_USDC_TOKEN_ADDRESS = "";
 
+/** Arc testnet EURC (Circle / Arc docs). */
+export const ARC_EURC_TOKEN_ADDRESS =
+  "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a";
+
+export function arcTokenAddressForSymbol(symbol?: string | null): string {
+  return isEurcToken(symbol)
+    ? ARC_EURC_TOKEN_ADDRESS
+    : ARC_USDC_TOKEN_ADDRESS;
+}
+
 export const USDC_SYMBOLS = new Set(["USDC", "USDCE", "USDC.E"]);
 export const EURC_SYMBOLS = new Set(["EURC", "EURC.E"]);
 
@@ -32,4 +42,15 @@ export function addressesEqual(a?: string | null, b?: string | null): boolean {
 
 export function totalUsdFromTokens(tokens: { usdValue: number }[]): number {
   return tokens.reduce((sum, t) => sum + t.usdValue, 0);
+}
+
+/** Prefer token sum; fall back to USDC balance when tokens are not loaded yet. */
+export function resolveWalletTotalUsd(
+  tokens: { usdValue: number }[],
+  usdcBalance = 0,
+): number {
+  const fromTokens = totalUsdFromTokens(tokens);
+  if (fromTokens > 0) return fromTokens;
+  if (tokens.length === 0 && usdcBalance > 0) return usdcBalance;
+  return fromTokens;
 }

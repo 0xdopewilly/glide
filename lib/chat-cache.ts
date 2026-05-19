@@ -13,6 +13,8 @@ export type StoredChatMessage = {
   contactSaved?: boolean;
   contactSkipped?: boolean;
   successAction?: ActionSuccessType;
+  /** USDC or EURC for send success cards */
+  token?: string;
   targetToken?: string;
   network?: string;
 };

@@ -12,6 +12,13 @@ export type AgentHistoryMessage = {
 
 export type BridgeNetwork = "ethereum" | "base" | "polygon" | "arbitrum";
 
+export type StableSendToken = "USDC" | "EURC";
+
+export type SendTransfer = {
+  amount: string;
+  token: StableSendToken;
+};
+
 const ADDRESS_RE = /0x[a-fA-F0-9]{40}/;
 const USERNAME_RE = /@?([a-z][a-z0-9_]{2,19})\b/i;
 
@@ -52,6 +59,11 @@ export function extractAmountFromText(text: string): string | null {
     const n = parseMoneyAmount(usdc[1]);
     if (n !== null && n > 0) return n.toFixed(2);
   }
+  const eurc = text.match(/(\d+(?:\.\d{1,2})?)\s*eurc/i);
+  if (eurc) {
+    const n = parseMoneyAmount(eurc[1]);
+    if (n !== null && n > 0) return n.toFixed(2);
+  }
   const leading = text.match(
     /(?:swap|bridge|convert|send)\s+(\d+(?:\.\d{1,2})?)/i,
   );
@@ -59,6 +71,52 @@ export function extractAmountFromText(text: string): string | null {
     const n = parseMoneyAmount(leading[1]);
     if (n !== null && n > 0) return n.toFixed(2);
   }
+  return null;
+}
+
+/** e.g. "send 1 usdc and 1 eurc to @fifi" */
+export function parseMultiSendFromMessage(text: string): {
+  transfers: SendTransfer[];
+  to: string;
+} | null {
+  const trimmed = text.trim();
+  if (!/\bsend\b/i.test(trimmed) || isNonSendMoneyMessage(trimmed)) return null;
+
+  const toMatch = trimmed.match(
+    /\bto\s+(@?[a-z][a-z0-9_]{2,19}|0x[a-fA-F0-9]{40})\s*$/i,
+  );
+  if (!toMatch) return null;
+
+  const body = trimmed
+    .replace(/\bto\s+.+$/i, "")
+    .replace(/^send\s+/i, "")
+    .trim();
+  if (!/\band\b|,/.test(body)) return null;
+
+  const parts = body.split(/\s+and\s+|\s*,\s*/i).map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+
+  const transfers: SendTransfer[] = [];
+  for (const part of parts) {
+    const m = part.match(/(\d+(?:\.\d{1,2})?)\s*(usdc|eurc)\b/i);
+    if (!m) return null;
+    const n = parseMoneyAmount(m[1]);
+    if (n === null || n <= 0) return null;
+    const token = m[2].toUpperCase() as StableSendToken;
+    transfers.push({ amount: n.toFixed(2), token });
+  }
+
+  if (transfers.length < 2) return null;
+
+  const to = toMatch[1].trim().replace(/^@/, "");
+  if (isValidWalletAddress(to)) return { transfers, to };
+  if (isValidUsername(normalizeUsername(to))) return { transfers, to };
+  return null;
+}
+
+export function extractTokenFromText(text: string): StableSendToken | null {
+  if (/\beurc\b/i.test(text) && !/\b(swap|convert)\b/i.test(text)) return "EURC";
+  if (/\busdc\b/i.test(text)) return "USDC";
   return null;
 }
 
@@ -170,9 +228,19 @@ export function extractUsernameFromHistory(
   for (let i = history.length - 1; i >= 0; i--) {
     const m = history[i];
     if (m.role !== "user") continue;
+    const mentions = [...m.content.matchAll(/@([a-z][a-z0-9_]{2,19})/gi)];
+    for (let j = mentions.length - 1; j >= 0; j--) {
+      const u = normalizeUsername(mentions[j][1]);
+      if (isValidUsername(u) && !NOT_A_USERNAME.has(u)) {
+        return u;
+      }
+    }
     const hit = m.content.match(USERNAME_RE);
-    if (hit?.[1] && isValidUsername(hit[1])) {
-      return normalizeUsername(hit[1]);
+    if (hit?.[1]) {
+      const u = normalizeUsername(hit[1]);
+      if (isValidUsername(u) && !NOT_A_USERNAME.has(u)) {
+        return u;
+      }
     }
   }
   return null;

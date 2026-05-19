@@ -9,6 +9,7 @@ import { CHAIN_META } from "@/lib/chain-meta";
 import {
   ARC_DISPLAY_TOKENS,
   isArcStablecoin,
+  isEurcToken,
   isUsdcToken,
   normalizeTokenSymbol,
 } from "@/lib/tokens";
@@ -100,16 +101,30 @@ export async function fetchAllWalletTokenBalances(
   walletId: string,
   walletAddress: string,
 ): Promise<GlideTokenBalance[]> {
-  const [arc, offArc] = await Promise.all([
-    fetchWalletTokenBalances(walletId),
-    fetchOffArcUsdcBalances(walletAddress),
-  ]);
-  return [...arc, ...offArc];
+  const arc = await fetchWalletTokenBalances(walletId);
+  try {
+    const offArc = await fetchOffArcUsdcBalances(walletAddress);
+    return [...arc, ...offArc];
+  } catch (err) {
+    console.warn("[Glide] off-arc balances skipped:", err);
+    return arc;
+  }
 }
 
 export async function fetchUsdcBalance(walletId: string): Promise<number> {
   const tokens = await fetchWalletTokenBalances(walletId);
   return tokens.find((t) => isUsdcToken(t.symbol))?.amount ?? 0;
+}
+
+export async function fetchTokenBalance(
+  walletId: string,
+  symbol: string,
+): Promise<number> {
+  const tokens = await fetchWalletTokenBalances(walletId);
+  const normalized = normalizeTokenSymbol(symbol);
+  return (
+    tokens.find((t) => normalizeTokenSymbol(t.symbol) === normalized)?.amount ?? 0
+  );
 }
 
 export async function fetchWalletBalance(walletId: string): Promise<number> {
@@ -138,11 +153,14 @@ export async function fetchWalletById(walletId: string): Promise<GlideWallet | n
 export async function assertSufficientBalance(
   walletId: string,
   amount: number,
+  symbol = "USDC",
 ): Promise<void> {
-  const balance = await fetchUsdcBalance(walletId);
+  const token = normalizeTokenSymbol(symbol);
+  const balance = await fetchTokenBalance(walletId, token);
   if (amount > balance) {
+    const prefix = isEurcToken(token) ? "€" : "$";
     throw new Error(
-      `Insufficient balance. You have $${balance.toFixed(2)} USDC available.`,
+      `Insufficient balance. You have ${prefix}${balance.toFixed(2)} ${token} available.`,
     );
   }
 }

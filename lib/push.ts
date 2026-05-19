@@ -72,8 +72,10 @@ export async function notifyPaymentSent(
   userId: string,
   amount: string,
   toLabel: string,
+  token: "USDC" | "EURC" = "USDC",
 ) {
-  const parsed = formatAmountForPush(`$${amount}`);
+  const prefix = token === "EURC" ? "€" : "$";
+  const parsed = formatAmountForPush(`${prefix}${amount}`);
 
   const target = formatUsernameForPush(toLabel);
 
