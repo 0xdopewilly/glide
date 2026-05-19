@@ -20,12 +20,9 @@ function mergeTransactions(lists: GlideTransaction[][]): GlideTransaction[] {
   }
 
   return merged.sort((a, b) => {
-    const order = (meta: string) => {
-      if (meta === "Today") return 0;
-      if (meta === "Yesterday") return 1;
-      return 2;
-    };
-    return order(a.meta) - order(b.meta);
+    const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return tb - ta;
   });
 }
 

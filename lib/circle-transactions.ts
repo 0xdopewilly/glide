@@ -41,6 +41,7 @@ export function mapCircleTransaction(tx: CircleTx): GlideTransaction {
     amount: `${isCredit ? "+" : "−"}$${Math.abs(amountNum).toFixed(2)}`,
     variant: isCredit ? "credit" : "debit",
     meta: formatRelativeDate(tx.createDate),
+    createdAt: tx.createDate ?? new Date().toISOString(),
     status: tx.state,
     kind,
     txHash,

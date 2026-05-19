@@ -1,12 +1,29 @@
 "use client";
 
+import { activityRowMeta } from "@/lib/activity";
 import { usePrivacy } from "@/context/privacy-context";
-import type { GlideTransaction } from "@/lib/types";
+import type { GlideTransaction, TransactionKind } from "@/lib/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ExternalLink, Share2 } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowLeftRight,
+  ArrowUpRight,
+  ChevronDown,
+  ExternalLink,
+  Link2,
+  Share2,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 const EXPAND_EASE = [0.22, 1, 0.36, 1] as const;
+
+const KIND_ICON: Record<TransactionKind, LucideIcon> = {
+  send: ArrowUpRight,
+  receive: ArrowDownLeft,
+  swap: ArrowLeftRight,
+  bridge: Link2,
+};
 
 function TransactionSkeleton() {
   return (
@@ -14,7 +31,7 @@ function TransactionSkeleton() {
       {[0, 1, 2].map((i) => (
         <li
           key={i}
-          className="h-[4.25rem] animate-pulse rounded-2xl bg-neutral-100 dark:bg-[#1c1c1e]"
+          className="h-[3.75rem] animate-pulse rounded-2xl bg-neutral-100/80 dark:bg-[#1c1c1e]"
         />
       ))}
     </ul>
@@ -25,10 +42,14 @@ export function TransactionList({
   transactions,
   loading = false,
   emptyMessage = "No activity yet",
+  showTime = false,
+  grouped = false,
 }: {
   transactions: GlideTransaction[];
   loading?: boolean;
   emptyMessage?: string;
+  showTime?: boolean;
+  grouped?: boolean;
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -36,9 +57,9 @@ export function TransactionList({
     return <TransactionSkeleton />;
   }
 
-  if (transactions.length === 0) {
+  if (transactions.length === 0 && !grouped) {
     return (
-      <p className="rounded-2xl bg-neutral-100 px-4 py-10 text-center text-sm font-medium tracking-tight text-neutral-500 dark:bg-[#1c1c1e] dark:text-white/40">
+      <p className="rounded-2xl px-4 py-10 text-center text-sm font-medium glide-muted glide-surface-card">
         {emptyMessage}
       </p>
     );
@@ -47,10 +68,11 @@ export function TransactionList({
   return (
     <ul className="flex flex-col gap-2">
       {transactions.map((item) => (
-        <li key={item.id}>
+        <li key={`${item.id}-${item.createdAt ?? ""}`}>
           <TransactionRow
             tx={item}
             expanded={expandedId === item.id}
+            showTime={showTime}
             onToggle={() =>
               setExpandedId((id) => (id === item.id ? null : item.id))
             }
@@ -64,16 +86,20 @@ export function TransactionList({
 function TransactionRow({
   tx,
   expanded,
+  showTime,
   onToggle,
 }: {
   tx: GlideTransaction;
   expanded: boolean;
+  showTime?: boolean;
   onToggle: () => void;
 }) {
-  const { title, amount, variant, meta, status, explorerUrl, txHash, note } = tx;
+  const { title, amount, variant, status, explorerUrl, txHash, note, kind } = tx;
   const isCredit = variant === "credit";
   const { blurAmounts } = usePrivacy();
   const [shareLabel, setShareLabel] = useState("Share");
+  const Icon = kind ? KIND_ICON[kind] : ArrowUpRight;
+  const subtitle = showTime ? activityRowMeta(tx) : [tx.meta, status].filter(Boolean).join(" · ");
 
   const shareText = [title, amount, txHash ? `Tx: ${txHash}` : null, explorerUrl ?? null]
     .filter(Boolean)
@@ -105,27 +131,32 @@ function TransactionRow({
 
   return (
     <article
-      className={`overflow-hidden rounded-2xl transition-shadow duration-200 ${
+      className={`overflow-hidden rounded-2xl transition-shadow duration-200 glide-surface-card ${
         expanded ? "shadow-md ring-1 ring-black/5 dark:ring-white/10" : ""
-      } ${
-        isCredit
-          ? "bg-emerald-500/10 ring-1 ring-emerald-500/20 dark:bg-emerald-500/10"
-          : "bg-neutral-100 dark:bg-[#1c1c1e]"
       }`}
     >
       <button
         type="button"
         onClick={onToggle}
-        className="glide-tap flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+        className="glide-tap flex w-full items-center gap-3 px-3.5 py-3 text-left"
         aria-expanded={expanded}
       >
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+            isCredit
+              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+              : "bg-neutral-100 text-neutral-700 dark:bg-white/10 dark:text-white/80"
+          }`}
+        >
+          <Icon className="h-[18px] w-[18px]" strokeWidth={2.25} />
+        </span>
+
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-semibold tracking-tight text-neutral-950 dark:text-white">
             {title}
           </p>
-          <p className="mt-0.5 text-xs font-medium text-neutral-500 dark:text-white/45">
-            {meta}
-            {status ? ` · ${status}` : ""}
+          <p className="mt-0.5 truncate text-xs font-medium capitalize glide-muted">
+            {subtitle}
           </p>
           {note && !expanded ? (
             <p className="mt-0.5 truncate text-xs text-neutral-400 dark:text-white/35">
@@ -134,9 +165,9 @@ function TransactionRow({
           ) : null}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5">
           <p
-            className={`text-[15px] font-semibold tracking-tight ${
+            className={`text-[15px] font-semibold tabular-nums tracking-tight ${
               isCredit
                 ? "text-emerald-600 dark:text-emerald-400"
                 : "text-neutral-950 dark:text-white"
@@ -165,11 +196,11 @@ function TransactionRow({
             className="overflow-hidden"
           >
             <div
-              className="border-t px-4 pb-4 pt-3 dark:border-white/10"
+              className="border-t px-4 pb-4 pt-3"
               style={{ borderColor: "var(--glide-border)" }}
             >
               {note ? (
-                <p className="rounded-xl bg-white/60 px-3 py-2.5 text-sm dark:bg-black/30">
+                <p className="rounded-xl bg-neutral-100/80 px-3 py-2.5 text-sm dark:bg-black/30">
                   &ldquo;{note}&rdquo;
                 </p>
               ) : null}
@@ -202,7 +233,7 @@ function TransactionRow({
                   <button
                     type="button"
                     onClick={handleShare}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3.5 py-2 text-[11px] font-semibold tracking-tight text-neutral-700 dark:bg-black/30 dark:text-white/80"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3.5 py-2 text-[11px] font-semibold tracking-tight text-neutral-700 dark:bg-white/10 dark:text-white/80"
                   >
                     <Share2 className="h-3 w-3" />
                     {shareLabel}

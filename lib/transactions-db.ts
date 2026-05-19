@@ -97,6 +97,7 @@ function rowToGlide(row: {
     amount: row.amountLabel,
     variant: row.variant as GlideTransaction["variant"],
     meta: formatRelativeDate(row.createdAt.toISOString()),
+    createdAt: row.createdAt.toISOString(),
     kind: row.kind as TransactionKind,
     status: row.status ?? undefined,
     note: metadataNote(row.metadata),

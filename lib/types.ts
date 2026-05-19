@@ -36,6 +36,8 @@ export type GlideTransaction = {
   txHash?: string;
   /** Block explorer link for sharing */
   explorerUrl?: string;
+  /** ISO timestamp for sorting and date filters */
+  createdAt?: string;
 };
 
 export type WalletResponse = {
