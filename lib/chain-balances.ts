@@ -24,13 +24,11 @@ const ARBITRUM_SEPOLIA_USDC = "0x75faf114eafb1BDbe2F631b3Ed6285af582bd807" as Ad
 const POLYGON_AMOY_USDC = "0x41E94Eb017C8aF78c5aC8a01bCbe1F3226D56C35" as Address;
 
 const OFF_ARC: {
-  network: BridgeNetworkKey;
   chainId: GlideChainKey;
   chain: Chain;
   usdc: Address;
 }[] = [
   {
-    network: "ethereum",
     chainId: BRIDGE_KEY_TO_CHAIN.ethereum,
     chain: sepolia,
     usdc: SEPOLIA_USDC,
@@ -79,7 +77,7 @@ export async function fetchOffArcUsdcBalances(
   const wallet = walletAddress as Address;
   const out: GlideTokenBalance[] = [];
 
-  for (const { chainId, network, chain, usdc } of OFF_ARC) {
+  for (const { chainId, chain, usdc } of OFF_ARC) {
     try {
       const amount = await readUsdcOnChain(chain, usdc, wallet);
       if (amount < MIN_DISPLAY) continue;
