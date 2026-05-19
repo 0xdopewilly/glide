@@ -1,5 +1,6 @@
 "use client";
 
+import { headerIconButtonClassName } from "@/components/header-icon-button";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -13,7 +14,7 @@ export function ThemeToggle() {
         const isDark = document.documentElement.classList.contains("dark");
         setTheme(isDark ? "light" : "dark");
       }}
-      className="glide-tap inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-700 dark:bg-[#1c1c1e] dark:text-white/80"
+      className={headerIconButtonClassName()}
       aria-label="Toggle light or dark mode"
       suppressHydrationWarning
     >

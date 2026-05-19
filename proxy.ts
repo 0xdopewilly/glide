@@ -17,6 +17,13 @@ const authorizedParties = [
 
 export default clerkMiddleware(
   async (auth, request) => {
+    const { userId } = await auth();
+    const { pathname } = request.nextUrl;
+
+    if (!userId && pathname === "/") {
+      return Response.redirect(new URL("/onboarding", request.url));
+    }
+
     if (!isPublicRoute(request)) {
       await auth.protect();
     }

@@ -1,18 +1,13 @@
-import { SignUp } from "@clerk/nextjs";
+import { AuthFlowHeader } from "@/components/auth-flow-header";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { clerkAppearance } from "@/lib/clerk-appearance";
-import Link from "next/link";
+import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
     <OnboardingShell>
-      <div className="flex flex-1 flex-col px-7 pb-10 pt-14">
-        <Link
-          href="/onboarding"
-          className="mb-6 inline-block text-sm font-medium glide-accent-text"
-        >
-          ← Back
-        </Link>
+      <AuthFlowHeader />
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-10">
         <SignUp
           appearance={clerkAppearance}
           routing="path"

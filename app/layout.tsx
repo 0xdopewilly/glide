@@ -53,7 +53,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable} h-full`}
     >
       <body className="h-full font-sans antialiased" suppressHydrationWarning>
-        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          afterSignOutUrl="/onboarding"
+        >
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

@@ -1,11 +1,13 @@
 "use client";
 
 import { GlideLogo } from "@/components/glide-logo";
+import { headerIconButtonClassName } from "@/components/header-icon-button";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { useGoBack } from "@/lib/use-go-back";
 import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 
 export function AppHeader({
   title,
@@ -32,38 +34,48 @@ export function AppHeader({
     <button
       type="button"
       onClick={onBack}
-      className="inline-flex items-center text-neutral-600 transition-colors hover:text-neutral-950 dark:text-white/75 dark:hover:text-white"
+      className={headerIconButtonClassName()}
       aria-label="Back"
     >
-      <ChevronLeft className="h-6 w-6" strokeWidth={2} />
+      <ChevronLeft className="h-5 w-5" strokeWidth={2.25} />
     </button>
   ) : showBack || backHref || backFallback ? (
     <button
       type="button"
       onClick={goBack}
-      className="inline-flex items-center text-neutral-600 transition-colors hover:text-neutral-950 dark:text-white/75 dark:hover:text-white"
+      className={headerIconButtonClassName()}
       aria-label="Back"
     >
-      <ChevronLeft className="h-6 w-6" strokeWidth={2} />
+      <ChevronLeft className="h-5 w-5" strokeWidth={2.25} />
     </button>
   ) : showLogo ? (
-    <div className="flex items-center gap-2.5">
-      <GlideLogo size="sm" linked glow={false} />
-      <span className="text-lg font-bold tracking-[-0.02em]">Glide</span>
-    </div>
+    <Link
+      href="/"
+      className="glide-tap inline-flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-2 transition-opacity hover:opacity-90"
+      aria-label="Glide home"
+    >
+      <GlideLogo size="sm" linked={false} glow={false} />
+      <span className="text-[17px] font-bold tracking-[-0.03em]">Glide</span>
+    </Link>
   ) : (
-    <span className="w-6" />
+    <span className="h-10 w-10 shrink-0" aria-hidden />
   );
 
   return (
-    <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 px-6 pb-2 pt-[max(1rem,env(safe-area-inset-top))]">
-      <div className="min-w-0 flex-1">{backControl}</div>
+    <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 px-5 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+      <div className="flex min-w-0 flex-1 items-center">{backControl}</div>
+
       {title ? (
-        <h1 className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[17px] font-semibold tracking-[-0.02em]">
+        <h1 className="pointer-events-none absolute left-1/2 max-w-[42%] -translate-x-1/2 truncate text-center text-[17px] font-semibold tracking-[-0.02em]">
           {title}
         </h1>
       ) : null}
-      <div className="flex shrink-0 items-center gap-1">
+
+      <div
+        className="flex shrink-0 items-center gap-0.5 rounded-full border border-neutral-200/80 bg-neutral-100/90 p-0.5 dark:border-white/10 dark:bg-[#1c1c1e]/90"
+        role="toolbar"
+        aria-label="Account actions"
+      >
         {showNotifications ? <NotificationBell /> : null}
         <ThemeToggle />
         <UserAvatar size="sm" linked />
