@@ -2,6 +2,7 @@
 
 import { FormField, inputClassName } from "@/components/form-field";
 import { GlideButton } from "@/components/glide-button";
+import { GlidePillButton } from "@/components/glide-pill-button";
 import { FlowPage } from "@/components/flow-page";
 import { useWallet } from "@/context/wallet-context";
 import { Check } from "lucide-react";
@@ -24,7 +25,6 @@ export default function BridgePage() {
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>("form");
-  const [localError, setLocalError] = useState<string | null>(null);
 
   const networkLabel =
     NETWORKS.find((n) => n.value === network)?.label ?? network;
@@ -37,12 +37,10 @@ export default function BridgePage() {
     e.preventDefault();
     if (!canSubmit) return;
     setSubmitting(true);
-    setLocalError(null);
     clearError();
     const ok = await bridgeMoney(amount, network);
     setSubmitting(false);
     if (ok) setStep("success");
-    else setLocalError("Bridge could not be completed.");
   };
 
   if (step === "success") {
@@ -74,9 +72,6 @@ export default function BridgePage() {
   return (
     <FlowPage title="Bridge" backHref="/">
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col px-5 pb-8">
-        <p className="mt-2 text-sm glide-muted">
-          Move USDC to another network. Balance ${balance.toFixed(2)} USDC.
-        </p>
         <FormField id="bridge-network" label="Destination network" className="mt-6">
           <select
             id="bridge-network"
@@ -107,17 +102,14 @@ export default function BridgePage() {
         {overBalance ? (
           <p className="mt-3 text-sm text-red-400">Amount exceeds your balance</p>
         ) : null}
-        {(localError || error) && (
-          <p className="mt-3 text-sm text-red-400">{localError ?? error}</p>
-        )}
-        <GlideButton
+        {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
+        <GlidePillButton
           type="submit"
           disabled={!canSubmit}
-          className="mt-8"
-          uppercase={false}
+          className="mt-8 w-full justify-center py-3.5"
         >
           {submitting ? "Processing" : "Confirm bridge"}
-        </GlideButton>
+        </GlidePillButton>
       </form>
     </FlowPage>
   );

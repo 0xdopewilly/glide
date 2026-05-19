@@ -9,8 +9,8 @@ import { shortenAddress } from "@/lib/format";
 import { isValidWalletAddress } from "@/lib/validation";
 import { useWallet } from "@/context/wallet-context";
 import { Check } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Step = "amount" | "review" | "success";
 
@@ -21,9 +21,17 @@ function formatAmountDisplay(raw: string) {
 
 export default function SendPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { sendMoney, wallet, loading, balance, error, clearError } = useWallet();
   const [step, setStep] = useState<Step>("amount");
-  const [recipient, setRecipient] = useState("");
+  const [recipient, setRecipient] = useState(
+    () => searchParams.get("to")?.trim() ?? "",
+  );
+
+  useEffect(() => {
+    const to = searchParams.get("to")?.trim();
+    if (to) setRecipient(to);
+  }, [searchParams]);
   const [amount, setAmount] = useState("0");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);

@@ -1,6 +1,7 @@
 export type GlideProfile = {
   displayName: string;
   email: string;
+  avatarUrl?: string | null;
 };
 
 export type GlideWallet = {

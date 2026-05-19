@@ -1,6 +1,7 @@
 "use client";
 
 import { useWallet } from "@/context/wallet-context";
+import Image from "next/image";
 import Link from "next/link";
 
 export function UserAvatar({
@@ -21,7 +22,19 @@ export function UserAvatar({
         ? "h-20 w-20 text-2xl"
         : "h-14 w-14 text-lg";
 
-  const inner = (
+  const inner = profile.avatarUrl ? (
+    <span
+      className={`relative inline-flex shrink-0 overflow-hidden rounded-full ${sizeClass}`}
+    >
+      <Image
+        src={profile.avatarUrl}
+        alt=""
+        fill
+        className="object-cover"
+        unoptimized
+      />
+    </span>
+  ) : (
     <span
       className={`inline-flex shrink-0 items-center justify-center rounded-full bg-neutral-200 font-semibold tracking-tight text-neutral-800 dark:bg-[#2c2c2e] dark:text-white ${sizeClass}`}
     >

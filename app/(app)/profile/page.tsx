@@ -2,14 +2,14 @@
 
 import { AccountSecurityCard } from "@/components/account-security-card";
 import { CopyButton } from "@/components/copy-button";
-import { GlideLogo } from "@/components/glide-logo";
+import { FormField, inputClassName } from "@/components/form-field";
+import { GlideButton } from "@/components/glide-button";
 import { PageHeader } from "@/components/page-header";
+import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
 import { shortenAddress } from "@/lib/format";
 import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
-import { FormField, inputClassName } from "@/components/form-field";
-import { GlideButton } from "@/components/glide-button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
   const {
@@ -27,20 +27,35 @@ export default function ProfilePage() {
 
   const [name, setName] = useState(profile.displayName);
   const [email, setEmail] = useState(profile.email);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(
+    profile.avatarUrl ?? null,
+  );
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setName(profile.displayName);
+    setEmail(profile.email);
+    setAvatarUrl(profile.avatarUrl ?? null);
+  }, [profile.displayName, profile.email, profile.avatarUrl]);
 
   const handleSave = async () => {
     setSaving(true);
     const ok = await saveProfile({
       displayName: name.trim() || "Guest",
       email: email.trim(),
+      avatarUrl,
     });
     setSaving(false);
     if (ok) {
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2000);
     }
+  };
+
+  const handleAvatarPick = (dataUrl: string) => {
+    setAvatarUrl(dataUrl);
+    updateProfile({ avatarUrl: dataUrl });
   };
 
   return (
@@ -57,7 +72,12 @@ export default function ProfilePage() {
         ) : null}
 
         <div className="mt-6 flex flex-col items-center">
-          <GlideLogo size="hero" />
+          <ProfileAvatarUpload
+            displayName={name}
+            avatarUrl={avatarUrl}
+            onPick={handleAvatarPick}
+            disabled={saving}
+          />
           <p className="mt-4 text-base font-semibold tracking-tight">
             {name.trim() || "Guest"}
           </p>

@@ -122,15 +122,35 @@ export async function executeArcBridge(input: {
 
   const { kit, adapter } = getGlideAppKit();
 
-  const result = await kit.bridge({
-    from: { adapter, chain: ArcTestnet, address: input.walletAddress },
-    to: { adapter, chain: dest.chain, address: input.walletAddress },
-    amount: input.amount,
-    token: "USDC",
-  });
+  try {
+    const result = await kit.bridge({
+      from: { adapter, chain: ArcTestnet, address: input.walletAddress },
+      to: { adapter, chain: dest.chain, address: input.walletAddress },
+      amount: input.amount,
+      token: "USDC",
+    });
 
-  return {
-    ...extractBridgeTx(result),
-    destination: dest.label,
-  };
+    return {
+      ...extractBridgeTx(result),
+      destination: dest.label,
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Bridge failed on Arc testnet";
+    if (
+      message.toLowerCase().includes("insufficient") ||
+      message.toLowerCase().includes("balance")
+    ) {
+      throw new Error(message);
+    }
+    if (
+      message.toLowerCase().includes("undeployed") ||
+      message.toLowerCase().includes("permit")
+    ) {
+      throw new Error(
+        "Your wallet needs a small on-chain transaction first. Try sending USDC once, then bridge again.",
+      );
+    }
+    throw new Error("Bridge could not be completed. Try again in a moment.");
+  }
 }

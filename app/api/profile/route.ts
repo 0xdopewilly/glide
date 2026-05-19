@@ -2,6 +2,8 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
+const MAX_AVATAR_BYTES = 280_000;
+
 /** GET — current profile from Supabase */
 export async function GET() {
   const session = await requireSessionUser();
@@ -9,7 +11,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { displayName: true, email: true },
+    select: { displayName: true, email: true, avatarUrl: true },
   });
 
   if (!user) {
@@ -19,10 +21,11 @@ export async function GET() {
   return NextResponse.json({
     displayName: user.displayName ?? session.displayName ?? "Guest",
     email: user.email,
+    avatarUrl: user.avatarUrl,
   });
 }
 
-/** PATCH { displayName?, email? } — persist profile to Supabase */
+/** PATCH { displayName?, email?, avatarUrl? } — persist profile */
 export async function PATCH(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
@@ -30,6 +33,7 @@ export async function PATCH(request: NextRequest) {
   const body = (await request.json()) as {
     displayName?: string;
     email?: string;
+    avatarUrl?: string | null;
   };
 
   const displayName = body.displayName?.trim();
@@ -39,19 +43,37 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
+  let avatarUrl: string | null | undefined;
+  if (body.avatarUrl !== undefined) {
+    if (body.avatarUrl === null || body.avatarUrl === "") {
+      avatarUrl = null;
+    } else if (!body.avatarUrl.startsWith("data:image/")) {
+      return NextResponse.json({ error: "Avatar must be an image" }, { status: 400 });
+    } else if (body.avatarUrl.length > MAX_AVATAR_BYTES) {
+      return NextResponse.json(
+        { error: "Image is too large (max ~200KB)" },
+        { status: 400 },
+      );
+    } else {
+      avatarUrl = body.avatarUrl;
+    }
+  }
+
   try {
     const user = await prisma.user.update({
       where: { id: session.userId },
       data: {
         ...(displayName !== undefined ? { displayName: displayName || null } : {}),
         ...(email ? { email } : {}),
+        ...(avatarUrl !== undefined ? { avatarUrl } : {}),
       },
-      select: { displayName: true, email: true },
+      select: { displayName: true, email: true, avatarUrl: true },
     });
 
     return NextResponse.json({
       displayName: user.displayName ?? "Guest",
       email: user.email,
+      avatarUrl: user.avatarUrl,
     });
   } catch (err) {
     console.error("[Glide] profile PATCH:", err);

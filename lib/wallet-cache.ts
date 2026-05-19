@@ -1,11 +1,13 @@
 import type { GlideWallet } from "@/lib/types";
 
-const CACHE_KEY = "glide.wallet.v1";
+function cacheKey(userId: string) {
+  return `glide.wallet.${userId}`;
+}
 
-export function readCachedWallet(): GlideWallet | null {
-  if (typeof window === "undefined") return null;
+export function readCachedWallet(userId?: string | null): GlideWallet | null {
+  if (typeof window === "undefined" || !userId) return null;
   try {
-    const raw = sessionStorage.getItem(CACHE_KEY);
+    const raw = sessionStorage.getItem(cacheKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as GlideWallet;
     if (parsed?.id && parsed?.address) return parsed;
@@ -15,11 +17,15 @@ export function readCachedWallet(): GlideWallet | null {
   return null;
 }
 
-export function writeCachedWallet(wallet: GlideWallet | null): void {
-  if (typeof window === "undefined") return;
+export function writeCachedWallet(
+  wallet: GlideWallet | null,
+  userId?: string | null,
+): void {
+  if (typeof window === "undefined" || !userId) return;
+  const key = cacheKey(userId);
   if (!wallet) {
-    sessionStorage.removeItem(CACHE_KEY);
+    sessionStorage.removeItem(key);
     return;
   }
-  sessionStorage.setItem(CACHE_KEY, JSON.stringify(wallet));
+  sessionStorage.setItem(key, JSON.stringify(wallet));
 }
