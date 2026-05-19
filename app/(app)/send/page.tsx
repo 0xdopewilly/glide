@@ -6,7 +6,6 @@ import { NumericKeypad } from "@/components/numeric-keypad";
 import { UserAvatar } from "@/components/user-avatar";
 import { GlideButton } from "@/components/glide-button";
 import { shortenAddress } from "@/lib/format";
-import { looksLikeRecipient } from "@/lib/recipient-input";
 import {
   isValidUsername,
   isValidWalletAddress,
@@ -24,16 +23,12 @@ function formatAmountDisplay(raw: string) {
   return raw;
 }
 
-function recipientKind(
-  value: string,
-): "wallet" | "username" | "contact" | null {
-  const t = value.trim();
-  if (!t) return null;
-  if (isValidWalletAddress(t)) return "wallet";
-  if (isValidUsername(normalizeUsername(t))) return "username";
-  if (t.length >= 2) return "contact";
-  return null;
-}
+type ResolveState = "idle" | "checking" | "ok" | "fail";
+
+type ResolvedMeta = {
+  source: "wallet" | "username" | "contact";
+  label: string;
+};
 
 export default function SendPage() {
   const router = useRouter();
@@ -44,11 +39,77 @@ export default function SendPage() {
     () => searchParams.get("to")?.trim() ?? "",
   );
   const [recipientFocused, setRecipientFocused] = useState(false);
+  const [resolveState, setResolveState] = useState<ResolveState>("idle");
+  const [resolvedMeta, setResolvedMeta] = useState<ResolvedMeta | null>(null);
+  const [resolveMessage, setResolveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const to = searchParams.get("to")?.trim();
     if (to) setRecipient(to);
   }, [searchParams]);
+
+  useEffect(() => {
+    const t = recipient.trim();
+    if (!t) {
+      setResolveState("idle");
+      setResolvedMeta(null);
+      setResolveMessage(null);
+      return;
+    }
+
+    if (isValidWalletAddress(t)) {
+      setResolveState("ok");
+      setResolvedMeta({
+        source: "wallet",
+        label: shortenAddress(t, 8),
+      });
+      setResolveMessage(null);
+      return;
+    }
+
+    let cancelled = false;
+    setResolveState("checking");
+    setResolveMessage(null);
+
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch(
+            `/api/recipient/resolve?q=${encodeURIComponent(t)}`,
+          );
+          const data = (await res.json()) as {
+            resolved?: boolean;
+            source?: ResolvedMeta["source"];
+            label?: string;
+            message?: string;
+          };
+          if (cancelled) return;
+          if (data.resolved && data.source && data.label) {
+            setResolveState("ok");
+            setResolvedMeta({ source: data.source, label: data.label });
+            setResolveMessage(null);
+          } else {
+            setResolveState("fail");
+            setResolvedMeta(null);
+            setResolveMessage(
+              data.message ?? "Recipient not found on Glide",
+            );
+          }
+        } catch {
+          if (!cancelled) {
+            setResolveState("fail");
+            setResolvedMeta(null);
+            setResolveMessage("Could not verify recipient");
+          }
+        }
+      })();
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [recipient]);
   const [amount, setAmount] = useState("0");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -69,8 +130,11 @@ export default function SendPage() {
   }, []);
 
   const parsed = parseFloat(amount) || 0;
-  const recipientOk = looksLikeRecipient(recipient);
-  const kind = recipientKind(recipient);
+  const recipientOk = resolveState === "ok";
+  const kind = resolvedMeta?.source ?? null;
+  const inputLooksLikeUsername = isValidUsername(
+    normalizeUsername(recipient),
+  );
   const overBalance = parsed > balance;
   const canContinue =
     parsed > 0 && recipientOk && wallet != null && !overBalance;
@@ -86,22 +150,23 @@ export default function SendPage() {
     else setLocalError("Payment could not be completed. Try again.");
   };
 
-  const recipientLabel = useMemo(() => {
-    const t = recipient.trim();
-    if (isValidWalletAddress(t)) return shortenAddress(t, 8);
-    if (t.startsWith("@")) return t;
-    if (/^[a-z0-9_]{3,20}$/i.test(t)) return `@${t.toLowerCase()}`;
-    return t;
-  }, [recipient]);
+  const recipientLabel = resolvedMeta?.label ?? recipient.trim();
 
   const hint = useMemo(() => {
     if (!recipient.trim()) return null;
-    if (!recipientOk) {
-      return "Use a wallet address (0x…), @username, or contact name";
-    }
+    if (resolveState === "checking") return "Checking recipient…";
+    if (resolveState === "fail" && resolveMessage) return resolveMessage;
     if (overBalance) return `You only have $${balance.toFixed(2)} USDC`;
-    return null;
-  }, [recipient, recipientOk, overBalance, balance]);
+    if (recipientOk) return null;
+    return "Use a wallet address (0x…), @username, or contact name";
+  }, [
+    recipient,
+    resolveState,
+    resolveMessage,
+    recipientOk,
+    overBalance,
+    balance,
+  ]);
 
   const recipientBorderClass = useMemo(() => {
     if (!recipient.trim()) {
@@ -109,11 +174,17 @@ export default function SendPage() {
         ? "border-violet-500/50 ring-2 ring-violet-500/20"
         : "border-white/12 dark:border-white/10";
     }
+    if (resolveState === "checking") {
+      return "border-violet-500/40 ring-2 ring-violet-500/15";
+    }
     if (recipientOk) {
       return "border-emerald-500/40 ring-2 ring-emerald-500/15";
     }
-    return "border-red-400/50 ring-2 ring-red-500/15";
-  }, [recipient, recipientFocused, recipientOk]);
+    if (resolveState === "fail") {
+      return "border-red-400/50 ring-2 ring-red-500/15";
+    }
+    return "border-white/12 dark:border-white/10";
+  }, [recipient, recipientFocused, recipientOk, resolveState]);
 
   if (step === "success") {
     return (
@@ -214,7 +285,7 @@ export default function SendPage() {
               Send to
             </label>
             <div className="relative mt-2">
-              {kind === "username" ? (
+              {(kind === "username" || (inputLooksLikeUsername && !kind)) ? (
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-violet-400">
                   @
                 </span>
@@ -232,12 +303,17 @@ export default function SendPage() {
                 spellCheck={false}
                 className={`w-full rounded-xl border-0 bg-black/20 py-3.5 text-center text-[16px] font-semibold tracking-tight text-white placeholder:font-medium placeholder:text-white/35 focus:outline-none dark:bg-black/30 ${
                   kind === "username" ? "pl-8 pr-3" : "px-3"
-                } ${kind === "wallet" ? "font-mono text-[14px]" : ""}`}
+                } ${kind === "wallet" || isValidWalletAddress(recipient.trim()) ? "font-mono text-[14px]" : ""}`}
               />
             </div>
             <p className="mt-2.5 text-center text-[12px] leading-snug font-medium text-white/45">
               Or type a saved contact name
             </p>
+            {resolveState === "checking" ? (
+              <p className="mt-3 text-center text-[12px] font-medium text-violet-400">
+                Verifying…
+              </p>
+            ) : null}
             {recipientOk && kind ? (
               <div className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-emerald-500">
                 {kind === "wallet" ? (
@@ -259,9 +335,11 @@ export default function SendPage() {
           {hint ? (
             <p
               className={`mt-3 text-center text-[13px] font-medium leading-snug ${
-                recipientOk && !overBalance
-                  ? "text-emerald-500/90"
-                  : "text-red-400"
+                resolveState === "fail" || overBalance
+                  ? "text-red-400"
+                  : resolveState === "checking"
+                    ? "text-violet-400"
+                    : "text-emerald-500/90"
               }`}
             >
               {hint}
