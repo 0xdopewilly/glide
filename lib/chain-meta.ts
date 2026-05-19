@@ -26,10 +26,9 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
     id: "arc-testnet",
     label: "Arc Testnet",
     shortLabel: "Arc",
-    badgeClass: "from-[#1a2744] to-[#0b1120]",
-    color: "#0b1120",
+    badgeClass: "from-[#1a4a7a] to-[#001030]",
+    color: "#1a4a7a",
     logo: "/chains/arc.png",
-    logoFit: "contain",
   },
   "ethereum-sepolia": {
     id: "ethereum-sepolia",
