@@ -13,6 +13,7 @@ import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowUp, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AnimatePresence } from "framer-motion";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 const WELCOME: StoredChatMessage = {
@@ -120,6 +121,9 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           });
           if (!ok) break;
           completed++;
+          if (completed === intent.transfers.length) {
+            setProcessingAction(null);
+          }
           pushMessage({
             id: `success-${Date.now()}-${transfer.token}`,
             role: "assistant",
@@ -153,7 +157,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           } catch {
             /* skip */
           }
-          await refresh();
+          void refresh();
         } else if (completed > 0) {
           pushMessage({
             id: `partial-${Date.now()}`,
@@ -161,7 +165,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             kind: "text",
             text: `Sent ${completed} of ${intent.transfers.length} payments. Check balance and try the rest on Send.`,
           });
-          await refresh();
+          void refresh();
         } else {
           pushMessage({
             id: `err-${Date.now()}`,
@@ -178,13 +182,15 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         });
         if (ok) {
           const label = intent.recipientName?.trim();
+          const token = intent.token ?? "USDC";
+          setProcessingAction(null);
           pushMessage({
             id: `success-${Date.now()}`,
             role: "assistant",
             kind: "action_success",
             successAction: "send",
             amount: intent.amount,
-            token: intent.token ?? "USDC",
+            token,
             to: intent.to,
             recipientName: label,
           });
@@ -209,7 +215,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           } catch {
             /* skip prompt if lookup fails */
           }
-          await refresh();
+          void refresh();
         } else {
           pushMessage({
             id: `err-${Date.now()}`,
@@ -231,7 +237,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             amount: intent.amount,
             targetToken: "EURC",
           });
-          await refresh();
+          void refresh();
         } else {
           pushMessage({
             id: `swap-err-${Date.now()}`,
@@ -253,7 +259,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             amount: intent.amount,
             network: intent.network,
           });
-          await refresh();
+          void refresh();
         } else {
           pushMessage({
             id: `bridge-err-${Date.now()}`,
@@ -280,7 +286,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             kind: "text",
             text: `Split $${intent.total} — sent $${each} to ${intent.recipients.map((r) => `@${r}`).join(", ")}.`,
           });
-          await refresh();
+          void refresh();
         } else if (sent > 0) {
           pushMessage({
             id: `split-partial-${Date.now()}`,
@@ -491,9 +497,12 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             onSaveContact={saveContact}
           />
         ))}
-        {processingAction ? (
-          <ProcessingBubble action={processingAction} />
-        ) : busy ? (
+        <AnimatePresence mode="wait">
+          {processingAction ? (
+            <ProcessingBubble key="processing" action={processingAction} />
+          ) : null}
+        </AnimatePresence>
+        {busy && !processingAction ? (
           <div className="flex justify-start px-1 py-1">
             <div className="glide-chat-typing flex gap-1.5 rounded-[20px] rounded-bl-[6px] border border-neutral-200/50 bg-white/90 px-4 py-3.5 dark:border-white/[0.06] dark:bg-[#1e1e22]">
               <span />

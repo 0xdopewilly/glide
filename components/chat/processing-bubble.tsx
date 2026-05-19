@@ -20,9 +20,10 @@ export function ProcessingBubble({ action }: { action: ActionSuccessType }) {
   return (
     <motion.div
       className="flex w-full justify-end px-1 py-2"
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0 }}
+      initial={{ opacity: 0, x: 12, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 8, scale: 0.98 }}
+      transition={{ duration: 0.18 }}
     >
       <motion.div
         className="flex min-w-[200px] items-center gap-3 rounded-2xl rounded-br-md px-4 py-3 glide-surface-card"

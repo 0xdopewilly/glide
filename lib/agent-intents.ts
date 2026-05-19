@@ -15,6 +15,7 @@ import {
   isSwapOrBridgeMessage,
   parseExplicitIntentFromMessage,
   parseMultiSendFromMessage,
+  parseSendFromMessage,
   parseSplitFromMessage,
 } from "@/lib/agent-context";
 import { findContactByName } from "@/lib/contacts-db";
@@ -187,6 +188,16 @@ export async function reconcileIntentWithHistory(
     };
   }
 
+  const singleSend = parseSendFromMessage(latestUserMessage);
+  if (singleSend) {
+    return {
+      action: "send",
+      amount: singleSend.amount,
+      token: singleSend.token,
+      to: singleSend.to,
+    };
+  }
+
   const split = parseSplitFromMessage(latestUserMessage);
   if (split) return { action: "split", ...split };
 
@@ -255,6 +266,13 @@ export async function reconcileIntentWithHistory(
           recipientName: glideUser.displayName ?? glideUser.username,
         };
       }
+    }
+  }
+
+  if (intent?.action === "send") {
+    const inferred = extractTokenFromText(latestUserMessage);
+    if (inferred && intent.token !== inferred) {
+      intent = { ...intent, token: inferred };
     }
   }
 
