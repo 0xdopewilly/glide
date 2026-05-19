@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Glide
 
-## Getting Started
+**Send money like Cash App — on Arc testnet.**
 
-First, run the development server:
+**GLIDE ON!** 🛝
+
+Live app: **[glide-arc.vercel.app](https://glide-arc.vercel.app)**
+
+Glide is a mobile-first crypto wallet: USDC on [Arc testnet](https://testnet.arcscan.app/), Circle developer wallets, Clerk auth, and an AI assistant on the Ask tab. Pay by **@username**, wallet address, or contact name — not just hex strings.
+
+---
+
+## What works today
+
+| Feature | Notes |
+|--------|--------|
+| **@usernames** | Pick once at signup; send to `@khadee` or a saved contact |
+| **Send & receive** | Keypad flow, balance, push when you get paid |
+| **Ask (AI)** | Groq-powered assistant — send, swap, bridge via chat |
+| **Swap & bridge** | USDC ↔ EURC on Arc; bridge to Sepolia testnets |
+| **Activity** | Transaction history at `/activity` |
+| **QR scan** | Pay via `/scan` (scanner UI polish in progress) |
+| **Push notifications** | Web push for send, receive, swap, bridge |
+| **Motion** | Horizontal slide transitions between screens |
+
+---
+
+## Building next
+
+| Feature | Plan |
+|--------|------|
+| **Request money** | “Request $20 from @khadee” + shareable link / QR |
+| **Payment notes** | Memos on send (“for pizza”) + show in activity |
+| **Activity feed** | Full history with filters (base `/activity` exists) |
+| **QR pay polish** | Square scan frame + more reliable decode (current box is rectangular) |
+| **Split a bill** | Agent or UI: “split $60 with 3 people” on Ask tab |
+| **Recurring sends** | Rent, allowances — scheduled transfers |
+| **Privacy controls** | Hide balance, blur amounts — Cash App–style |
+
+---
+
+## Stack
+
+- **Next.js 16** (App Router) · **React** · **Tailwind**
+- **Clerk** — auth
+- **Circle** — developer-controlled wallets, App Kit swap/bridge
+- **Arc testnet** — USDC gas & balances
+- **Supabase / Prisma** — Postgres
+- **Groq** — Ask tab assistant
+- **Framer Motion** — transitions & micro-interactions
+
+---
+
+## Local dev
 
 ```bash
+npm install
+cp .env.example .env.local   # fill in secrets — see DEPLOY.md
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Circle env vars** (server only — never commit `.env.local`):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Format |
+|----------|--------|
+| `CIRCLE_API_KEY` | Full `TEST_API_KEY:id:secret` |
+| `CIRCLE_KIT_KEY` | Full `KIT_KEY:id:secret` (swap; same Circle app as API key) |
+| `CIRCLE_ENTITY_SECRET` | 64-char hex, no prefix |
 
-## Learn More
+After deploy, verify: `/api/health/kit` → `{ "ok": true }`.
 
-To learn more about Next.js, take a look at the following resources:
+Production deploy: **[DEPLOY.md](./DEPLOY.md)** · Clerk: **[CLERK.md](./CLERK.md)**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts
 
-## Deploy on Vercel
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Dev server |
+| `npm run build` | Migrate + production build |
+| `npm run db:migrate` | Prisma migrate (local) |
+| `npm run db:studio` | Prisma Studio |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Repo
+
+**GitHub:** [github.com/0xdopewilly/glide](https://github.com/0xdopewilly/glide)
+
+Built for Arc testnet. Fund wallets via [Circle faucet](https://faucet.circle.com/) (Arc Testnet).
+
+**GLIDE ON!**
