@@ -66,9 +66,9 @@ export function ActionSuccessCard({
   }
 
   return (
-    <div className="flex justify-center px-1 py-2">
+    <div className="flex w-full justify-end px-1 py-2">
       <div
-        className={`glide-chat-card flex aspect-square w-[min(100%,300px)] max-w-[300px] flex-col items-center justify-center rounded-[28px] bg-gradient-to-br ${gradient} p-6 text-center text-white`}
+        className={`glide-chat-card flex aspect-square w-[min(100%,300px)] max-w-[300px] shrink-0 flex-col items-center justify-center rounded-[28px] rounded-br-md bg-gradient-to-br ${gradient} p-6 text-center text-white`}
         role="status"
         aria-label={`${label}${amount ? `: $${amount}` : ""}`}
       >
