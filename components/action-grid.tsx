@@ -11,7 +11,7 @@ import type { ReactNode } from "react";
 
 const ACTIONS = [
   { href: "/send", label: "Send", icon: Send },
-  { href: "/request", label: "Request", icon: ArrowDownLeft },
+  { href: "/receive", label: "Receive", icon: Download },
   { href: "/swap", label: "Swap", icon: ArrowLeftRight },
   { href: "/bridge", label: "Bridge", icon: Link2 },
 ] as const;
