@@ -9,9 +9,14 @@ const FULL_BLEED_ROUTES = ["/send", "/receive", "/swap", "/bridge", "/request", 
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
 
+/** Exact route or child path only — avoids `/payments` matching `/pay`. */
+function isFullBleedRoute(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hideNav = FULL_BLEED_ROUTES.some((r) => pathname.startsWith(r));
+  const hideNav = FULL_BLEED_ROUTES.some((r) => isFullBleedRoute(pathname, r));
 
   return (
     <div
