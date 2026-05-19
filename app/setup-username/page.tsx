@@ -12,7 +12,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 export default function SetupUsernamePage() {
   const router = useRouter();
   const { user, ready } = useAuth();
-  const { profile, loading, updateProfile } = useWallet();
+  const { profile, loading, profileHydrated, updateProfile } = useWallet();
   const [username, setUsername] = useState("");
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
@@ -26,10 +26,10 @@ export default function SetupUsernamePage() {
       router.replace("/onboarding");
       return;
     }
-    if (!loading && profile.username) {
+    if (profileHydrated && profile.username) {
       router.replace("/");
     }
-  }, [ready, user, loading, profile.username, router]);
+  }, [ready, user, profileHydrated, profile.username, router]);
 
   const checkAvailability = useCallback(async (raw: string) => {
     const u = normalizeUsername(raw);
@@ -104,6 +104,20 @@ export default function SetupUsernamePage() {
   const normalized = normalizeUsername(username);
   const canSubmit =
     isValidUsername(normalized) && available === true && !submitting && !checking;
+
+  if (!ready || !user || !profileHydrated) {
+    return (
+      <OnboardingShell>
+        <div className="flex flex-1 items-center justify-center px-7 pb-10 pt-14">
+          <p className="text-sm font-medium glide-muted">Loading…</p>
+        </div>
+      </OnboardingShell>
+    );
+  }
+
+  if (profile.username) {
+    return null;
+  }
 
   return (
     <OnboardingShell>

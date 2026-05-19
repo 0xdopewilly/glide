@@ -11,6 +11,10 @@ import {
   readCachedTransactions,
   writeCachedTransactions,
 } from "@/lib/transaction-cache";
+import {
+  readCachedProfile,
+  writeCachedProfile,
+} from "@/lib/profile-cache";
 import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import {
   createContext,
@@ -37,6 +41,8 @@ type WalletContextValue = {
   transactions: GlideTransaction[];
   transactionsLoading: boolean;
   loading: boolean;
+  /** True after profile has been fetched for the signed-in user. */
+  profileHydrated: boolean;
   refreshing: boolean;
   error: string | null;
   notice: string | null;
@@ -106,13 +112,19 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [transactions, setTransactions] = useState<GlideTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [profileHydrated, setProfileHydrated] = useState(false);
   const userIdRef = useRef<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   const updateProfile = useCallback((patch: Partial<GlideProfile>) => {
-    setProfile((prev) => ({ ...prev, ...patch }));
+    setProfile((prev) => {
+      const next = { ...prev, ...patch };
+      const uid = userIdRef.current;
+      if (uid) writeCachedProfile(next, uid);
+      return next;
+    });
   }, []);
 
   const saveProfile = useCallback(async (patch: Partial<GlideProfile>) => {
@@ -125,12 +137,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       });
       const data = (await res.json()) as GlideProfile & { error?: string };
       if (!res.ok) throw new Error(data.error ?? "Could not save profile");
-      setProfile({
+      const next: GlideProfile = {
         displayName: data.displayName,
         email: data.email,
         username: data.username ?? null,
         avatarUrl: data.avatarUrl ?? null,
-      });
+      };
+      setProfile(next);
+      if (userIdRef.current) writeCachedProfile(next, userIdRef.current);
       return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save profile");
@@ -346,36 +360,52 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setBalance(0);
       setTokens([]);
       setTransactions([]);
+      setProfile(DEFAULT_PROFILE);
+      setProfileHydrated(false);
       setLoading(false);
       return;
     }
 
     userIdRef.current = user.id;
+    setProfileHydrated(false);
+
+    const cachedProfile = readCachedProfile(user.id);
+    if (cachedProfile) {
+      setProfile(cachedProfile);
+      if (cachedProfile.username) {
+        setProfileHydrated(true);
+      }
+    }
+
     const cached = readCachedWallet(user.id);
     const cachedTxs = readCachedTransactions(user.id);
     if (cachedTxs?.length) setTransactions(cachedTxs);
     if (cached) {
       setWallet(cached);
-      setLoading(false);
       void fetchTransactions(cached.id, { quick: true });
-    } else {
-      setLoading(true);
     }
+    setLoading(true);
 
     let cancelled = false;
 
     void (async () => {
       setError(null);
 
-      const saved = await loadProfileFromApi();
-      if (!cancelled) {
-        setProfile(
-          saved ?? {
-            displayName: user.displayName,
-            email: user.email,
-            avatarUrl: null,
-          },
-        );
+      let saved: GlideProfile | null = null;
+      try {
+        saved = await loadProfileFromApi();
+        if (!cancelled) {
+          const next =
+            saved ?? {
+              displayName: user.displayName,
+              email: user.email,
+              avatarUrl: null,
+            };
+          setProfile(next);
+          writeCachedProfile(next, user.id);
+        }
+      } finally {
+        if (!cancelled) setProfileHydrated(true);
       }
 
       try {
@@ -386,6 +416,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         setBalance(b);
         setTokens(t);
         void loadTransactions(w.id);
+
+        if (!saved && !cancelled) {
+          const refreshed = await loadProfileFromApi();
+          if (refreshed) {
+            setProfile(refreshed);
+            writeCachedProfile(refreshed, user.id);
+          }
+        }
       } catch (e) {
         if (!cancelled) {
           setError(e instanceof Error ? e.message : "Wallet setup failed");
@@ -411,6 +449,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       transactions,
       transactionsLoading,
       loading,
+      profileHydrated,
       refreshing,
       error,
       notice,
@@ -434,6 +473,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       transactions,
       transactionsLoading,
       loading,
+      profileHydrated,
       refreshing,
       error,
       notice,
