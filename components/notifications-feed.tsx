@@ -1,7 +1,7 @@
 "use client";
 
 import type { GlideNotification } from "@/lib/notifications";
-import { NOTIFICATION_UI } from "@/lib/notification-ui";
+import { notificationUiFor } from "@/lib/notification-ui";
 import { formatRelativeDate } from "@/lib/format";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -54,11 +54,7 @@ export function NotificationsFeed({
           </h2>
           <ul className="space-y-2">
             {items.map((n) => {
-              const ui = NOTIFICATION_UI[n.type] ?? {
-                Icon: NOTIFICATION_UI.payment_received.Icon,
-                accent: "bg-neutral-500/10 text-neutral-600",
-              };
-              const { Icon, accent } = ui;
+              const { Icon, accent } = notificationUiFor(n.type);
 
               return (
                 <li key={n.id}>

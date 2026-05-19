@@ -2,6 +2,11 @@
 
 import { FormField, inputClassName } from "@/components/form-field";
 import { PLACEHOLDER_GLIDE_TAG_OR_ADDRESS } from "@/lib/placeholders";
+import {
+  formatNextScheduledRun,
+  scheduleFrequencyLabel,
+  type ScheduleFrequency,
+} from "@/lib/scheduled-transfers";
 import { GlideButton } from "@/components/glide-button";
 import { useEffect, useState } from "react";
 
@@ -18,7 +23,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
   const [rows, setRows] = useState<Row[]>([]);
   const [destination, setDestination] = useState("");
   const [amount, setAmount] = useState("");
-  const [frequency, setFrequency] = useState<"weekly" | "monthly">("monthly");
+  const [frequency, setFrequency] = useState<ScheduleFrequency>("monthly");
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
@@ -76,8 +81,9 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
                 <span className="font-medium">
                   {r.recipientLabel ?? r.destination}
                 </span>
-                <span className="mt-0.5 block text-xs capitalize glide-muted">
-                  {r.frequency} · next {new Date(r.nextRunAt).toLocaleDateString()}
+                <span className="mt-0.5 block text-xs glide-muted">
+                  {scheduleFrequencyLabel(r.frequency)} · next{" "}
+                  {formatNextScheduledRun(r.nextRunAt, r.frequency)}
                 </span>
               </span>
               <button
@@ -124,13 +130,24 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
         <select
           id="sched-freq"
           value={frequency}
-          onChange={(e) => setFrequency(e.target.value as "weekly" | "monthly")}
+          onChange={(e) =>
+            setFrequency(e.target.value as ScheduleFrequency)
+          }
           className={inputClassName}
         >
+          <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
           <option value="monthly">Monthly</option>
+          <option value="minutely">Every minute (test)</option>
         </select>
       </FormField>
+      {frequency === "minutely" ? (
+        <p className="mt-2 text-xs leading-relaxed glide-muted">
+          For testing only. Runs when the scheduled-send cron fires (about every
+          minute on Vercel). Set <code className="text-[11px]">CRON_SECRET</code>{" "}
+          in your env.
+        </p>
+      ) : null}
       <GlideButton
         type="button"
         variant="simple"

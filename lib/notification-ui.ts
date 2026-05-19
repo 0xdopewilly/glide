@@ -3,11 +3,15 @@ import type { LucideIcon } from "lucide-react";
 import {
   ArrowDownLeft,
   ArrowLeftRight,
-  ArrowUpRight,
   Bell,
   Globe2,
   HandCoins,
 } from "lucide-react";
+
+const DEFAULT_UI = {
+  Icon: Bell,
+  accent: "bg-neutral-500/10 text-neutral-600 dark:text-white/60",
+} as const;
 
 export const NOTIFICATION_UI: Record<
   NotificationType,
@@ -20,10 +24,6 @@ export const NOTIFICATION_UI: Record<
   payment_request: {
     Icon: HandCoins,
     accent: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
-  },
-  payment_sent: {
-    Icon: ArrowUpRight,
-    accent: "bg-neutral-500/10 text-neutral-600 dark:text-white/60",
   },
   request_paid: {
     Icon: HandCoins,
@@ -39,6 +39,6 @@ export const NOTIFICATION_UI: Record<
   },
 };
 
-export function defaultNotificationIcon() {
-  return Bell;
+export function notificationUiFor(type: string) {
+  return NOTIFICATION_UI[type as NotificationType] ?? DEFAULT_UI;
 }

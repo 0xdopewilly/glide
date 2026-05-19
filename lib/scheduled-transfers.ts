@@ -1,25 +1,80 @@
 import { prisma } from "@/lib/db";
 
-export type ScheduleFrequency = "weekly" | "monthly";
+export type ScheduleFrequency = "daily" | "weekly" | "monthly" | "minutely";
 
-export function nextRunFromNow(frequency: ScheduleFrequency): Date {
-  const d = new Date();
-  if (frequency === "weekly") {
-    d.setDate(d.getDate() + 7);
-  } else {
-    d.setMonth(d.getMonth() + 1);
+export const SCHEDULE_FREQUENCIES: ScheduleFrequency[] = [
+  "daily",
+  "weekly",
+  "monthly",
+  "minutely",
+];
+
+export function isScheduleFrequency(value: string): value is ScheduleFrequency {
+  return SCHEDULE_FREQUENCIES.includes(value as ScheduleFrequency);
+}
+
+export function scheduleFrequencyLabel(frequency: string): string {
+  switch (frequency) {
+    case "daily":
+      return "Daily";
+    case "weekly":
+      return "Weekly";
+    case "monthly":
+      return "Monthly";
+    case "minutely":
+      return "Every minute (test)";
+    default:
+      return frequency;
+  }
+}
+
+export function formatNextScheduledRun(iso: string, frequency: string): string {
+  const d = new Date(iso);
+  if (frequency === "minutely") {
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+  return d.toLocaleDateString("en-US", {
+    weekday: frequency === "weekly" ? "short" : undefined,
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function addInterval(from: Date, frequency: ScheduleFrequency): Date {
+  const d = new Date(from);
+  switch (frequency) {
+    case "minutely":
+      d.setMinutes(d.getMinutes() + 1);
+      break;
+    case "daily":
+      d.setDate(d.getDate() + 1);
+      break;
+    case "weekly":
+      d.setDate(d.getDate() + 7);
+      break;
+    case "monthly":
+      d.setMonth(d.getMonth() + 1);
+      break;
   }
   return d;
 }
 
-export function advanceNextRun(current: Date, frequency: ScheduleFrequency): Date {
-  const d = new Date(current);
-  if (frequency === "weekly") {
-    d.setDate(d.getDate() + 7);
-  } else {
-    d.setMonth(d.getMonth() + 1);
-  }
-  return d;
+export function nextRunFromNow(frequency: ScheduleFrequency): Date {
+  return addInterval(new Date(), frequency);
+}
+
+export function advanceNextRun(
+  current: Date,
+  frequency: ScheduleFrequency,
+): Date {
+  return addInterval(current, frequency);
 }
 
 export async function listScheduledTransfers(userId: string) {

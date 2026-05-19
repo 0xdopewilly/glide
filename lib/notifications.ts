@@ -4,7 +4,6 @@ import type { Prisma } from "@prisma/client";
 export type NotificationType =
   | "payment_received"
   | "payment_request"
-  | "payment_sent"
   | "request_paid"
   | "swap_complete"
   | "bridge_complete";

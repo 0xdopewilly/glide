@@ -97,25 +97,6 @@ export async function notifyIncomingPayment(
   });
 }
 
-export async function notifyPaymentSent(
-  userId: string,
-  amount: string,
-  toLabel: string,
-  token: "USDC" | "EURC" = "USDC",
-) {
-  const prefix = token === "EURC" ? "€" : "$";
-  const parsed = formatAmountForPush(`${prefix}${amount}`);
-  const target = formatUsernameForPush(toLabel);
-
-  await notifyUser(userId, {
-    type: "payment_sent",
-    title: "Payment sent",
-    body: `You sent ${parsed} to ${target}.`,
-    url: "/activity",
-    metadata: { amount, to: target, token },
-  });
-}
-
 export async function notifySwapComplete(userId: string, amount: string) {
   const parsed = formatAmountForPush(`$${amount}`);
 

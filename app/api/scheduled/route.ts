@@ -2,6 +2,7 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import {
   cancelScheduledTransfer,
   createScheduledTransfer,
+  isScheduleFrequency,
   listScheduledTransfers,
   type ScheduleFrequency,
 } from "@/lib/scheduled-transfers";
@@ -37,9 +38,12 @@ export async function POST(request: NextRequest) {
   if (!destination || parsed === null || parsed <= 0) {
     return NextResponse.json({ error: "Invalid destination or amount" }, { status: 400 });
   }
-  if (frequency !== "weekly" && frequency !== "monthly") {
+  if (!isScheduleFrequency(frequency)) {
     return NextResponse.json(
-      { error: "frequency must be weekly or monthly" },
+      {
+        error:
+          "frequency must be daily, weekly, monthly, or minutely (test only)",
+      },
       { status: 400 },
     );
   }

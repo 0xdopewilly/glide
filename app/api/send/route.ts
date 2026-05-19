@@ -7,7 +7,6 @@ import {
 } from "@/lib/tokens";
 import { formatStableAmount } from "@/lib/currency-format";
 import { userOwnsWallet } from "@/lib/users";
-import { notifyPaymentSent } from "@/lib/push";
 import {
   formatResolvedRecipientLabel,
   resolveRecipient,
@@ -151,13 +150,6 @@ export async function POST(request: NextRequest) {
     }
 
     const balance = await fetchWalletBalance(walletId);
-
-    void notifyPaymentSent(
-      session.userId,
-      parsed.toFixed(2),
-      formatResolvedRecipientLabel(resolved),
-      isEurcToken(token) ? "EURC" : "USDC",
-    ).catch((err) => console.error("[Glide] send push:", err));
 
     return NextResponse.json({
       transactionId: circleId,
