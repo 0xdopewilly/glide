@@ -9,12 +9,12 @@ const BYPASS = ["/setup-username"];
 
 export function UsernameGate({ children }: { children: React.ReactNode }) {
   const { user, ready } = useAuth();
-  const { profile, loading, profileHydrated } = useWallet();
+  const { profile, profileHydrated } = useWallet();
   const router = useRouter();
   const pathname = usePathname();
 
   const onSetupPage = BYPASS.some((p) => pathname.startsWith(p));
-  const waiting = !profileHydrated || loading;
+  const waiting = !profileHydrated;
 
   useEffect(() => {
     if (!ready || !user || waiting) return;

@@ -100,8 +100,10 @@ export async function fetchWalletTokenBalances(
 export async function fetchAllWalletTokenBalances(
   walletId: string,
   walletAddress: string,
+  options?: { includeOffArc?: boolean },
 ): Promise<GlideTokenBalance[]> {
   const arc = await fetchWalletTokenBalances(walletId);
+  if (options?.includeOffArc === false) return arc;
   try {
     const offArc = await fetchOffArcUsdcBalances(walletAddress);
     return [...arc, ...offArc];

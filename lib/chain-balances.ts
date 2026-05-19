@@ -71,23 +71,25 @@ export async function fetchOffArcUsdcBalances(
   if (!walletAddress?.startsWith("0x")) return [];
 
   const wallet = walletAddress as Address;
-  const out: GlideTokenBalance[] = [];
 
-  for (const { chainId, chain, usdc } of OFF_ARC) {
-    try {
-      const amount = await readUsdcOnChain(chain, usdc, wallet);
-      if (amount < MIN_DISPLAY) continue;
-      out.push({
-        symbol: "USDC",
-        amount,
-        usdValue: amount,
-        chainId,
-        chainLabel: CHAIN_META[chainId].label,
-      });
-    } catch (err) {
-      console.warn(`[Glide] ${chainId} USDC balance:`, err);
-    }
-  }
+  const rows = await Promise.all(
+    OFF_ARC.map(async ({ chainId, chain, usdc }) => {
+      try {
+        const amount = await readUsdcOnChain(chain, usdc, wallet);
+        if (amount < MIN_DISPLAY) return null;
+        return {
+          symbol: "USDC",
+          amount,
+          usdValue: amount,
+          chainId,
+          chainLabel: CHAIN_META[chainId].label,
+        } satisfies GlideTokenBalance;
+      } catch (err) {
+        console.warn(`[Glide] ${chainId} USDC balance:`, err);
+        return null;
+      }
+    }),
+  );
 
-  return out;
+  return rows.filter((r): r is GlideTokenBalance => r !== null);
 }

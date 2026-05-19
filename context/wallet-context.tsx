@@ -15,6 +15,14 @@ import {
   readCachedProfile,
   writeCachedProfile,
 } from "@/lib/profile-cache";
+import {
+  estimateNetUsdFromTransactions,
+  resolveWalletTotalUsd,
+} from "@/lib/tokens";
+import {
+  readCachedWalletBalances,
+  writeCachedWalletBalances,
+} from "@/lib/wallet-balance-cache";
 import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import { playSuccessChime } from "@/lib/success-chime";
 import {
@@ -38,6 +46,8 @@ type WalletContextValue = {
   saveProfile: (patch: Partial<GlideProfile>) => Promise<boolean>;
   wallet: GlideWallet | null;
   balance: number;
+  /** Best-known USD total (on-chain, cache, or activity fallback). */
+  totalUsd: number;
   tokens: GlideTokenBalance[];
   transactions: GlideTransaction[];
   transactionsLoading: boolean;
@@ -90,22 +100,53 @@ function applyWalletPayload(
   writeCachedWallet(data.wallet, userId);
   setBalance(data.balance ?? 0);
   setTokens(data.tokens ?? []);
+  const totalUsd =
+    typeof data.totalUsd === "number"
+      ? data.totalUsd
+      : resolveWalletTotalUsd(data.tokens ?? [], data.balance ?? 0);
+  writeCachedWalletBalances(
+    {
+      balance: data.balance ?? 0,
+      tokens: data.tokens ?? [],
+      totalUsd,
+    },
+    userId,
+  );
 }
 
-async function loadWalletFromApi(): Promise<{
+async function loadWalletFromApi(options?: {
+  walletId?: string;
+  full?: boolean;
+}): Promise<{
   wallet: GlideWallet;
   balance: number;
   tokens: GlideTokenBalance[];
+  totalUsd: number;
 }> {
-  const res = await fetch("/api/wallet", { method: "POST" });
+  const params = new URLSearchParams();
+  if (options?.walletId) params.set("walletId", options.walletId);
+  if (options?.full) params.set("full", "1");
+
+  const useGet = Boolean(options?.walletId);
+  const qs = params.toString();
+  const url = useGet ? `/api/wallet?${qs}` : `/api/wallet${qs ? `?${qs}` : ""}`;
+
+  const res = await fetch(url, { method: useGet ? "GET" : "POST" });
   const data = (await res.json()) as WalletApiPayload;
   if (!res.ok || !data.wallet) {
     throw new Error(data.error ?? "Could not load wallet");
   }
+  const balance = data.balance ?? 0;
+  const tokens = data.tokens ?? [];
+  const totalUsd =
+    typeof data.totalUsd === "number"
+      ? data.totalUsd
+      : resolveWalletTotalUsd(tokens, balance);
   return {
     wallet: data.wallet,
-    balance: data.balance ?? 0,
-    tokens: data.tokens ?? [],
+    balance,
+    tokens,
+    totalUsd,
   };
 }
 
@@ -165,8 +206,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchWalletState = useCallback(
-    async (w: GlideWallet, userId: string) => {
-      const res = await fetch("/api/wallet");
+    async (w: GlideWallet, userId: string, full = false) => {
+      const qs = new URLSearchParams({
+        walletId: w.id,
+        ...(full ? { full: "1" } : {}),
+      });
+      const res = await fetch(`/api/wallet?${qs}`);
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error ?? "Could not load wallet");
@@ -229,11 +274,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     try {
       const uid = userIdRef.current;
       if (!uid) return null;
-      const { wallet: w, balance: b, tokens: t } = await loadWalletFromApi();
+      const { wallet: w, balance: b, tokens: t } = await loadWalletFromApi({
+        walletId: wallet?.id,
+      });
       setWallet(w);
       writeCachedWallet(w, uid);
       setBalance(b);
       setTokens(t);
+      writeCachedWalletBalances(
+        {
+          balance: b,
+          tokens: t,
+          totalUsd: resolveWalletTotalUsd(t, b),
+        },
+        uid,
+      );
       void loadTransactions(w.id);
       return w;
     } catch (e) {
@@ -406,65 +461,78 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
 
     const cached = readCachedWallet(user.id);
+    const cachedBalances = readCachedWalletBalances(user.id);
     const cachedTxs = readCachedTransactions(user.id);
     if (cachedTxs?.length) setTransactions(cachedTxs);
+    if (cachedBalances) {
+      setBalance(cachedBalances.balance);
+      setTokens(cachedBalances.tokens);
+    }
     if (cached) {
       setWallet(cached);
       void fetchTransactions(cached.id, { quick: true });
     }
-    setLoading(true);
+    setLoading(!cachedBalances);
 
     let cancelled = false;
 
     void (async () => {
       setError(null);
 
-      let saved: GlideProfile | null = null;
-      try {
-        saved = await loadProfileFromApi();
-        if (!cancelled) {
-          const next =
-            saved ?? {
-              displayName: user.displayName,
-              email: user.email,
-              avatarUrl: null,
-            };
-          setProfile(next);
-          writeCachedProfile(next, user.id);
-        }
-      } finally {
-        if (!cancelled) setProfileHydrated(true);
+      const profilePromise = loadProfileFromApi();
+      const walletPromise = loadWalletFromApi({
+        walletId: cached?.id,
+        full: false,
+      });
+
+      const [saved, walletResult] = await Promise.all([
+        profilePromise.catch(() => null),
+        walletPromise.catch((e: unknown) => {
+          if (!cancelled) {
+            setError(e instanceof Error ? e.message : "Wallet setup failed");
+          }
+          return null;
+        }),
+      ]);
+
+      if (!cancelled) {
+        const next =
+          saved ?? {
+            displayName: user.displayName,
+            email: user.email,
+            avatarUrl: null,
+          };
+        setProfile(next);
+        writeCachedProfile(next, user.id);
+        setProfileHydrated(true);
       }
 
-      try {
-        const { wallet: w, balance: b, tokens: t } = await loadWalletFromApi();
-        if (cancelled) return;
+      if (walletResult && !cancelled) {
+        const { wallet: w, balance: b, tokens: t, totalUsd } = walletResult;
         setWallet(w);
         writeCachedWallet(w, user.id);
         setBalance(b);
         setTokens(t);
+        writeCachedWalletBalances(
+          { balance: b, tokens: t, totalUsd },
+          user.id,
+        );
         void loadTransactions(w.id);
-
-        if (!saved && !cancelled) {
-          const refreshed = await loadProfileFromApi();
-          if (refreshed) {
-            setProfile(refreshed);
-            writeCachedProfile(refreshed, user.id);
-          }
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : "Wallet setup failed");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
       }
+
+      if (!cancelled) setLoading(false);
     })();
 
     return () => {
       cancelled = true;
     };
   }, [authReady, user?.id, fetchTransactions, loadTransactions]);
+
+  const totalUsd = useMemo(() => {
+    const onChain = resolveWalletTotalUsd(tokens, balance);
+    if (onChain > 0) return onChain;
+    return estimateNetUsdFromTransactions(transactions);
+  }, [tokens, balance, transactions]);
 
   const value = useMemo(
     () => ({
@@ -473,6 +541,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       saveProfile,
       wallet,
       balance,
+      totalUsd,
       tokens,
       transactions,
       transactionsLoading,
@@ -497,6 +566,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       saveProfile,
       wallet,
       balance,
+      totalUsd,
       tokens,
       transactions,
       transactionsLoading,

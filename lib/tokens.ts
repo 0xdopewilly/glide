@@ -40,17 +40,49 @@ export function addressesEqual(a?: string | null, b?: string | null): boolean {
   return a.toLowerCase() === b.toLowerCase();
 }
 
-export function totalUsdFromTokens(tokens: { usdValue: number }[]): number {
-  return tokens.reduce((sum, t) => sum + t.usdValue, 0);
+export function totalUsdFromTokens(
+  tokens: { usdValue: number; amount: number }[],
+): number {
+  return tokens.reduce((sum, t) => {
+    const v = t.usdValue > 0 ? t.usdValue : t.amount > 0 ? t.amount : 0;
+    return sum + v;
+  }, 0);
 }
 
-/** Prefer token sum; fall back to USDC balance when tokens are not loaded yet. */
+/** Sum completed credits minus debits from activity (fallback when Circle lags). */
+export function estimateNetUsdFromTransactions(
+  transactions: { variant?: string; amount: string }[],
+): number {
+  let net = 0;
+  for (const tx of transactions) {
+    const n = parseSignedUsdAmount(tx.amount);
+    if (n === null) continue;
+    if (tx.variant === "credit") net += n;
+    else if (tx.variant === "debit") net -= n;
+  }
+  return Math.max(0, net);
+}
+
+function parseSignedUsdAmount(amount: string): number | null {
+  const cleaned = amount.replace(/,/g, "").trim();
+  const m = cleaned.match(/([+-])?\s*\$?\s*([\d.]+)/);
+  if (!m) return null;
+  const n = parseFloat(m[2]);
+  if (Number.isNaN(n)) return null;
+  if (m[1] === "-") return -n;
+  if (m[1] === "+") return n;
+  return n;
+}
+
+/** Prefer on-chain totals; fall back to USDC balance, then recent activity. */
 export function resolveWalletTotalUsd(
-  tokens: { usdValue: number }[],
+  tokens: { usdValue: number; amount: number }[],
   usdcBalance = 0,
+  activityFallback?: number,
 ): number {
   const fromTokens = totalUsdFromTokens(tokens);
   if (fromTokens > 0) return fromTokens;
-  if (tokens.length === 0 && usdcBalance > 0) return usdcBalance;
-  return fromTokens;
+  if (usdcBalance > 0) return usdcBalance;
+  if (activityFallback && activityFallback > 0) return activityFallback;
+  return 0;
 }

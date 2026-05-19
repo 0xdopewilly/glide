@@ -8,18 +8,25 @@ import {
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { NextRequest, NextResponse } from "next/server";
 
-async function walletPayload(walletId: string, address: string) {
+async function walletPayload(
+  walletId: string,
+  address: string,
+  options?: { includeOffArc?: boolean },
+) {
+  const includeOffArc = options?.includeOffArc ?? false;
   let tokens: Awaited<ReturnType<typeof fetchAllWalletTokenBalances>> = [];
   let balance = 0;
 
   try {
     [tokens, balance] = await Promise.all([
-      fetchAllWalletTokenBalances(walletId, address),
+      fetchAllWalletTokenBalances(walletId, address, { includeOffArc }),
       fetchWalletBalance(walletId),
     ]);
   } catch (err) {
     console.error("[Glide] wallet balances:", err);
-    tokens = await fetchAllWalletTokenBalances(walletId, address);
+    tokens = await fetchAllWalletTokenBalances(walletId, address, {
+      includeOffArc: false,
+    });
     balance = tokens.find((t) => t.symbol === "USDC")?.amount ?? 0;
   }
 
@@ -31,6 +38,13 @@ async function walletPayload(walletId: string, address: string) {
     tokens,
     totalUsd,
   };
+}
+
+function walletOptions(request: NextRequest) {
+  const includeOffArc =
+    request.nextUrl.searchParams.get("full") === "1" ||
+    request.nextUrl.searchParams.get("offArc") === "1";
+  return { includeOffArc };
 }
 
 /** GET — current user's wallet; optional ?walletId= with ownership check */
@@ -84,7 +98,9 @@ export async function POST() {
       email: session.email,
       displayName: session.displayName,
     });
-    return NextResponse.json(await walletPayload(wallet.id, wallet.address));
+    return NextResponse.json(
+      await walletPayload(wallet.id, wallet.address, { includeOffArc: false }),
+    );
   } catch (err) {
     console.error("[Glide] wallet POST:", err);
     return NextResponse.json(

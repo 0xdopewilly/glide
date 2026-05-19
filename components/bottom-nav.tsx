@@ -2,11 +2,9 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 import { useWallet } from "@/context/wallet-context";
-import { resolveWalletTotalUsd } from "@/lib/tokens";
 import { ArrowLeftRight, Clock, Sparkles, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
 
 const ICON_NAV: {
   href: string;
@@ -28,12 +26,8 @@ function formatNavBalance(amount: number) {
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { tokens, balance } = useWallet();
+  const { totalUsd } = useWallet();
   const { hideBalance } = usePrivacy();
-  const totalUsd = useMemo(
-    () => resolveWalletTotalUsd(tokens, balance),
-    [tokens, balance],
-  );
   const balanceLabel = hideBalance ? "•••" : formatNavBalance(totalUsd);
   const homeActive = pathname === "/";
 

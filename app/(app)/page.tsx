@@ -6,13 +6,12 @@ import { BalanceHero } from "@/components/balance-hero";
 import { TokenBalances } from "@/components/token-balances";
 import { TransactionList } from "@/components/transaction-list";
 import { useWallet } from "@/context/wallet-context";
-import { resolveWalletTotalUsd } from "@/lib/tokens";
 import Link from "next/link";
-import { useMemo } from "react";
 
 export default function HomePage() {
   const {
     balance,
+    totalUsd,
     tokens,
     loading,
     refreshing,
@@ -22,11 +21,6 @@ export default function HomePage() {
     clearError,
     refresh,
   } = useWallet();
-
-  const totalUsd = useMemo(
-    () => resolveWalletTotalUsd(tokens, balance),
-    [tokens, balance],
-  );
 
   return (
     <>
