@@ -17,6 +17,7 @@ import {
   parseMultiSendFromMessage,
   parseSendFromMessage,
   extractSplitRecipients,
+  parseRequestFromMessage,
   parseSplitFromMessage,
 } from "@/lib/agent-context";
 import { findContactByName } from "@/lib/contacts-db";
@@ -40,7 +41,14 @@ export type GlideIntent =
     }
   | { action: "swap"; amount: string }
   | { action: "bridge"; amount: string; network: BridgeNetwork }
-  | { action: "split"; total: string; recipients: string[] }
+  | {
+      action: "request";
+      amount: string;
+      token: StableSendToken;
+      glideTag: string;
+      note?: string;
+    }
+  | { action: "split"; total: string; recipients: string[]; token?: StableSendToken }
   | { action: "navigate"; path: string };
 
 export type { BridgeNetwork } from "@/lib/agent-context";
@@ -63,6 +71,8 @@ RULES (critical):
 10. Single-token send: include "token":"USDC" or "token":"EURC" when the user names the token.
 11. "split" means the user ALREADY PAID a bill and wants to REQUEST each friend's equal share — NEVER send money on split. Include the user in the math: share = total ÷ (friends + 1). Only use a total the user stated in this chat — NEVER invent amounts (no default $60).
 12. Split needs total bill + at least two @usernames. If either is missing, use reply JSON to ask once.
+13. "request" means ask someone to pay YOU — use request JSON with amount, token (USDC or EURC), and glideTag. Never navigate to /request for money requests.
+14. Split and request may use EURC — include token in JSON when user says EURC or €.
 
 Respond with JSON only:
 - {"action":"reply","message":"..."} — only when info is still missing
@@ -70,8 +80,10 @@ Respond with JSON only:
 - {"action":"send_batch","transfers":[{"amount":"1.00","token":"USDC"},{"amount":"1.00","token":"EURC"}],"to":"fifi"}
 - {"action":"swap","amount":"5.00"}
 - {"action":"bridge","amount":"10.00","network":"base"|"ethereum"|"polygon"|"arbitrum"}
-- {"action":"split","total":"60.00","recipients":["khadee","tom"]} — equal shares, usernames only
-- {"action":"navigate","path":"/send"|"/payments"|"/trade"|"/ask"|"/receive"|"/activity"|"/scheduled"|"/profile"|"/contacts"|"/request"}`;
+- {"action":"request","amount":"10.00","token":"USDC","glideTag":"khadee"}
+- {"action":"request","amount":"5.00","token":"EURC","glideTag":"fifi"}
+- {"action":"split","total":"60.00","token":"USDC","recipients":["khadee","tom"]} — equal shares, usernames only
+- {"action":"navigate","path":"/send"|"/payments"|"/trade"|"/ask"|"/receive"|"/activity"|"/scheduled"|"/profile"|"/contacts"}`;
 
 const BRIDGE_NETWORKS = new Set(["ethereum", "base", "polygon", "arbitrum"]);
 
@@ -146,6 +158,26 @@ export function parseAgentJson(raw: string): GlideIntent | null {
       };
     }
     if (
+      action === "request" &&
+      typeof data.amount === "string" &&
+      typeof data.glideTag === "string"
+    ) {
+      const token =
+        typeof data.token === "string" &&
+        data.token.trim().toUpperCase() === "EURC"
+          ? "EURC"
+          : "USDC";
+      return {
+        action: "request",
+        amount: data.amount.trim(),
+        token,
+        glideTag: data.glideTag.trim().replace(/^@/, ""),
+        ...(typeof data.note === "string" && data.note.trim()
+          ? { note: data.note.trim() }
+          : {}),
+      };
+    }
+    if (
       action === "split" &&
       typeof data.total === "string" &&
       Array.isArray(data.recipients)
@@ -154,8 +186,13 @@ export function parseAgentJson(raw: string): GlideIntent | null {
         .filter((r): r is string => typeof r === "string")
         .map((r) => r.trim().replace(/^@/, ""))
         .filter(Boolean);
+      const token =
+        typeof data.token === "string" &&
+        data.token.trim().toUpperCase() === "EURC"
+          ? "EURC"
+          : "USDC";
       if (recipients.length >= 2) {
-        return { action: "split", total: data.total.trim(), recipients };
+        return { action: "split", total: data.total.trim(), recipients, token };
       }
     }
     if (action === "navigate" && typeof data.path === "string") {
@@ -201,6 +238,9 @@ export async function reconcileIntentWithHistory(
     };
   }
 
+  const request = parseRequestFromMessage(latestUserMessage);
+  if (request) return { action: "request", ...request };
+
   const split = parseSplitFromMessage(latestUserMessage);
   if (split) return { action: "split", ...split };
 
@@ -215,7 +255,12 @@ export async function reconcileIntentWithHistory(
     const billTotal = extractAmountFromHistory(fullHistory);
 
     if (billTotal && recipients.length >= 2) {
-      return { action: "split", total: billTotal, recipients };
+      return {
+        action: "split",
+        total: billTotal,
+        recipients,
+        token: extractTokenFromText(latestUserMessage) ?? "USDC",
+      };
     }
     if (recipients.length >= 2) {
       return {
@@ -251,22 +296,38 @@ export async function reconcileIntentWithHistory(
           'To split a bill, say the total and friends — e.g. "Split $60 with @fifi and @khadee".',
       };
     }
-    return { action: "split", total: billTotal, recipients: intent.recipients };
+    return {
+      action: "split",
+      total: billTotal,
+      recipients: intent.recipients,
+      token: intent.token ?? extractTokenFromText(latestUserMessage) ?? "USDC",
+    };
   }
 
   if (intent?.action === "swap" || intent?.action === "bridge") {
     return intent;
   }
 
-  if (isNonSendMoneyMessage(latestUserMessage)) {
-    if (/\brequest\b/i.test(latestUserMessage)) {
-      return (
-        intent ?? {
-          action: "reply",
-          message: "How much should I request, and from who? Use @username.",
-        }
-      );
+  if (/\brequest\b/i.test(latestUserMessage)) {
+    const req = parseRequestFromMessage(latestUserMessage);
+    if (req) return { action: "request", ...req };
+    const amount = extractAmountFromHistory(fullHistory);
+    const handle = extractUsernameFromHistory(fullHistory);
+    if (amount && handle) {
+      return {
+        action: "request",
+        amount,
+        token: extractTokenFromText(latestUserMessage) ?? "USDC",
+        glideTag: handle,
+      };
     }
+    return {
+      action: "reply",
+      message: "How much should I request, and from who? Use @username.",
+    };
+  }
+
+  if (isNonSendMoneyMessage(latestUserMessage)) {
     return (
       intent ?? {
         action: "reply",

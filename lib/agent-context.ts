@@ -235,6 +235,7 @@ export function extractSplitRecipients(text: string): string[] {
 export function parseSplitFromMessage(text: string): {
   total: string;
   recipients: string[];
+  token: StableSendToken;
 } | null {
   const trimmed = text.trim();
   if (!/\bsplit\b/i.test(trimmed)) return null;
@@ -245,7 +246,35 @@ export function parseSplitFromMessage(text: string): {
   const recipients = extractSplitRecipients(trimmed);
   if (recipients.length < 2) return null;
 
-  return { total, recipients };
+  return { total, recipients, token: extractTokenFromText(trimmed) ?? "USDC" };
+}
+
+/** request $10 USDC from @khadee — ask someone to pay you. */
+export function parseRequestFromMessage(text: string): {
+  amount: string;
+  token: StableSendToken;
+  glideTag: string;
+} | null {
+  const trimmed = text.trim();
+  if (!/\brequest\b/i.test(trimmed)) return null;
+
+  const amount = extractAmountFromText(trimmed);
+  if (!amount) return null;
+
+  const tagMatch =
+    trimmed.match(/\bfrom\s+@?([a-z][a-z0-9_]{2,19})\b/i) ??
+    trimmed.match(/\bto\s+@?([a-z][a-z0-9_]{2,19})\b/i) ??
+    trimmed.match(/@([a-z][a-z0-9_]{2,19})\b/i);
+
+  if (!tagMatch) return null;
+  const glideTag = normalizeUsername(tagMatch[1]);
+  if (!isValidUsername(glideTag) || NOT_A_USERNAME.has(glideTag)) return null;
+
+  return {
+    amount,
+    token: extractTokenFromText(trimmed) ?? "USDC",
+    glideTag,
+  };
 }
 
 /** Last wallet address the user mentioned in the thread. */

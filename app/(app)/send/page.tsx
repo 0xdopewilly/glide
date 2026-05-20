@@ -6,7 +6,15 @@ import { NumericKeypad } from "@/components/numeric-keypad";
 import { UserAvatar } from "@/components/user-avatar";
 import { GlideButton } from "@/components/glide-button";
 import { SendScanSheet } from "@/components/send-scan-sheet";
+import { StableTokenSegment } from "@/components/stable-token-segment";
 import { shortenAddress } from "@/lib/format";
+import {
+  currencyPrefixForToken,
+  formatStableAmount,
+  stableTokenFromSymbol,
+  type StableToken,
+} from "@/lib/currency-format";
+import { tokenAmountFromBalances } from "@/lib/tokens";
 import { PLACEHOLDER_GLIDE_TAG_OR_WALLET } from "@/lib/placeholders";
 import {
   isValidUsername,
@@ -38,7 +46,12 @@ type ResolvedMeta = {
 export default function SendPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { sendMoney, wallet, loading, balance, error, clearError } = useWallet();
+  const { sendMoney, wallet, loading, balance, tokens, error, clearError } =
+    useWallet();
+  const requestCode = searchParams.get("request")?.trim() || undefined;
+  const [token, setToken] = useState<StableToken>(() =>
+    stableTokenFromSymbol(searchParams.get("token")),
+  );
   const [step, setStep] = useState<Step>("amount");
   const [recipient, setRecipient] = useState(
     () => searchParams.get("to")?.trim() ?? "",
@@ -50,6 +63,10 @@ export default function SendPage() {
   const [scanOpen, setScanOpen] = useState(
     () => searchParams.get("scan") === "1",
   );
+  const [amount, setAmount] = useState("0");
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (searchParams.get("scan") === "1") setScanOpen(true);
@@ -65,7 +82,15 @@ export default function SendPage() {
     }
     const n = searchParams.get("note")?.trim();
     if (n) setNote(n);
+    const t = searchParams.get("token")?.trim();
+    if (t) setToken(stableTokenFromSymbol(t));
   }, [searchParams]);
+
+  const tokenBalance = useMemo(() => {
+    const fromTokens = tokenAmountFromBalances(tokens, token);
+    if (fromTokens > 0) return fromTokens;
+    return token === "USDC" ? balance : 0;
+  }, [tokens, token, balance]);
 
   useEffect(() => {
     const t = recipient.trim();
@@ -129,10 +154,6 @@ export default function SendPage() {
       window.clearTimeout(timer);
     };
   }, [recipient]);
-  const [amount, setAmount] = useState("0");
-  const [note, setNote] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [localError, setLocalError] = useState<string | null>(null);
 
   const onKey = useCallback((key: string) => {
     setAmount((prev) => {
@@ -154,9 +175,10 @@ export default function SendPage() {
   const inputLooksLikeUsername = isValidUsername(
     normalizeUsername(recipient),
   );
-  const overBalance = parsed > balance;
+  const overBalance = parsed > tokenBalance;
   const canContinue =
     parsed > 0 && recipientOk && wallet != null && !overBalance;
+  const amountPrefix = currencyPrefixForToken(token);
 
   const handlePay = async () => {
     if (!wallet || !canContinue) return;
@@ -165,7 +187,8 @@ export default function SendPage() {
     clearError();
     const ok = await sendMoney(recipient.trim(), amount, {
       note: note.trim() || undefined,
-      requestCode: searchParams.get("request")?.trim() || undefined,
+      requestCode,
+      token,
     });
     setSubmitting(false);
     if (ok) setStep("success");
@@ -178,7 +201,9 @@ export default function SendPage() {
     if (!recipient.trim()) return null;
     if (resolveState === "checking") return "Checking recipient…";
     if (resolveState === "fail" && resolveMessage) return resolveMessage;
-    if (overBalance) return `You only have $${balance.toFixed(2)} USDC`;
+    if (overBalance) {
+      return `You only have ${formatStableAmount(tokenBalance, token)}`;
+    }
     if (recipientOk) return null;
     return "Use a wallet address (0x…), Glide Tag, or contact name";
   }, [
@@ -187,7 +212,8 @@ export default function SendPage() {
     resolveMessage,
     recipientOk,
     overBalance,
-    balance,
+    tokenBalance,
+    token,
   ]);
 
   const recipientBorderClass = useMemo(() => {
@@ -224,7 +250,7 @@ export default function SendPage() {
             className="mt-2 text-5xl font-bold tracking-tight"
             style={{ color: "var(--glide-success)" }}
           >
-            ${parsed.toFixed(2)}
+            {formatStableAmount(parsed, token)}
           </p>
           <p className="mt-3 text-lg font-semibold">{recipientLabel}</p>
           {note.trim() ? (
@@ -253,7 +279,8 @@ export default function SendPage() {
             </p>
             <p className="mt-2 text-xl font-bold tracking-tight">{recipientLabel}</p>
             <p className="mt-4 text-5xl font-bold tracking-tight tabular-nums">
-              ${formatAmountDisplay(amount)}
+              {amountPrefix}
+              {formatAmountDisplay(amount)}
             </p>
           </div>
 
@@ -269,7 +296,7 @@ export default function SendPage() {
 
           <div className="mt-5 flex items-center justify-between rounded-xl border border-neutral-200/90 bg-neutral-50/80 px-4 py-3.5 dark:border-white/10 dark:bg-white/[0.05]">
             <span className="text-sm font-medium glide-muted">From</span>
-            <span className="text-sm font-bold">Glide · USDC</span>
+            <span className="text-sm font-bold">Glide · {token}</span>
           </div>
 
           {(localError || error) && (
@@ -285,7 +312,7 @@ export default function SendPage() {
             className="mt-6"
             uppercase={false}
           >
-            {submitting ? "Paying…" : `Pay $${parsed.toFixed(2)}`}
+            {submitting ? "Paying…" : `Pay ${formatStableAmount(parsed, token)}`}
           </GlideButton>
         </div>
       </FlowPage>
@@ -369,7 +396,7 @@ export default function SendPage() {
           </div>
 
           <motion.p
-            key={hint ?? `balance-${balance.toFixed(2)}`}
+            key={hint ?? `balance-${tokenBalance.toFixed(2)}-${token}`}
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.15, ease: MOTION_EASE }}
@@ -383,18 +410,24 @@ export default function SendPage() {
                 : "glide-muted"
             }`}
           >
-            {hint ?? `Balance $${balance.toFixed(2)} USDC`}
+            {hint ?? `Balance ${formatStableAmount(tokenBalance, token)}`}
           </motion.p>
         </section>
 
-        <div className="glide-amount-display mt-6 flex flex-col items-center">
+        {!requestCode ? (
+          <div className="mt-4 px-1">
+            <StableTokenSegment value={token} onChange={setToken} />
+          </div>
+        ) : null}
+
+        <div className="glide-amount-display mt-4 flex flex-col items-center">
           <span className="text-sm font-semibold uppercase tracking-[0.12em] glide-muted">
-            Amount
+            Amount · {token}
           </span>
           <p className="mt-2 text-[56px] font-bold leading-none tracking-tight">
             <AnimatedAmount
               value={formatAmountDisplay(amount)}
-              prefix="$"
+              prefix={amountPrefix}
               prefixClassName="text-[32px] font-bold text-neutral-400 dark:text-white/50"
             />
           </p>

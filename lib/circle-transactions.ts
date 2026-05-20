@@ -1,5 +1,7 @@
 import { createCircleClient } from "@/lib/circle";
+import { formatStableAmount } from "@/lib/currency-format";
 import { notifyIncomingPayment } from "@/lib/push";
+import { isEurcToken } from "@/lib/tokens";
 import { arcExplorerUrl, recordTransaction } from "@/lib/transactions-db";
 import { formatRelativeDate } from "@/lib/format";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
@@ -14,6 +16,7 @@ type CircleTx = {
   transactionType?: string;
   txHash?: string;
   blockchain?: string;
+  token?: { symbol?: string; name?: string };
 };
 
 function inferKind(tx: CircleTx): TransactionKind {
@@ -22,23 +25,28 @@ function inferKind(tx: CircleTx): TransactionKind {
   return "send";
 }
 
+function inferToken(tx: CircleTx): "USDC" | "EURC" {
+  const sym = tx.token?.symbol ?? tx.token?.name ?? "";
+  if (isEurcToken(sym)) return "EURC";
+  const type = tx.transactionType?.toLowerCase() ?? "";
+  if (/\beurc\b/.test(type)) return "EURC";
+  return "USDC";
+}
+
 export function mapCircleTransaction(tx: CircleTx): GlideTransaction {
   const amountRaw = tx.amounts?.[0] ?? "0";
   const amountNum = parseFloat(amountRaw);
   const kind = inferKind(tx);
   const isCredit = kind === "receive";
+  const token = inferToken(tx);
 
   const txHash = tx.txHash;
   const explorerUrl = txHash ? arcExplorerUrl(txHash) : undefined;
 
   return {
     id: txHash ?? tx.id,
-    title: isCredit
-      ? "Received USDC"
-      : tx.destinationAddress
-        ? `Sent to ${tx.destinationAddress.slice(0, 6)}...${tx.destinationAddress.slice(-4)}`
-        : "Transfer",
-    amount: `${isCredit ? "+" : "−"}$${Math.abs(amountNum).toFixed(2)}`,
+    title: isCredit ? `Received ${token}` : `Sent ${token}`,
+    amount: `${isCredit ? "+" : "−"}${formatStableAmount(Math.abs(amountNum), token)}`,
     variant: isCredit ? "credit" : "debit",
     meta: formatRelativeDate(tx.createDate),
     createdAt: tx.createDate ?? new Date().toISOString(),
@@ -70,6 +78,7 @@ export async function syncCircleTransactionsToDb(
   const circleTxs = await fetchCircleTransactions(walletId);
 
   for (const tx of circleTxs) {
+    const token = inferToken(tx);
     const mapped = mapCircleTransaction(tx);
     const { row, isNew } = await recordTransaction({
       userId,
@@ -84,8 +93,8 @@ export async function syncCircleTransactionsToDb(
       chain: tx.blockchain,
       metadata:
         mapped.kind === "receive" && tx.sourceAddress
-          ? { fromAddress: tx.sourceAddress }
-          : undefined,
+          ? { fromAddress: tx.sourceAddress, token }
+          : { token },
     });
 
     if (
@@ -100,6 +109,7 @@ export async function syncCircleTransactionsToDb(
           mapped.amount,
           row.id,
           tx.sourceAddress,
+          token,
         );
       } catch (err) {
         console.error("[Glide] push notify:", err);

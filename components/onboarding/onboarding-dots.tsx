@@ -20,12 +20,12 @@ export function OnboardingDots({
           key={i}
           role="tab"
           aria-selected={i === current}
-          className="h-1 rounded-full bg-neutral-950 dark:bg-white"
+          className="h-1 rounded-full bg-[var(--glide-accent)]"
           layout
           initial={false}
           animate={{
             width: i === current ? 28 : 8,
-            opacity: i === current ? 1 : 0.25,
+            opacity: i === current ? 1 : 0.28,
           }}
           transition={{
             type: "spring",

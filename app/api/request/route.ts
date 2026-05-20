@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json()) as {
     amount?: string;
+    token?: string;
     note?: string;
     glideTag?: string;
     email?: string;
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
   const row = await createPaymentRequest({
     userId: session.userId,
     amount: parsed.toFixed(2),
+    token: body.token,
     note: body.note,
     targetUserId,
     requestFromEmail,
@@ -93,12 +95,14 @@ export async function POST(request: NextRequest) {
       row.amount,
       fromLabel,
       payPath,
+      row.token,
     ).catch((err) => console.error("[Glide] request push:", err));
   }
 
   return NextResponse.json({
     code: row.code,
     amount: row.amount,
+    token: row.token,
     note: row.note,
     url,
     glideTag: row.user.username,

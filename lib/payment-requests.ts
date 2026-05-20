@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { normalizeTokenSymbol } from "@/lib/tokens";
 import { randomBytes } from "crypto";
 
 function newCode() {
@@ -16,11 +17,13 @@ export function paymentRequestUrl(code: string, origin?: string) {
 export async function createPaymentRequest(input: {
   userId: string;
   amount: string;
+  token?: string;
   note?: string;
   targetUserId?: string;
   requestFromEmail?: string;
   requestFromGlideTag?: string;
 }) {
+  const token = normalizeTokenSymbol(input.token);
   for (let i = 0; i < 5; i++) {
     const code = newCode();
     try {
@@ -28,6 +31,7 @@ export async function createPaymentRequest(input: {
         data: {
           userId: input.userId,
           amount: input.amount,
+          token,
           note: input.note?.trim() || null,
           code,
           targetUserId: input.targetUserId ?? null,

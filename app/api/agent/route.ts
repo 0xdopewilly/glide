@@ -81,6 +81,21 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
       intent: { ...intent, amount: amount.toFixed(2) },
     };
   }
+  if (intent.action === "request") {
+    const amount = parseMoneyAmount(intent.amount);
+    if (amount === null || amount <= 0) {
+      return { reply: "How much should I request?" };
+    }
+    const token = intent.token ?? "USDC";
+    return {
+      reply: `Requesting ${formatStableAmount(amount, token)} from @${intent.glideTag}…`,
+      intent: {
+        ...intent,
+        amount: amount.toFixed(2),
+        token,
+      },
+    };
+  }
   if (intent.action === "split") {
     const total = parseMoneyAmount(intent.total);
     if (total === null || total <= 0) {
@@ -93,8 +108,13 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
       reply: formatSplitProcessingReply(
         total.toFixed(2),
         intent.recipients.length,
+        intent.token ?? "USDC",
       ),
-      intent: { ...intent, total: total.toFixed(2) },
+      intent: {
+        ...intent,
+        total: total.toFixed(2),
+        token: intent.token ?? "USDC",
+      },
     };
   }
   return { reply: "How can I help?" };

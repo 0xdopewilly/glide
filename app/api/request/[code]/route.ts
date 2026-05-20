@@ -16,6 +16,7 @@ export async function GET(
   return NextResponse.json({
     code: row.code,
     amount: row.amount,
+    token: row.token,
     note: row.note,
     status: row.status,
     requester: {

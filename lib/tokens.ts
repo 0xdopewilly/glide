@@ -40,6 +40,15 @@ export function addressesEqual(a?: string | null, b?: string | null): boolean {
   return a.toLowerCase() === b.toLowerCase();
 }
 
+export function tokenAmountFromBalances(
+  tokens: { symbol: string; amount: number }[],
+  symbol?: string | null,
+): number {
+  const target = normalizeTokenSymbol(symbol);
+  const row = tokens.find((t) => normalizeTokenSymbol(t.symbol) === target);
+  return row?.amount ?? 0;
+}
+
 export function totalUsdFromTokens(
   tokens: { usdValue: number; amount: number }[],
 ): number {

@@ -2,11 +2,16 @@
 
 import { FlowPage } from "@/components/flow-page";
 import { GlideButton } from "@/components/glide-button";
+import {
+  currencyPrefixForToken,
+  stableTokenFromSymbol,
+} from "@/lib/currency-format";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
 type RequestInfo = {
   amount: string;
+  token?: string;
   note: string | null;
   status: string;
   requester: { username: string | null; displayName: string | null };
@@ -49,6 +54,7 @@ export default function PayRequestPage({
     const q = new URLSearchParams();
     q.set("to", info.payTo);
     q.set("amount", info.amount);
+    q.set("token", stableTokenFromSymbol(info.token));
     if (info.note) q.set("note", info.note);
     q.set("request", code);
     router.push(`/send?${q.toString()}`);
@@ -73,7 +79,13 @@ export default function PayRequestPage({
                 </span>
               ) : null}
             </p>
-            <p className="mt-4 text-5xl font-bold tabular-nums">${info.amount}</p>
+            <p className="mt-4 text-5xl font-bold tabular-nums">
+              {currencyPrefixForToken(info.token)}
+              {info.amount}
+            </p>
+            <p className="mt-1 text-xs font-semibold uppercase tracking-wider glide-muted">
+              {stableTokenFromSymbol(info.token)}
+            </p>
             {info.note ? (
               <p className="mt-2 text-base glide-muted">&ldquo;{info.note}&rdquo;</p>
             ) : null}

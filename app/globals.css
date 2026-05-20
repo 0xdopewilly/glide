@@ -39,13 +39,13 @@
 
 .dark {
   color-scheme: dark;
-  --glide-bg: #0e0e11;
-  --glide-shell: #121216;
-  --glide-surface: #1a1a1f;
-  --glide-surface-elevated: #222228;
-  --glide-surface-container: #1e1e24;
-  --glide-surface-container-high: #28282f;
-  --glide-nav-surface: #121216;
+  --glide-bg: #010102;
+  --glide-shell: #030304;
+  --glide-surface: #0a0a0e;
+  --glide-surface-elevated: #121218;
+  --glide-surface-container: #0e0e12;
+  --glide-surface-container-high: #181820;
+  --glide-nav-surface: #030304;
   --glide-primary-container: rgba(110, 184, 240, 0.16);
   --glide-success-container: rgba(74, 222, 128, 0.14);
   --glide-text: #f2f2f5;
@@ -69,6 +69,21 @@ body {
   color: var(--glide-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+.onboarding-shell-root {
+  background: var(--glide-bg);
+}
+
+/* Prevent iOS Safari zoom on input focus */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 .glide-scroll {
@@ -836,6 +851,11 @@ body {
 
   .glide-m3-nav-pill--success {
     background: var(--glide-success-container);
+  }
+
+  .glide-m3-segment {
+    background: var(--glide-surface-container);
+    border: 1px solid var(--glide-border);
   }
 
   .onboarding-hero-glow {

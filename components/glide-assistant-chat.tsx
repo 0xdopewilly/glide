@@ -6,6 +6,7 @@ import {
   type ProcessingAction,
 } from "@/components/chat/processing-bubble";
 import type { GlideIntent } from "@/lib/agent-intents";
+import { formatStableAmountWithCode } from "@/lib/currency-format";
 import {
   computeSplitSharePerPerson,
   formatSplitPartialMessage,
@@ -113,10 +114,11 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         intent.action === "send_batch" ||
         intent.action === "swap" ||
         intent.action === "bridge" ||
+        intent.action === "request" ||
         intent.action === "split"
           ? intent.action === "send_batch"
             ? "send"
-            : intent.action === "split"
+            : intent.action === "split" || intent.action === "request"
               ? "request"
               : intent.action
           : null;
@@ -282,13 +284,52 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         }
         return;
       }
+      if (intent.action === "request") {
+        try {
+          const res = await fetch("/api/request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: intent.amount,
+              token: intent.token ?? "USDC",
+              glideTag: intent.glideTag,
+              note: intent.note,
+            }),
+          });
+          const data = (await res.json()) as { error?: string; targetOnGlide?: boolean };
+          if (res.ok) {
+            pushMessage({
+              id: `req-${Date.now()}`,
+              role: "assistant",
+              kind: "text",
+              text: `Requested ${formatStableAmountWithCode(intent.amount, intent.token ?? "USDC")} from @${intent.glideTag}.${data.targetOnGlide ? " They'll get a notification." : ""}`,
+            });
+          } else {
+            pushMessage({
+              id: `req-err-${Date.now()}`,
+              role: "assistant",
+              kind: "text",
+              text: data.error ?? "Could not send that request.",
+            });
+          }
+        } catch {
+          pushMessage({
+            id: `req-err-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: "Could not send that request. Try again.",
+          });
+        }
+        return;
+      }
       if (intent.action === "split") {
         const total = parseFloat(intent.total);
+        const token = intent.token ?? "USDC";
         const share = computeSplitSharePerPerson(
           total,
           intent.recipients.length,
         );
-        const note = `Your share of a $${intent.total} bill`;
+        const note = `Your share of a ${formatStableAmountWithCode(intent.total, token)} bill`;
         let requested = 0;
         const failures: string[] = [];
 
@@ -297,7 +338,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             const res = await fetch("/api/request", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ amount: share, glideTag, note }),
+              body: JSON.stringify({ amount: share, glideTag, note, token }),
             });
             const data = (await res.json()) as { error?: string };
             if (res.ok) {
@@ -321,6 +362,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
               intent.total,
               share,
               intent.recipients,
+              token,
             ),
           });
         } else if (requested > 0) {
@@ -332,6 +374,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
               requested,
               intent.recipients.length,
               share,
+              token,
             ),
           });
           if (failures.length > 0) {

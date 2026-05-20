@@ -79,8 +79,9 @@ export async function notifyIncomingPayment(
   amountLabel: string,
   transactionId: string,
   fromWalletAddress?: string | null,
+  token?: string | null,
 ) {
-  const amount = formatAmountForPush(amountLabel);
+  const amount = formatAmountForPush(amountLabel, token);
   const from = await formatUserForPush(fromWalletAddress);
 
   await notifyUser(userId, {
@@ -114,8 +115,9 @@ export async function notifyPaymentRequest(
   amount: string,
   fromLabel: string,
   payUrl: string,
+  token = "USDC",
 ) {
-  const parsed = formatAmountForPush(`$${amount}`);
+  const parsed = formatAmountForPush(`$${amount}`, token);
   const from = formatUsernameForPush(fromLabel);
   const url = payUrl.startsWith("/") ? payUrl : `/pay/${payUrl}`;
 

@@ -6,6 +6,7 @@ import {
   normalizeTokenSymbol,
 } from "@/lib/tokens";
 import { formatStableAmount } from "@/lib/currency-format";
+import { findUserByWalletAddress } from "@/lib/usernames";
 import { userOwnsWallet } from "@/lib/users";
 import {
   formatResolvedRecipientLabel,
@@ -123,6 +124,33 @@ export async function POST(request: NextRequest) {
         token,
       },
     });
+
+    const recipientUser = await findUserByWalletAddress(destinationAddress);
+    if (recipientUser?.id && recipientUser.id !== session.userId) {
+      const creditLabel = `+${formatStableAmount(parsed, token)}`;
+      const { notifyIncomingPayment } = await import("@/lib/push");
+      const receiveRow = await recordTransaction({
+        userId: recipientUser.id,
+        kind: "receive",
+        title: `Received ${token}`,
+        amountLabel: creditLabel,
+        variant: "credit",
+        status: state,
+        txHash,
+        explorerUrl: txHash ? arcExplorerUrl(txHash) : undefined,
+        chain: GLIDE_BLOCKCHAIN,
+        metadata: { token, fromUserId: session.userId },
+      });
+      if (receiveRow.isNew) {
+        void notifyIncomingPayment(
+          recipientUser.id,
+          creditLabel,
+          receiveRow.row.id,
+          wallet.address,
+          token,
+        ).catch((err) => console.error("[Glide] receive notify:", err));
+      }
+    }
 
     if (requestCode) {
       const { getPaymentRequestByCode, markPaymentRequestPaid } =

@@ -105,7 +105,7 @@ export default function OnboardingPage() {
           <button
             type="button"
             onClick={() => router.push("/sign-in")}
-            className="text-[15px] font-medium text-neutral-600 transition-colors hover:text-neutral-950 dark:text-white/75 dark:hover:text-white"
+            className="glide-tap text-[15px] font-medium text-[var(--glide-muted)] transition-colors hover:text-[var(--glide-text)]"
           >
             Login
           </button>
@@ -139,21 +139,21 @@ export default function OnboardingPage() {
               <motion.div variants={stagger} initial="initial" animate="animate">
                 <motion.span
                   variants={fadeUp}
-                  className="inline-flex rounded-full bg-neutral-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-600 dark:bg-[#1c1c1e] dark:text-white/80"
+                  className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--glide-accent)]"
                 >
                   {slide.tag}
                 </motion.span>
 
                 <motion.h1
                   variants={fadeUp}
-                  className="mt-4 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-neutral-950 dark:text-white"
+                  className="mt-4 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-[var(--glide-text)]"
                 >
                   {slide.title}
                 </motion.h1>
 
                 <motion.p
                   variants={fadeUp}
-                  className="mt-3.5 max-w-[19.5rem] text-[15px] leading-[1.6] text-neutral-500 dark:text-white/50"
+                  className="mt-3.5 max-w-[19.5rem] text-[15px] leading-[1.6] text-[var(--glide-muted)]"
                 >
                   {slide.body}
                 </motion.p>
@@ -182,6 +182,7 @@ export default function OnboardingPage() {
               >
                 <OnboardingContinueButton
                   label={isLast ? "Create account" : "Continue"}
+                  step={step}
                   onClick={goNext}
                 />
               </motion.div>
@@ -191,7 +192,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => router.push("/sign-in")}
-                className="w-full py-2.5 text-center text-sm font-semibold text-neutral-500 transition-colors hover:text-neutral-950 dark:text-white/50 dark:hover:text-[var(--glide-accent)]"
+                className="glide-tap w-full py-2.5 text-center text-sm font-semibold text-[var(--glide-muted)] transition-colors hover:text-[var(--glide-accent)]"
               >
                 I already have an account
               </button>

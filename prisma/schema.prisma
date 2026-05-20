@@ -52,6 +52,8 @@ model PaymentRequest {
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount       String
+  /// USDC or EURC on Arc.
+  token        String   @default("USDC")
   note         String?
   code         String   @unique
   status       String   @default("pending")
