@@ -3,46 +3,72 @@
 import { getSlideDirection } from "@/lib/route-motion";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
-/** Snappy ease-out — short distance, no overshoot. */
-const SNAP_EASE = [0.32, 0.72, 0, 1] as const;
-const SLIDE_MS = 0.24;
+/** Short ease-out — no overshoot (stable on mobile GPUs). */
+const EASE = [0.25, 0.1, 0.25, 1] as const;
+const DURATION = 0.22;
+
+type RouteFrame = { path: string; node: ReactNode };
 
 const slideVariants = {
   enter: (dir: number) => ({
     x: dir > 0 ? "100%" : "-100%",
-    zIndex: 2,
   }),
-  center: {
-    x: 0,
-    zIndex: 2,
-  },
+  center: { x: 0 },
   exit: (dir: number) => ({
-    x: dir > 0 ? "-18%" : "18%",
-    zIndex: 1,
+    x: dir > 0 ? "-22%" : "22%",
   }),
 };
 
-/** Horizontal slide transitions between main tabs (Cash App–style). */
-export function PageMotion({ children }: { children: React.ReactNode }) {
+/**
+ * Freezes each route's React tree so exit animations don't show the *next* page
+ * (classic App Router + AnimatePresence jitter).
+ */
+export function PageMotion({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const prevPath = useRef(pathname);
-  const [direction, setDirection] = useState(1);
   const reduceMotion = useReducedMotion();
+  const prevPath = useRef(pathname);
+  const direction = useRef(1);
+  const cache = useRef<Map<string, ReactNode>>(new Map());
+
+  cache.current.set(pathname, children);
+
+  const [frames, setFrames] = useState<RouteFrame[]>([
+    { path: pathname, node: children },
+  ]);
 
   useLayoutEffect(() => {
-    if (pathname === prevPath.current) return;
-    setDirection(getSlideDirection(prevPath.current, pathname));
-    prevPath.current = pathname;
-  }, [pathname]);
+    const node = cache.current.get(pathname) ?? children;
 
-  const transition = useMemo(
-    () => ({
-      x: { duration: SLIDE_MS, ease: SNAP_EASE },
-    }),
-    [],
-  );
+    if (pathname === prevPath.current) {
+      setFrames((prev) =>
+        prev.map((f) => (f.path === pathname ? { path: pathname, node } : f)),
+      );
+      return;
+    }
+
+    direction.current = getSlideDirection(prevPath.current, pathname);
+    prevPath.current = pathname;
+
+    setFrames((prev) => {
+      if (prev.some((f) => f.path === pathname)) {
+        return prev.map((f) => (f.path === pathname ? { path: pathname, node } : f));
+      }
+      return [...prev, { path: pathname, node }];
+    });
+  }, [pathname, children]);
+
+  const onExitComplete = useCallback(() => {
+    const node = cache.current.get(pathname) ?? children;
+    setFrames([{ path: pathname, node }]);
+  }, [pathname, children]);
 
   if (reduceMotion) {
     return (
@@ -51,20 +77,27 @@ export function PageMotion({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="page-motion-viewport relative isolate flex min-h-0 flex-1 flex-col overflow-hidden">
-      <AnimatePresence initial={false} custom={direction} mode="sync">
-        <motion.div
-          key={pathname}
-          custom={direction}
-          variants={slideVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={transition}
-          className="page-motion-panel absolute inset-0 z-10 flex min-h-0 flex-col overflow-hidden bg-inherit"
-        >
-          {children}
-        </motion.div>
+    <div className="page-motion-viewport relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <AnimatePresence
+        initial={false}
+        mode="sync"
+        custom={direction.current}
+        onExitComplete={onExitComplete}
+      >
+        {frames.map((frame) => (
+          <motion.div
+            key={frame.path}
+            custom={direction.current}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: DURATION, ease: EASE }}
+            className="page-motion-panel absolute inset-0 flex min-h-0 flex-col overflow-hidden bg-white dark:bg-[#0a0a0a]"
+          >
+            {frame.node}
+          </motion.div>
+        ))}
       </AnimatePresence>
     </div>
   );

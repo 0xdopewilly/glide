@@ -64,15 +64,16 @@ body {
 
 /* Route transitions — GPU layer, no opacity jitter */
 .page-motion-viewport {
-  contain: layout paint;
+  contain: strict;
+  overflow: hidden;
   transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .page-motion-panel {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
+  overflow: hidden;
 }
 
 .page-motion-shell {
