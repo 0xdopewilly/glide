@@ -66,7 +66,7 @@ export default function PaymentsPage() {
                 prefetch
                 className="glide-tap flex items-center gap-3.5 rounded-2xl px-4 py-3.5 glide-surface-card"
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-neutral-100 dark:bg-white/10">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--glide-surface-container)]">
                   <Icon className="h-5 w-5" strokeWidth={2} />
                 </span>
                 <span className="min-w-0 flex-1">

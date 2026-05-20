@@ -2,6 +2,10 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 import { useWallet } from "@/context/wallet-context";
+import {
+  GLIDE_LAYOUT_SPRING,
+  GLIDE_TAP_SPRING,
+} from "@/lib/motion-tokens";
 import { ArrowLeftRight, Clock, Sparkles, Wallet } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
@@ -19,33 +23,20 @@ const ICON_NAV: {
   { href: "/activity", label: "Activity", icon: Clock },
 ];
 
-const TAP_SPRING = { type: "spring" as const, stiffness: 520, damping: 28, mass: 0.55 };
-const INDICATOR_SPRING = { type: "spring" as const, stiffness: 420, damping: 34, mass: 0.45 };
-
 function formatNavBalance(amount: number) {
   if (amount >= 100) return `$${Math.round(amount)}`;
   if (amount >= 10) return `$${amount.toFixed(0)}`;
   return `$${amount.toFixed(2)}`;
 }
 
-function NavIndicator({
-  active,
-  variant,
-}: {
-  active: boolean;
-  variant: "balance" | "default";
-}) {
-  if (!active) return null;
-
+function NavActivePill({ variant }: { variant: "balance" | "default" }) {
   return (
     <motion.span
-      layoutId="bottom-nav-indicator"
-      className={`absolute inset-x-4 top-0 h-[2px] rounded-full ${
-        variant === "balance"
-          ? "bg-[var(--glide-success)]"
-          : "bg-neutral-950 dark:bg-white"
+      layoutId="nav-active-pill"
+      className={`glide-m3-nav-pill absolute inset-x-1.5 inset-y-1 ${
+        variant === "balance" ? "glide-m3-nav-pill--success" : ""
       }`}
-      transition={INDICATOR_SPRING}
+      transition={GLIDE_LAYOUT_SPRING}
       aria-hidden
     />
   );
@@ -60,9 +51,9 @@ function NavTap({
 }) {
   return (
     <motion.span
-      className="relative flex w-full items-center justify-center"
-      whileTap={reduceMotion ? undefined : { scale: 0.88 }}
-      transition={TAP_SPRING}
+      className="relative z-10 flex w-full items-center justify-center"
+      whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+      transition={GLIDE_TAP_SPRING}
     >
       {children}
     </motion.span>
@@ -78,25 +69,22 @@ export function BottomNav() {
   const homeActive = pathname === "/";
 
   return (
-    <nav
-      className="w-full shrink-0 border-t border-neutral-200/90 bg-white/98 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0a]/98"
-      aria-label="Main"
-    >
-      <ul className="flex h-[3.35rem] items-stretch px-0.5 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-0.5">
+    <nav className="glide-m3-nav w-full shrink-0" aria-label="Main">
+      <ul className="flex h-[3.5rem] items-stretch px-1 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1">
         <li className="flex min-w-0 flex-1">
           <Link
             href="/"
             prefetch
             aria-label={`Home, balance ${balanceLabel}`}
             aria-current={homeActive ? "page" : undefined}
-            className={`glide-nav-tap relative flex w-full px-1 transition-colors duration-200 ${
+            className={`glide-nav-tap relative flex w-full px-0.5 transition-colors duration-200 ${
               homeActive
                 ? "text-[var(--glide-success)]"
-                : "text-neutral-500 dark:text-white/45"
+                : "text-[var(--glide-on-nav-inactive)]"
             }`}
           >
+            {homeActive ? <NavActivePill variant="balance" /> : null}
             <NavTap reduceMotion={reduceMotion}>
-              <NavIndicator active={homeActive} variant="balance" />
               <span
                 className={`font-bold tabular-nums tracking-tight ${
                   balanceLabel.length > 6 ? "text-[13px]" : "text-[15px]"
@@ -118,23 +106,16 @@ export function BottomNav() {
                 prefetch
                 aria-label={label}
                 aria-current={active ? "page" : undefined}
-                className={`glide-nav-tap relative flex w-full px-1 transition-colors duration-200 ${
-                  active
-                    ? "text-neutral-950 dark:text-white"
-                    : "text-neutral-500 dark:text-white/45"
+                className={`glide-nav-tap relative flex w-full px-0.5 transition-colors duration-200 ${
+                  active ? "text-[var(--glide-text)]" : "text-[var(--glide-on-nav-inactive)]"
                 }`}
               >
+                {active ? <NavActivePill variant="default" /> : null}
                 <NavTap reduceMotion={reduceMotion}>
-                  <NavIndicator active={active} variant="default" />
-                  <motion.span
-                    animate={{ scale: active && !reduceMotion ? 1.04 : 1 }}
-                    transition={INDICATOR_SPRING}
-                  >
-                    <Icon
-                      className="h-[23px] w-[23px]"
-                      strokeWidth={active ? 2.35 : 2}
-                    />
-                  </motion.span>
+                  <Icon
+                    className="h-[23px] w-[23px]"
+                    strokeWidth={active ? 2.35 : 2}
+                  />
                 </NavTap>
               </Link>
             </li>

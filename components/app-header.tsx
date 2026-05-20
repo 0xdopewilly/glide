@@ -72,7 +72,7 @@ export function AppHeader({
       ) : null}
 
       <div
-        className="flex shrink-0 items-center gap-0.5 rounded-full border border-neutral-200/80 bg-neutral-100/90 p-0.5 dark:border-white/10 dark:bg-[#1c1c1e]/90"
+        className="glide-m3-toolbar flex shrink-0 items-center gap-0.5 p-0.5"
         role="toolbar"
         aria-label="Account actions"
       >

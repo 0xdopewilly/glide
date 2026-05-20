@@ -1,12 +1,13 @@
 "use client";
 
 import { getSlideDirection } from "@/lib/route-motion";
+import {
+  GLIDE_DURATION,
+  GLIDE_EASE,
+} from "@/lib/motion-tokens";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useRef, type ReactNode } from "react";
-
-const EASE = [0.25, 0.1, 0.25, 1] as const;
-const DURATION = 0.2;
 
 const slideVariants = {
   enter: (dir: number) => ({
@@ -48,7 +49,7 @@ export function PageMotion({ children }: { children: ReactNode }) {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: DURATION, ease: EASE }}
+          transition={{ duration: GLIDE_DURATION, ease: GLIDE_EASE }}
           className="page-motion-panel flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           {children}

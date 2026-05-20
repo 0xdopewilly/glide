@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 const baseClass =
-  "glide-tap inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-neutral-600 transition-colors hover:bg-neutral-200/80 hover:text-neutral-950 dark:text-white/75 dark:hover:bg-white/10 dark:hover:text-white";
+  "glide-m3-icon-btn glide-tap inline-flex h-10 w-10 shrink-0 items-center justify-center";
 
 export function headerIconButtonClassName(extra = "") {
   return extra ? `${baseClass} ${extra}` : baseClass;
