@@ -35,7 +35,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <PageMotion>{children}</PageMotion>
         </div>
         {!hideNav ? (
-          <div className="relative z-10 shrink-0">
+          <div className="relative z-10 mt-auto w-full shrink-0">
             <BottomNav />
           </div>
         ) : null}

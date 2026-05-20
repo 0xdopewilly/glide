@@ -10,10 +10,9 @@ const ICON_NAV: {
   href: string;
   label: string;
   icon: typeof Wallet;
-  assist?: boolean;
 }[] = [
   { href: "/payments", label: "Payments", icon: Wallet },
-  { href: "/ask", label: "Glide Assist", icon: Sparkles, assist: true },
+  { href: "/ask", label: "Glide Assist", icon: Sparkles },
   { href: "/trade", label: "Trade", icon: ArrowLeftRight },
   { href: "/activity", label: "Activity", icon: Clock },
 ];
@@ -33,25 +32,31 @@ export function BottomNav() {
 
   return (
     <nav
-      className="mx-2 mb-[max(0.75rem,env(safe-area-inset-bottom))] shrink-0 rounded-full bg-neutral-100/95 px-1.5 py-1.5 backdrop-blur-xl dark:bg-[#1c1c1e]/95 dark:ring-1 dark:ring-white/10"
+      className="w-full shrink-0 border-t border-neutral-200/90 bg-white/98 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0a0a0a]/98"
       aria-label="Main"
     >
-      <ul className="flex items-center justify-between gap-0.5">
-        <li className="flex flex-1 justify-center">
+      <ul className="flex h-[3.35rem] items-stretch px-0.5 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-0.5">
+        <li className="flex min-w-0 flex-1">
           <Link
             href="/"
             prefetch
             aria-label={`Home, balance ${balanceLabel}`}
             aria-current={homeActive ? "page" : undefined}
-            className={`glide-tap flex h-11 min-w-[2.75rem] items-center justify-center rounded-full px-2.5 transition-[background-color,color,box-shadow] duration-200 ease-out ${
+            className={`glide-tap relative flex w-full items-center justify-center px-1 transition-colors duration-150 ${
               homeActive
-                ? "bg-white text-neutral-950 shadow-sm dark:bg-white dark:text-[#0a0a0a]"
-                : "text-neutral-800 dark:text-white/80"
+                ? "text-[var(--glide-success)]"
+                : "text-neutral-500 dark:text-white/45"
             }`}
           >
+            {homeActive ? (
+              <span
+                className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-[var(--glide-success)]"
+                aria-hidden
+              />
+            ) : null}
             <span
               className={`font-bold tabular-nums tracking-tight ${
-                balanceLabel.length > 6 ? "text-[12px]" : "text-[14px]"
+                balanceLabel.length > 6 ? "text-[13px]" : "text-[15px]"
               }`}
             >
               {balanceLabel}
@@ -59,27 +64,31 @@ export function BottomNav() {
           </Link>
         </li>
 
-        {ICON_NAV.map(({ href, label, icon: Icon, assist }) => {
+        {ICON_NAV.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
 
           return (
-            <li key={href} className="flex flex-1 justify-center">
+            <li key={href} className="flex min-w-0 flex-1">
               <Link
                 href={href}
                 prefetch
                 aria-label={label}
                 aria-current={active ? "page" : undefined}
-                className={`glide-tap flex h-11 w-11 items-center justify-center rounded-full transition-[background-color,color,box-shadow,transform] duration-200 ease-out ${
+                className={`glide-tap relative flex w-full items-center justify-center px-1 transition-colors duration-150 ${
                   active
-                    ? assist
-                      ? "bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/30"
-                      : "bg-white text-neutral-950 shadow-sm dark:bg-white dark:text-[#0a0a0a]"
-                    : "text-neutral-700 dark:text-white/70"
-                } ${assist && !active ? "text-violet-600 dark:text-violet-300" : ""}`}
+                    ? "text-neutral-950 dark:text-white"
+                    : "text-neutral-500 dark:text-white/45"
+                }`}
               >
+                {active ? (
+                  <span
+                    className="absolute inset-x-4 top-0 h-[2px] rounded-full bg-neutral-950 dark:bg-white"
+                    aria-hidden
+                  />
+                ) : null}
                 <Icon
-                  className={`h-[1.35rem] w-[1.35rem] ${active ? "stroke-[2.5]" : "stroke-[2]"}`}
-                  strokeWidth={active ? 2.5 : 2}
+                  className="h-[23px] w-[23px]"
+                  strokeWidth={active ? 2.35 : 2}
                 />
               </Link>
             </li>
