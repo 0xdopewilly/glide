@@ -21,15 +21,20 @@ export default clerkMiddleware(
     const { userId } = await auth();
     const { pathname } = request.nextUrl;
 
-    if (!userId && pathname === "/") {
-      return NextResponse.redirect(new URL("/onboarding", request.url));
-    }
-
-    if (!isPublicRoute(request)) {
-      await auth.protect();
+    if (!userId) {
+      if (pathname === "/") {
+        return NextResponse.redirect(new URL("/onboarding", request.url));
+      }
+      if (!isPublicRoute(request)) {
+        return NextResponse.redirect(new URL("/sign-in", request.url));
+      }
     }
   },
-  { authorizedParties },
+  {
+    authorizedParties,
+    signInUrl: "/sign-in",
+    signUpUrl: "/sign-up",
+  },
 );
 
 export const config = {
