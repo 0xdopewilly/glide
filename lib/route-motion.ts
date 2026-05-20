@@ -18,6 +18,11 @@ const FLOW_ROUTES = [
 
 function tabIndex(path: string): number {
   const base = path.split("?")[0] ?? path;
+  if (base === "/") return 0;
+  for (let i = 1; i < TAB_ORDER.length; i++) {
+    const tab = TAB_ORDER[i]!;
+    if (base === tab || base.startsWith(`${tab}/`)) return i;
+  }
   const idx = TAB_ORDER.indexOf(base as (typeof TAB_ORDER)[number]);
   if (idx >= 0) return idx;
   if (FLOW_ROUTES.some((r) => base.startsWith(r))) return 100;

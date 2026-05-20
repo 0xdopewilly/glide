@@ -62,7 +62,19 @@ body {
   }
 }
 
-/* Route transitions — opacity only, GPU-friendly */
+/* Route transitions — GPU layer, no opacity jitter */
+.page-motion-viewport {
+  contain: layout paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.page-motion-panel {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
 .page-motion-shell {
   animation: glide-page-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
   contain: layout style;
@@ -96,6 +108,16 @@ body {
 .glide-tap:active:not(:disabled) {
   transform: scale(0.97);
   opacity: 0.92;
+}
+
+/* Bottom nav — spring tap handled by Framer; disable CSS scale to avoid double-dip */
+.glide-nav-tap {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.glide-nav-tap:active {
+  opacity: 1;
 }
 
 /* Swap / bridge processing overlay */
