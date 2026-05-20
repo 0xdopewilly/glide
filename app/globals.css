@@ -82,15 +82,11 @@ body {
   }
 }
 
-/* Route transitions — GPU layer, no opacity jitter */
-.page-motion-viewport {
-  overflow: hidden;
-}
-
+/* Tab slide — single enter animation in app/(app)/template.tsx */
 .page-motion-panel {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  will-change: transform;
+  transform: translateZ(0);
 }
 
 .page-motion-shell {
@@ -454,11 +450,15 @@ body {
 }
 
 :root:not(.dark) .glide-gradient--vivid .glide-mesh-layer--primary {
-  opacity: 1.15;
+  opacity: 1;
 }
 
 :root:not(.dark) .glide-gradient--vivid .glide-mesh-layer--secondary {
-  opacity: 1.1;
+  opacity: 0.95;
+}
+
+:root:not(.dark) .glide-app-frame {
+  background: color-mix(in srgb, var(--glide-shell) 82%, transparent);
 }
 
 @keyframes glide-mesh-float {

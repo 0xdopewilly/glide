@@ -2,7 +2,6 @@
 
 import { BottomNav } from "@/components/bottom-nav";
 import { GlideGradient } from "@/components/glide-gradient";
-import { PageMotion } from "@/components/page-motion";
 import { usePathname } from "next/navigation";
 
 const FULL_BLEED_ROUTES = ["/send", "/receive", "/swap", "/bridge", "/request", "/pay"];
@@ -26,13 +25,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="glide-app-frame relative flex h-dvh w-full max-w-md flex-col overflow-hidden md:h-[85vh] md:rounded-[var(--glide-radius-xl)] md:shadow-2xl md:ring-1 md:ring-black/5 dark:md:ring-white/10">
         <GlideGradient
           intensity="vivid"
-          className="pointer-events-none absolute inset-0 opacity-[0.9] transition-opacity duration-500 dark:opacity-100"
+          className="pointer-events-none absolute inset-0 opacity-100 transition-opacity duration-500"
         />
         <div
           className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden"
           style={{ fontFamily: jakarta }}
         >
-          <PageMotion>{children}</PageMotion>
+          {children}
         </div>
         {!hideNav ? (
           <div className="relative z-10 mt-auto w-full shrink-0">
