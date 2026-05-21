@@ -24,10 +24,7 @@ import {
 import { useWallet } from "@/context/wallet-context";
 import { AtSign, Check, QrCode, User, Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-const MOTION_EASE = [0.22, 1, 0.36, 1] as const;
 
 type Step = "amount" | "review" | "success";
 
@@ -395,12 +392,8 @@ export default function SendPage() {
             ) : null}
           </div>
 
-          <motion.p
-            key={hint ?? `balance-${tokenBalance.toFixed(2)}-${token}`}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.15, ease: MOTION_EASE }}
-            className={`mt-3 text-center text-[13px] font-medium leading-snug ${
+          <p
+            className={`mt-3 text-center text-[13px] font-medium leading-snug transition-opacity duration-150 ${
               hint
                 ? resolveState === "fail" || overBalance
                   ? "text-red-400"
@@ -411,7 +404,7 @@ export default function SendPage() {
             }`}
           >
             {hint ?? `Balance ${formatStableAmount(tokenBalance, token)}`}
-          </motion.p>
+          </p>
         </section>
 
         {!requestCode ? (

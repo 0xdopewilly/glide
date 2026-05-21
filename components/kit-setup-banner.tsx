@@ -1,7 +1,6 @@
 "use client";
 
 import { useKitHealth } from "@/hooks/use-kit-health";
-import { motion } from "framer-motion";
 import Link from "next/link";
 
 export function KitSetupBanner({ mode = "swap" }: { mode?: "swap" | "bridge" }) {
@@ -27,12 +26,7 @@ export function KitSetupBanner({ mode = "swap" }: { mode?: "swap" | "bridge" }) 
         "Add CIRCLE_KIT_KEY (KIT_KEY:id:secret) from Circle Console, then redeploy.");
 
   return (
-    <motion.div
-      className="mx-5 mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
-      initial={{ opacity: 0, x: 12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.22 }}
-    >
+    <div className="glide-enter mx-5 mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
       <p className="font-medium text-amber-50">{title}</p>
       <p className="mt-1.5 leading-relaxed text-amber-100/90">{body}</p>
       {mode === "swap" ? (
@@ -46,7 +40,7 @@ export function KitSetupBanner({ mode = "swap" }: { mode?: "swap" | "bridge" }) 
           .
         </p>
       ) : null}
-    </motion.div>
+    </div>
   );
 }
 

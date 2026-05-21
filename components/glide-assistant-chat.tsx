@@ -22,7 +22,6 @@ import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowUp, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AnimatePresence } from "framer-motion";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 const WELCOME: StoredChatMessage = {
@@ -597,11 +596,9 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             onSaveContact={saveContact}
           />
         ))}
-        <AnimatePresence mode="wait">
-          {processingAction ? (
-            <ProcessingBubble key="processing" action={processingAction} />
-          ) : null}
-        </AnimatePresence>
+        {processingAction ? (
+          <ProcessingBubble action={processingAction} />
+        ) : null}
         {busy && !processingAction ? (
           <div className="flex justify-start px-1 py-1">
             <div className="glide-chat-typing flex gap-1.5 rounded-[20px] rounded-bl-[6px] border border-neutral-200/50 bg-white/90 px-4 py-3.5 dark:border-white/[0.06] dark:bg-[#1e1e22]">

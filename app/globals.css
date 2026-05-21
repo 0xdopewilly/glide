@@ -29,6 +29,7 @@
   --glide-duration-short: 200ms;
   --glide-duration-medium: 280ms;
   --glide-ease: cubic-bezier(0.2, 0, 0, 1);
+  --glide-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   --glide-gradient-from: #3b7fd4;
   --glide-gradient-to: #7c8fd4;
   --glide-glow-primary: rgba(59, 127, 212, 0.45);
@@ -97,49 +98,196 @@ body {
   }
 }
 
-/* Tab slide — single enter animation in app/(app)/template.tsx */
+/* ── Motion: transform + opacity only (GPU-composited) ── */
+@keyframes glide-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes glide-tab-forward {
+  from {
+    opacity: 0;
+    transform: translate3d(10px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes glide-tab-back {
+  from {
+    opacity: 0;
+    transform: translate3d(-10px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.glide-enter {
+  animation: glide-enter 0.2s var(--glide-ease-out) both;
+}
+
+.glide-tab-enter {
+  animation: glide-tab-forward 0.22s var(--glide-ease-out) both;
+}
+
+.glide-tab-enter[data-tab-dir="back"] {
+  animation-name: glide-tab-back;
+}
+
 .page-motion-panel {
+  contain: layout style paint;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
 }
 
-.page-motion-shell {
-  animation: glide-page-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
-  contain: layout style;
-  backface-visibility: hidden;
-  transform: translateZ(0);
+.onboarding-dot {
+  width: 28px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--glide-accent);
+  transform: scaleX(0.286);
+  transform-origin: center;
+  opacity: 0.28;
+  transition:
+    transform 0.22s var(--glide-ease-out),
+    opacity 0.22s var(--glide-ease-out);
 }
 
-@keyframes glide-page-in {
+.onboarding-dot--active {
+  transform: scaleX(1);
+  opacity: 1;
+}
+
+.onboarding-dot--inactive {
+  transform: scaleX(0.286);
+  opacity: 0.28;
+}
+
+@keyframes glide-sheet-up {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translate3d(0, 100%, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.glide-sheet-backdrop {
+  animation: glide-enter 0.18s var(--glide-ease-out) both;
+}
+
+.glide-sheet-panel {
+  animation: glide-sheet-up 0.26s var(--glide-ease-out) both;
+}
+
+.glide-sheet-open {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+  transition:
+    transform 0.26s var(--glide-ease-out),
+    opacity 0.2s var(--glide-ease-out);
+}
+
+.glide-sheet-closed {
+  transform: translate3d(0, 100%, 0);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 0.26s var(--glide-ease-out),
+    opacity 0.2s var(--glide-ease-out);
+}
+
+.glide-processing-pulse {
+  animation: glide-processing-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes glide-processing-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+
+.glide-processing-bar-indeterminate {
+  animation: glide-processing-bar 1s ease-in-out infinite;
+}
+
+@keyframes glide-processing-bar {
+  from {
+    transform: translate3d(-100%, 0, 0);
+  }
+  to {
+    transform: translate3d(220%, 0, 0);
+  }
+}
+
+.glide-processing-arrow {
+  animation: glide-processing-arrow 1.4s ease-in-out infinite;
+}
+
+@keyframes glide-processing-arrow {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: translate3d(3px, 0, 0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page-motion-shell {
+  .glide-enter,
+  .glide-tab-enter,
+  .glide-sheet-backdrop,
+  .glide-sheet-panel {
+    animation: none;
+  }
+
+  .glide-sheet-open,
+  .glide-sheet-closed {
+    transition: none;
+  }
+
+  .onboarding-dot {
+    transition: none;
+  }
+
+  .glide-processing-pulse,
+  .glide-processing-bar-indeterminate,
+  .glide-processing-arrow {
     animation: none;
   }
 }
 
-/* Tap feedback — Material standard duration */
+/* Tap feedback — transform only (no opacity repaint) */
 .glide-tap {
-  transition:
-    transform var(--glide-duration-short) var(--glide-ease),
-    opacity var(--glide-duration-short) var(--glide-ease),
-    background-color var(--glide-duration-short) var(--glide-ease);
+  transition: transform 0.12s var(--glide-ease-out);
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .glide-tap:active:not(:disabled) {
-  transform: scale(0.96);
-  opacity: 0.88;
+  transform: scale(0.97);
 }
 
 /* Bottom nav — spring tap handled by Framer; disable CSS scale to avoid double-dip */
@@ -227,85 +375,26 @@ body {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   transition:
-    transform 0.1s cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 0.12s ease,
-    box-shadow 0.12s ease;
-  will-change: transform;
+    transform 0.1s var(--glide-ease-out),
+    background-color 0.12s ease;
 }
 
 .glide-key:active:not(:disabled) {
-  transform: scale(0.9);
+  transform: scale3d(0.94, 0.94, 1);
   background: color-mix(in srgb, var(--glide-accent) 16%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-
-.glide-keypad {
-  animation: glide-keypad-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes glide-keypad-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Amount / hero number */
-.glide-amount-display {
-  animation: glide-amount-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes glide-amount-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .glide-assistant-panel {
-  animation: glide-assistant-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-  transform-origin: bottom right;
+  animation: glide-enter 0.24s var(--glide-ease-out) both;
 }
 
 .glide-assistant-fab {
-  animation: glide-fab-in 0.2s ease-out both;
-}
-
-@keyframes glide-assistant-in {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes glide-fab-in {
-  from {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  animation: glide-enter 0.18s var(--glide-ease-out) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .glide-assistant-panel,
-  .glide-assistant-fab,
-  .glide-keypad,
-  .glide-amount-display {
+  .glide-assistant-fab {
     animation: none;
   }
 
@@ -314,11 +403,11 @@ body {
   }
 }
 
-/* Chat */
+/* Chat — short fade-up */
 .glide-chat-bubble,
 .glide-chat-card,
 .glide-chat-receipt {
-  animation: glide-chat-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: glide-chat-in 0.2s var(--glide-ease-out) both;
 }
 
 /* Text inputs — subtle focus glow */
@@ -332,11 +421,11 @@ body {
 @keyframes glide-chat-in {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
+    transform: translate3d(0, 6px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -362,11 +451,11 @@ body {
   80%,
   100% {
     opacity: 0.35;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
   40% {
     opacity: 1;
-    transform: translateY(-3px);
+    transform: translate3d(0, -3px, 0);
   }
 }
 
@@ -889,6 +978,7 @@ body {
   .glide-m3-nav-pill {
     background: var(--glide-primary-container);
     border-radius: var(--glide-radius-md);
+    transition: opacity 0.15s var(--glide-ease-out);
   }
 
   .glide-m3-nav-pill--success {

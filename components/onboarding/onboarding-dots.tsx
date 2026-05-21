@@ -1,7 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
-
 export function OnboardingDots({
   total,
   current,
@@ -16,22 +12,13 @@ export function OnboardingDots({
       aria-label="Onboarding steps"
     >
       {Array.from({ length: total }).map((_, i) => (
-        <motion.div
+        <div
           key={i}
           role="tab"
           aria-selected={i === current}
-          className="h-1 rounded-full bg-[var(--glide-accent)]"
-          layout
-          initial={false}
-          animate={{
-            width: i === current ? 28 : 8,
-            opacity: i === current ? 1 : 0.28,
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 380,
-            damping: 28,
-          }}
+          className={`onboarding-dot ${
+            i === current ? "onboarding-dot--active" : "onboarding-dot--inactive"
+          }`}
         />
       ))}
     </div>

@@ -3,7 +3,6 @@
 import { activityRowMeta } from "@/lib/activity";
 import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowDownLeft,
   ArrowLeftRight,
@@ -15,8 +14,6 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
-
-const EXPAND_EASE = [0.22, 1, 0.36, 1] as const;
 
 const KIND_ICON: Record<TransactionKind, LucideIcon> = {
   send: ArrowUpRight,
@@ -175,30 +172,19 @@ function TransactionRow({
           >
             {blurAmounts ? "•••" : amount}
           </p>
-          <motion.span
-            animate={{ rotate: expanded ? 180 : 0 }}
-            transition={{ duration: 0.22, ease: EXPAND_EASE }}
-            className="text-neutral-400 dark:text-white/35"
+          <span
+            className={`inline-flex text-neutral-400 transition-transform duration-200 dark:text-white/35 ${
+              expanded ? "rotate-180" : ""
+            }`}
           >
             <ChevronDown className="h-4 w-4" strokeWidth={2.5} />
-          </motion.span>
+          </span>
         </div>
       </button>
 
-      <AnimatePresence initial={false}>
-        {expanded ? (
-          <motion.div
-            key="receipt"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.28, ease: EXPAND_EASE }}
-            className="overflow-hidden"
-          >
-            <div
-              className="border-t px-4 pb-4 pt-3"
-              style={{ borderColor: "var(--glide-border)" }}
-            >
+      {expanded ? (
+            <div className="overflow-hidden border-t border-[var(--glide-border)]">
+            <div className="px-4 pb-4 pt-3">
               {note ? (
                 <p className="rounded-xl bg-neutral-100/80 px-3 py-2.5 text-sm dark:bg-black/30">
                   &ldquo;{note}&rdquo;
@@ -241,9 +227,8 @@ function TransactionRow({
                 ) : null}
               </div>
             </div>
-          </motion.div>
+          </div>
         ) : null}
-      </AnimatePresence>
     </article>
   );
 }

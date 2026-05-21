@@ -1,23 +1,9 @@
-/** Material You–style motion tokens (shared across nav + page transitions). */
+/** Shared motion — use CSS classes; only transform + opacity on the GPU. */
 
-/** Standard easing — fast out, no bounce. */
-export const GLIDE_EASE = [0.2, 0, 0, 1] as const;
+/** Primary ease (iOS/Material-style deceleration). */
+export const GLIDE_EASE_CSS = "cubic-bezier(0.32, 0.72, 0, 1)";
 
-/** Tab slide duration (seconds). */
-export const GLIDE_DURATION = 0.22;
+/** Snappy UI (tabs, taps). */
+export const GLIDE_EASE_STANDARD_CSS = "cubic-bezier(0.2, 0, 0, 1)";
 
-/** Press feedback on nav + tappable controls. */
-export const GLIDE_TAP_SPRING = {
-  type: "spring" as const,
-  stiffness: 520,
-  damping: 30,
-  mass: 0.55,
-};
-
-/** Sliding nav indicator pill. */
-export const GLIDE_LAYOUT_SPRING = {
-  type: "spring" as const,
-  stiffness: 400,
-  damping: 32,
-  mass: 0.5,
-};
+export const GLIDE_ENTER_MS = 200;
