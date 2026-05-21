@@ -1,6 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useLiteMotion } from "@/hooks/use-lite-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -18,7 +19,7 @@ export function AnimatedAmount({
   prefixClassName?: string;
   amountClassName?: string;
 }) {
-  const reduceMotion = useReducedMotion();
+  const liteMotion = useLiteMotion();
 
   return (
     <span
@@ -32,20 +33,10 @@ export function AnimatedAmount({
           <motion.span
             key={value}
             initial={
-              reduceMotion
-                ? false
-                : { opacity: 0, y: 10, scale: 0.94, filter: "blur(2px)" }
+              liteMotion ? false : { opacity: 0, y: 8, scale: 0.98 }
             }
-            animate={
-              reduceMotion
-                ? { opacity: 1 }
-                : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
-            }
-            exit={
-              reduceMotion
-                ? { opacity: 0 }
-                : { opacity: 0, y: -8, scale: 0.97, filter: "blur(2px)" }
-            }
+            animate={liteMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={liteMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.99 }}
             transition={{ duration: 0.16, ease: EASE }}
             className={`inline-block origin-bottom ${amountClassName}`}
           >

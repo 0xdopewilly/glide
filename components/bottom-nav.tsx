@@ -2,12 +2,10 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 import { useWallet } from "@/context/wallet-context";
-import {
-  GLIDE_LAYOUT_SPRING,
-  GLIDE_TAP_SPRING,
-} from "@/lib/motion-tokens";
+import { useLiteMotion } from "@/hooks/use-lite-motion";
+import { GLIDE_LAYOUT_SPRING, GLIDE_TAP_SPRING } from "@/lib/motion-tokens";
 import { ArrowLeftRight, Clock, Sparkles, Wallet } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -29,13 +27,25 @@ function formatNavBalance(amount: number) {
   return `$${amount.toFixed(2)}`;
 }
 
-function NavActivePill({ variant }: { variant: "balance" | "default" }) {
+function NavActivePill({
+  variant,
+  animateLayout,
+}: {
+  variant: "balance" | "default";
+  animateLayout: boolean;
+}) {
+  const className = `glide-m3-nav-pill absolute inset-x-1.5 inset-y-1 ${
+    variant === "balance" ? "glide-m3-nav-pill--success" : ""
+  }`;
+
+  if (!animateLayout) {
+    return <span className={className} aria-hidden />;
+  }
+
   return (
     <motion.span
       layoutId="nav-active-pill"
-      className={`glide-m3-nav-pill absolute inset-x-1.5 inset-y-1 ${
-        variant === "balance" ? "glide-m3-nav-pill--success" : ""
-      }`}
+      className={className}
       transition={GLIDE_LAYOUT_SPRING}
       aria-hidden
     />
@@ -44,15 +54,23 @@ function NavActivePill({ variant }: { variant: "balance" | "default" }) {
 
 function NavTap({
   children,
-  reduceMotion,
+  liteMotion,
 }: {
   children: ReactNode;
-  reduceMotion: boolean | null;
+  liteMotion: boolean;
 }) {
+  if (liteMotion) {
+    return (
+      <span className="relative z-10 flex w-full items-center justify-center">
+        {children}
+      </span>
+    );
+  }
+
   return (
     <motion.span
       className="relative z-10 flex w-full items-center justify-center"
-      whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+      whileTap={{ scale: 0.9 }}
       transition={GLIDE_TAP_SPRING}
     >
       {children}
@@ -64,7 +82,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const { totalUsd } = useWallet();
   const { hideBalance } = usePrivacy();
-  const reduceMotion = useReducedMotion();
+  const liteMotion = useLiteMotion();
   const balanceLabel = hideBalance ? "•••" : formatNavBalance(totalUsd);
   const homeActive = pathname === "/";
 
@@ -83,8 +101,10 @@ export function BottomNav() {
                 : "text-[var(--glide-on-nav-inactive)]"
             }`}
           >
-            {homeActive ? <NavActivePill variant="balance" /> : null}
-            <NavTap reduceMotion={reduceMotion}>
+            {homeActive ? (
+              <NavActivePill variant="balance" animateLayout={!liteMotion} />
+            ) : null}
+            <NavTap liteMotion={liteMotion}>
               <span
                 className={`font-bold tabular-nums tracking-tight ${
                   balanceLabel.length > 6 ? "text-[13px]" : "text-[15px]"
@@ -110,8 +130,10 @@ export function BottomNav() {
                   active ? "text-[var(--glide-text)]" : "text-[var(--glide-on-nav-inactive)]"
                 }`}
               >
-                {active ? <NavActivePill variant="default" /> : null}
-                <NavTap reduceMotion={reduceMotion}>
+                {active ? (
+                  <NavActivePill variant="default" animateLayout={!liteMotion} />
+                ) : null}
+                <NavTap liteMotion={liteMotion}>
                   <Icon
                     className="h-[23px] w-[23px]"
                     strokeWidth={active ? 2.35 : 2}
