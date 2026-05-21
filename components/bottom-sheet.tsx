@@ -23,10 +23,9 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
   return (
     <>
       <div
-        className={`absolute inset-0 z-40 bg-black/55 transition-opacity duration-200 ${
+        className={`absolute inset-0 z-40 bg-black/55 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
-        style={{ transitionTimingFunction: "var(--glide-ease-out)" }}
         onClick={onClose}
         aria-hidden={!open}
       />

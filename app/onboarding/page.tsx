@@ -71,7 +71,7 @@ export default function OnboardingPage() {
           </button>
         </header>
 
-        <div key={step} className="glide-enter flex min-h-0 flex-col justify-center">
+        <div key={step} className="flex min-h-0 flex-col justify-center">
           <OnboardingHeroVisual step={step} />
           <div className="px-6 pt-2">
             <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--glide-accent)]">

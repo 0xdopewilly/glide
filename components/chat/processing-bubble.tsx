@@ -51,7 +51,7 @@ export function ProcessingBubble({ action }: { action: ProcessingAction }) {
   const { label, hint } = stages[stageIndex] ?? stages[0];
 
   return (
-    <div className="glide-enter flex w-full justify-end px-1 py-2">
+    <div className="flex w-full justify-end px-1 py-2">
       <div
         className="flex min-w-[220px] max-w-[min(88%,280px)] items-center gap-3 rounded-2xl rounded-br-md px-4 py-3 glide-surface-card"
         role="status"

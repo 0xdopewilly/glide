@@ -88,7 +88,7 @@ body {
 }
 
 .glide-scroll {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -98,57 +98,24 @@ body {
   }
 }
 
-/* ── Motion: transform + opacity only (GPU-composited) ── */
-@keyframes glide-enter {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 4px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-@keyframes glide-tab-forward {
-  from {
-    opacity: 0;
-    transform: translate3d(10px, 0, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-@keyframes glide-tab-back {
-  from {
-    opacity: 0;
-    transform: translate3d(-10px, 0, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-}
-
-.glide-enter {
-  animation: glide-enter 0.2s var(--glide-ease-out) both;
-}
-
-.glide-tab-enter {
-  animation: glide-tab-forward 0.22s var(--glide-ease-out) both;
-}
-
-.glide-tab-enter[data-tab-dir="back"] {
-  animation-name: glide-tab-back;
+/* Static shell background — no filter: blur() layers */
+.glide-bg-wash {
+  background:
+    radial-gradient(
+      ellipse 85% 55% at 92% 8%,
+      color-mix(in srgb, var(--glide-glow-primary) 70%, transparent) 0%,
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 70% 50% at 8% 88%,
+      color-mix(in srgb, var(--glide-glow-secondary) 55%, transparent) 0%,
+      transparent 52%
+    );
+  opacity: 0.85;
 }
 
 .page-motion-panel {
-  contain: layout style paint;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
+  contain: layout style;
 }
 
 .onboarding-dot {
@@ -185,29 +152,15 @@ body {
   }
 }
 
-.glide-sheet-backdrop {
-  animation: glide-enter 0.18s var(--glide-ease-out) both;
-}
-
-.glide-sheet-panel {
-  animation: glide-sheet-up 0.26s var(--glide-ease-out) both;
-}
-
 .glide-sheet-open {
   transform: translate3d(0, 0, 0);
-  opacity: 1;
-  transition:
-    transform 0.26s var(--glide-ease-out),
-    opacity 0.2s var(--glide-ease-out);
+  transition: transform 0.2s var(--glide-ease-out);
 }
 
 .glide-sheet-closed {
   transform: translate3d(0, 100%, 0);
-  opacity: 0;
   pointer-events: none;
-  transition:
-    transform 0.26s var(--glide-ease-out),
-    opacity 0.2s var(--glide-ease-out);
+  transition: transform 0.2s var(--glide-ease-out);
 }
 
 .glide-processing-pulse {
@@ -256,13 +209,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .glide-enter,
-  .glide-tab-enter,
-  .glide-sheet-backdrop,
-  .glide-sheet-panel {
-    animation: none;
-  }
-
   .glide-sheet-open,
   .glide-sheet-closed {
     transition: none;
@@ -384,31 +330,13 @@ body {
   background: color-mix(in srgb, var(--glide-accent) 16%, transparent);
 }
 
-.glide-assistant-panel {
-  animation: glide-enter 0.24s var(--glide-ease-out) both;
-}
-
-.glide-assistant-fab {
-  animation: glide-enter 0.18s var(--glide-ease-out) both;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .glide-assistant-panel,
-  .glide-assistant-fab {
-    animation: none;
-  }
-
   .glide-key:active:not(:disabled) {
     transform: none;
   }
 }
 
-/* Chat — short fade-up */
-.glide-chat-bubble,
-.glide-chat-card,
-.glide-chat-receipt {
-  animation: glide-chat-in 0.2s var(--glide-ease-out) both;
-}
+/* Chat — no enter animation (instant feels faster) */
 
 /* Text inputs — subtle focus glow */
 .glide-input-focus {
@@ -416,17 +344,6 @@ body {
     border-color 0.2s ease,
     box-shadow 0.2s ease,
     background-color 0.2s ease;
-}
-
-@keyframes glide-chat-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 6px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
 }
 
 .glide-chat-typing span {

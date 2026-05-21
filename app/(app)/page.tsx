@@ -25,7 +25,7 @@ export default function HomePage() {
   return (
     <>
       <AppHeader showLogo showNotifications />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
+      <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-6">
         {error ? (
           <div className="mt-3 rounded-2xl bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-300">
             <span className="truncate">{error}</span>

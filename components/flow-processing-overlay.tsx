@@ -47,7 +47,7 @@ export function FlowProcessingOverlay({
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="glide-enter w-full max-w-[280px] rounded-3xl px-6 py-7 text-center shadow-xl glide-surface-card">
+      <div className="w-full max-w-[280px] rounded-3xl px-6 py-7 text-center shadow-xl glide-surface-card">
         <div className="flex items-center justify-center gap-2.5">
           {mode === "swap" ? (
             <>

@@ -17,14 +17,14 @@ export function SendScanSheet({
       <button
         type="button"
         aria-label="Close scanner"
-        className="glide-sheet-backdrop absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/55"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Scan QR code"
-        className="glide-sheet-panel relative mt-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-white dark:bg-[#141416]"
+        className="glide-sheet-open relative mt-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-white dark:bg-[#141416]"
       >
         <div className="flex items-center justify-between border-b px-5 py-4 dark:border-white/10">
           <h2 className="text-lg font-semibold tracking-tight">Scan to pay</h2>

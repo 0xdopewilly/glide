@@ -23,10 +23,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       style={{ background: "var(--glide-bg)" }}
     >
       <div className="glide-app-frame relative flex h-dvh w-full max-w-md flex-col overflow-hidden md:h-[85vh] md:rounded-[var(--glide-radius-xl)] md:shadow-2xl md:ring-1 md:ring-black/5 dark:md:ring-white/10">
-        <GlideGradient
-          intensity="vivid"
-          className="pointer-events-none absolute inset-0 opacity-100 transition-opacity duration-500"
-        />
+        <GlideGradient className="opacity-100" />
         <div
           className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden"
           style={{ fontFamily: jakarta }}
