@@ -1,8 +1,9 @@
 "use client";
 
+import { useLiteMotion } from "@/hooks/use-lite-motion";
 import { getSlideDirection } from "@/lib/route-motion";
 import { GLIDE_DURATION, GLIDE_EASE } from "@/lib/motion-tokens";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
@@ -12,7 +13,7 @@ import { useRef } from "react";
  */
 export default function AppTemplate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const reduceMotion = useReducedMotion();
+  const liteMotion = useLiteMotion();
   const prevPath = useRef(pathname);
   const direction = useRef(1);
 
@@ -21,9 +22,17 @@ export default function AppTemplate({ children }: { children: React.ReactNode })
     prevPath.current = pathname;
   }
 
-  if (reduceMotion) {
+  if (liteMotion) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.12, ease: GLIDE_EASE }}
+        className="page-motion-panel flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        {children}
+      </motion.div>
     );
   }
 

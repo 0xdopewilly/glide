@@ -394,8 +394,7 @@ body {
 .glide-mesh-layer {
   position: absolute;
   border-radius: 50%;
-  filter: blur(72px);
-  will-change: transform;
+  filter: blur(56px);
 }
 
 .glide-mesh-layer--primary {
@@ -450,12 +449,10 @@ body {
   opacity: 0.85;
 }
 
-:root:not(.dark) .glide-mesh-layer--primary {
-  animation: glide-mesh-float 16s ease-in-out infinite alternate;
-}
-
+/* Static mesh only — animated blur is costly on Android / desktop Chrome */
+:root:not(.dark) .glide-mesh-layer--primary,
 :root:not(.dark) .glide-mesh-layer--secondary {
-  animation: glide-mesh-float 20s ease-in-out infinite alternate-reverse;
+  animation: none;
 }
 
 .glide-gradient--vivid .glide-mesh-layer--primary,
@@ -473,7 +470,7 @@ body {
 }
 
 :root:not(.dark) .glide-app-frame {
-  background: color-mix(in srgb, var(--glide-shell) 82%, transparent);
+  background: var(--glide-shell);
 }
 
 @keyframes glide-mesh-float {
@@ -804,14 +801,59 @@ body {
   }
 
   .glide-app-frame {
-    background: color-mix(in srgb, var(--glide-shell) 88%, transparent);
+    background: var(--glide-shell);
     color: var(--glide-text);
-    backdrop-filter: blur(20px) saturate(1.15);
-    -webkit-backdrop-filter: blur(20px) saturate(1.15);
   }
 
   .dark .glide-app-frame {
-    background: color-mix(in srgb, var(--glide-shell) 92%, transparent);
+    background: var(--glide-shell);
+  }
+
+  /* Clerk auth — theme-safe text/inputs (OTP, labels, social buttons) */
+  .clerk-auth [class*="cl-headerTitle"] {
+    color: var(--glide-text) !important;
+  }
+
+  .clerk-auth [class*="cl-headerSubtitle"],
+  .clerk-auth [class*="cl-footerActionText"],
+  .clerk-auth [class*="cl-dividerText"],
+  .clerk-auth [class*="cl-formFieldLabel"] {
+    color: var(--glide-muted) !important;
+  }
+
+  .clerk-auth [class*="cl-formFieldInput"],
+  .clerk-auth [class*="cl-otpCodeFieldInput"] {
+    color: var(--glide-text) !important;
+    background: var(--glide-input) !important;
+    border-color: var(--glide-border) !important;
+    caret-color: var(--glide-accent) !important;
+  }
+
+  .clerk-auth [class*="cl-socialButtonsBlockButton"] {
+    color: var(--glide-text) !important;
+    background: var(--glide-input) !important;
+    border-color: var(--glide-border) !important;
+  }
+
+  .clerk-auth [class*="cl-footerActionLink"],
+  .clerk-auth [class*="cl-formResendCodeLink"],
+  .clerk-auth [class*="cl-alternativeMethodsBlockButton"],
+  .clerk-auth [class*="cl-identityPreviewEditButton"] {
+    color: var(--glide-accent) !important;
+  }
+
+  /* Touch / low-end devices — lighter GPU work */
+  @media (hover: none) and (pointer: coarse) {
+    .glide-mesh-layer {
+      filter: blur(40px) !important;
+      opacity: 0.75;
+    }
+
+    .glide-glass-panel,
+    .glide-tonal-card {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
   }
 
   .glide-m3-toolbar {

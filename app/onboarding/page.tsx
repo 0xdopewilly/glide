@@ -8,8 +8,9 @@ import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/context/auth-context";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLiteMotion } from "@/hooks/use-lite-motion";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -47,6 +48,7 @@ export default function OnboardingPage() {
   const { user, ready } = useAuth();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
+  const liteMotion = useLiteMotion();
 
   const isLast = step === SLIDES.length - 1;
   const slide = SLIDES[step];
@@ -69,25 +71,32 @@ export default function OnboardingPage() {
     setStep((s) => Math.max(s - 1, 0));
   }, []);
 
-  const slideVariants = {
-    initial: (d: number) => ({
-      opacity: 0,
-      x: d > 0 ? 48 : -48,
-      filter: "blur(6px)",
-    }),
-    animate: {
-      opacity: 1,
-      x: 0,
-      filter: "blur(0px)",
-      transition: { duration: 0.4, ease },
-    },
-    exit: (d: number) => ({
-      opacity: 0,
-      x: d > 0 ? -48 : 48,
-      filter: "blur(6px)",
-      transition: { duration: 0.32, ease },
-    }),
-  };
+  const slideVariants = useMemo(
+    () =>
+      liteMotion
+        ? {
+            initial: { opacity: 0 },
+            animate: { opacity: 1, transition: { duration: 0.28, ease } },
+            exit: { opacity: 0, transition: { duration: 0.2, ease } },
+          }
+        : {
+            initial: (d: number) => ({
+              opacity: 0,
+              x: d > 0 ? 48 : -48,
+            }),
+            animate: {
+              opacity: 1,
+              x: 0,
+              transition: { duration: 0.4, ease },
+            },
+            exit: (d: number) => ({
+              opacity: 0,
+              x: d > 0 ? -48 : 48,
+              transition: { duration: 0.32, ease },
+            }),
+          },
+    [liteMotion],
+  );
 
   return (
     <OnboardingShell>
