@@ -5,23 +5,9 @@ import { SignIn, SignUp } from "@clerk/nextjs";
 import { useTheme } from "next-themes";
 import { useEffect, useMemo, useState } from "react";
 
-/** Override Clerk's default "Sign in to <AppName>" / "Sign up for <AppName>"
- *  copy. Clerk reads the app name from your Dashboard; this forces it to say
- *  "glidepay" in case the Dashboard hasn't been updated. */
-const glidepayLocalization = {
-  signIn: {
-    start: {
-      title: "Sign in to glidepay",
-      subtitle: "Welcome back. Please sign in to continue.",
-    },
-  },
-  signUp: {
-    start: {
-      title: "Create your glidepay account",
-      subtitle: "Send and receive money in seconds.",
-    },
-  },
-};
+// Note: localization (title overrides like "Sign in to glidepay") is set on the
+// <ClerkProvider> in app/layout.tsx, not here — this version of @clerk/nextjs
+// types don't expose the prop on SignIn/SignUp directly.
 
 function useResolvedAppTheme(): "light" | "dark" {
   const { resolvedTheme } = useTheme();
@@ -41,7 +27,6 @@ export function ClerkSignInForm() {
     <div className="clerk-auth" data-theme={theme}>
       <SignIn
         appearance={appearance}
-        localization={glidepayLocalization}
         routing="path"
         path="/sign-in"
         signUpUrl="/sign-up"
@@ -58,7 +43,6 @@ export function ClerkSignUpForm() {
     <div className="clerk-auth" data-theme={theme}>
       <SignUp
         appearance={appearance}
-        localization={glidepayLocalization}
         routing="path"
         path="/sign-up"
         signInUrl="/sign-in"

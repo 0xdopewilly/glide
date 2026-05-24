@@ -63,6 +63,20 @@ export default function RootLayout({
           signInUrl="/sign-in"
           signUpUrl="/sign-up"
           afterSignOutUrl="/onboarding"
+          localization={{
+            signIn: {
+              start: {
+                title: "Sign in to glidepay",
+                subtitle: "Welcome back. Please sign in to continue.",
+              },
+            },
+            signUp: {
+              start: {
+                title: "Create your glidepay account",
+                subtitle: "Send and receive money in seconds.",
+              },
+            },
+          }}
         >
           <ThemeProvider
             attribute="class"
