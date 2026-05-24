@@ -2,6 +2,7 @@
 
 import { PageHeader } from "@/components/page-header";
 import {
+  ArrowDownLeft,
   CalendarClock,
   HandCoins,
   QrCode,
@@ -16,7 +17,6 @@ type Tile = {
   title: string;
   description: string;
   icon: LucideIcon;
-  wide?: boolean;
 };
 
 const TILES: Tile[] = [
@@ -27,16 +27,22 @@ const TILES: Tile[] = [
     icon: Send,
   },
   {
-    href: "/send?scan=1",
-    title: "Scan",
-    description: "Pay with a QR code",
-    icon: QrCode,
+    href: "/receive",
+    title: "Receive",
+    description: "Share your address",
+    icon: ArrowDownLeft,
   },
   {
     href: "/request",
     title: "Request",
     description: "Get paid with a link",
     icon: HandCoins,
+  },
+  {
+    href: "/send?scan=1",
+    title: "Scan",
+    description: "Pay with a QR code",
+    icon: QrCode,
   },
   {
     href: "/scheduled",
@@ -49,7 +55,6 @@ const TILES: Tile[] = [
     title: "Split a bill",
     description: "Divide costs with the assistant",
     icon: Users,
-    wide: true,
   },
 ];
 
@@ -62,34 +67,27 @@ export default function PaymentsPage() {
           Send, request, schedule, and split — all in one place.
         </p>
         <div className="glide-stagger mt-5 grid grid-cols-2 gap-3">
-          {TILES.map(({ href, title, description, icon: Icon, wide }) => (
+          {TILES.map(({ href, title, description, icon: Icon }) => (
             <Link
               key={href}
               href={href}
               prefetch
-              className={`glide-tap group relative flex flex-col justify-between rounded-3xl border p-4 ${
-                wide ? "col-span-2 min-h-[7rem]" : "min-h-[9.5rem]"
-              }`}
+              className="glide-tap group relative flex min-h-[9.5rem] flex-col justify-between rounded-3xl border p-4"
               style={{
                 background: "var(--glide-surface-elevated)",
                 borderColor: "var(--glide-border)",
               }}
             >
               <span
-                className={`flex items-center justify-center rounded-2xl ${
-                  wide ? "h-11 w-11" : "h-12 w-12"
-                }`}
+                className="flex h-12 w-12 items-center justify-center rounded-2xl"
                 style={{
                   background: "var(--glide-accent)",
                   color: "var(--glide-bg)",
                 }}
               >
-                <Icon
-                  className={wide ? "h-5 w-5" : "h-5 w-5"}
-                  strokeWidth={2.25}
-                />
+                <Icon className="h-5 w-5" strokeWidth={2.25} />
               </span>
-              <div className={wide ? "mt-3" : "mt-auto"}>
+              <div className="mt-auto">
                 <p className="text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
                   {title}
                 </p>
