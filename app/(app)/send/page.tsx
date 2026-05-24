@@ -349,96 +349,106 @@ export default function SendPage() {
     );
   }
 
+  const kindLabel =
+    kind === "wallet"
+      ? "Wallet address"
+      : kind === "username"
+        ? "Pay tag"
+        : kind === "contact"
+          ? "Contact"
+          : null;
+  const KindIcon =
+    kind === "wallet" ? Wallet : kind === "username" ? AtSign : User;
+
   return (
     <FlowPage backHref="/">
       <SendScanSheet open={scanOpen} onClose={() => setScanOpen(false)} />
-      <div className="flex min-h-0 flex-1 flex-col px-5 pb-4 font-[family-name:var(--font-jakarta)]">
-        <section className="mt-2">
-          <div className="flex items-center justify-between gap-3">
-            <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
-              Send money
-            </p>
-            <button
-              type="button"
-              onClick={() => setScanOpen(true)}
-              className="glide-tap glide-label-mono inline-flex items-center gap-1.5 rounded-full bg-[var(--glide-surface-container)] px-3 py-1.5 text-[11px] font-semibold text-[var(--glide-text)]"
+      <div className="flex min-h-0 flex-1 flex-col px-5 pb-4">
+        {/* Recipient row — compact pill with scan icon inline */}
+        <div
+          className={`mt-2 flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all ${recipientBorderClass}`}
+          style={{
+            background: "var(--glide-surface-elevated)",
+            borderColor: "var(--glide-border)",
+          }}
+        >
+          {(kind === "username" || (inputLooksLikeUsername && !kind)) ? (
+            <span className="shrink-0 pl-1 text-[18px] font-bold text-[var(--glide-muted)]">
+              @
+            </span>
+          ) : null}
+          <input
+            id="send-recipient"
+            value={recipient}
+            onChange={(e) => setRecipient(e.target.value)}
+            onFocus={() => setRecipientFocused(true)}
+            onBlur={() => setRecipientFocused(false)}
+            placeholder={PLACEHOLDER_GLIDE_TAG_OR_WALLET}
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-label="Recipient"
+            style={{ color: "var(--glide-text)" }}
+            className={`min-w-0 flex-1 bg-transparent py-2 text-[15px] font-semibold tracking-tight placeholder:font-medium placeholder:text-[var(--glide-muted)] focus:outline-none ${
+              kind === "wallet" || isValidWalletAddress(recipient.trim())
+                ? "font-mono text-[13px]"
+                : ""
+            }`}
+          />
+          {recipientOk && kindLabel ? (
+            <span
+              className="glide-label-mono inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold"
+              style={{
+                background:
+                  "color-mix(in srgb, var(--glide-success) 18%, transparent)",
+                color: "var(--glide-success)",
+              }}
             >
-              <QrCode className="h-3.5 w-3.5" strokeWidth={2.5} />
-              Scan QR
-            </button>
-          </div>
-
-          <div
-            className={`mt-4 rounded-2xl border p-4 transition-shadow ${recipientBorderClass}`}
+              <KindIcon className="h-3 w-3" strokeWidth={2.5} />
+              {kindLabel}
+            </span>
+          ) : resolveState === "checking" ? (
+            <span className="glide-label-mono shrink-0 text-[10px] font-bold text-[var(--glide-muted)]">
+              Checking…
+            </span>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setScanOpen(true)}
+            aria-label="Scan QR"
+            className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
             style={{
-              background: "var(--glide-surface-elevated)",
-              borderColor: "var(--glide-border)",
+              background: "var(--glide-surface-container-high)",
+              color: "var(--glide-text)",
             }}
           >
-            <label
-              htmlFor="send-recipient"
-              className="glide-label-mono block text-[11px] font-bold text-[var(--glide-muted)]"
-            >
-              Send to
-            </label>
-            <div className="relative mt-2">
-              {(kind === "username" || (inputLooksLikeUsername && !kind)) ? (
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-[var(--glide-text)]">
-                  @
-                </span>
-              ) : null}
-              <input
-                id="send-recipient"
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                onFocus={() => setRecipientFocused(true)}
-                onBlur={() => setRecipientFocused(false)}
-                placeholder={PLACEHOLDER_GLIDE_TAG_OR_WALLET}
-                autoComplete="off"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck={false}
-                style={{
-                  background: "var(--glide-input)",
-                  borderColor: "var(--glide-border)",
-                  color: "var(--glide-text)",
-                }}
-                className={`w-full rounded-xl border py-3.5 text-center text-[16px] font-semibold tracking-tight placeholder:font-medium placeholder:text-[var(--glide-muted)] focus:outline-none ${
-                  kind === "username" ? "pl-8 pr-3" : "px-3"
-                } ${kind === "wallet" || isValidWalletAddress(recipient.trim()) ? "font-mono text-[14px]" : ""}`}
-              />
-            </div>
-            <p className="mt-2.5 text-center text-[12px] leading-snug font-medium text-[var(--glide-muted)]">
-              Or type a saved contact name
-            </p>
-            {resolveState === "checking" ? (
-              <p className="mt-3 text-center text-[12px] font-medium text-[var(--glide-muted)]">
-                Verifying…
-              </p>
-            ) : null}
-            {recipientOk && kind ? (
-              <div
-                className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-semibold"
-                style={{ color: "var(--glide-success)" }}
-              >
-                {kind === "wallet" ? (
-                  <Wallet className="h-3.5 w-3.5" />
-                ) : kind === "username" ? (
-                  <AtSign className="h-3.5 w-3.5" />
-                ) : (
-                  <User className="h-3.5 w-3.5" />
-                )}
-                {kind === "wallet"
-                  ? "Wallet address"
-                  : kind === "username"
-                    ? "Pay tag"
-                    : "Contact name"}
-              </div>
-            ) : null}
-          </div>
+            <QrCode className="h-4 w-4" strokeWidth={2.25} />
+          </button>
+        </div>
 
+        {/* Token segment */}
+        {!requestCode ? (
+          <div className="mt-3">
+            <StableTokenSegment value={token} onChange={setToken} />
+          </div>
+        ) : null}
+
+        {/* Amount hero */}
+        <div className="mt-6 flex flex-col items-center">
           <p
-            className={`mt-3 text-center text-[13px] font-medium leading-snug transition-opacity duration-150 ${
+            key={amount}
+            className="glide-pop text-[72px] font-bold leading-none tracking-[-0.04em]"
+            style={{ color: "var(--glide-text)" }}
+          >
+            <AnimatedAmount
+              value={formatAmountDisplay(amount)}
+              prefix={amountPrefix}
+              prefixClassName="text-[36px] font-bold text-[var(--glide-muted)]"
+            />
+          </p>
+          <p
+            className={`mt-3 text-[13px] font-semibold leading-snug transition-opacity duration-150 ${
               hint
                 ? resolveState === "fail" || overBalance
                   ? "text-red-400"
@@ -453,39 +463,16 @@ export default function SendPage() {
           >
             {hint ?? `Balance ${formatStableAmount(tokenBalance, token)}`}
           </p>
-        </section>
-
-        {!requestCode ? (
-          <div className="mt-4 px-1">
-            <StableTokenSegment value={token} onChange={setToken} />
-          </div>
-        ) : null}
-
-        <div className="mt-4 flex flex-col items-center">
-          <span className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
-            Amount · {token}
-          </span>
-          <p
-            key={amount}
-            className="glide-pop mt-2 text-[64px] font-bold leading-none tracking-[-0.03em]"
-            style={{ color: "var(--glide-text)" }}
-          >
-            <AnimatedAmount
-              value={formatAmountDisplay(amount)}
-              prefix={amountPrefix}
-              prefixClassName="text-[36px] font-bold text-[var(--glide-muted)]"
-            />
-          </p>
         </div>
 
-        <div className="mt-auto pt-4">
+        {/* Keypad + Continue */}
+        <div className="mt-auto pt-3">
           <NumericKeypad onKey={onKey} />
           <GlideButton
             disabled={!canContinue}
             onClick={() => setStep("review")}
             variant="simple"
             className="mb-2 mt-3"
-            uppercase={false}
           >
             Continue
           </GlideButton>

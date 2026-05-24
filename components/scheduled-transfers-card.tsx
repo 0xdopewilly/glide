@@ -64,7 +64,13 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
   };
 
   return (
-    <div className={`rounded-2xl p-4 glide-surface-card ${className}`}>
+    <div
+      className={`rounded-3xl border p-4 ${className}`}
+      style={{
+        background: "var(--glide-surface-elevated)",
+        borderColor: "var(--glide-border)",
+      }}
+    >
       <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
         Active
       </p>
@@ -73,18 +79,21 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
           {rows.map((r) => (
             <li
               key={r.id}
-              className="flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 text-sm"
-              style={{ background: "var(--glide-surface-container)" }}
+              className="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-sm"
+              style={{
+                background: "var(--glide-surface-container)",
+                borderColor: "var(--glide-border)",
+              }}
             >
               <span className="min-w-0 leading-snug">
-                <span className="font-semibold text-[var(--glide-text)]">
+                <span className="text-[15px] font-bold text-[var(--glide-text)]">
                   ${r.amount}
                 </span>
                 <span className="text-[var(--glide-muted)]"> → </span>
-                <span className="font-medium text-[var(--glide-text)]">
+                <span className="text-[15px] font-semibold text-[var(--glide-text)]">
                   {r.recipientLabel ?? r.destination}
                 </span>
-                <span className="mt-0.5 block text-xs text-[var(--glide-muted)]">
+                <span className="mt-1 block text-[11px] text-[var(--glide-muted)]">
                   {scheduleFrequencyLabel(r.frequency)} · next{" "}
                   {formatNextScheduledRun(r.nextRunAt, r.frequency)}
                 </span>
@@ -92,7 +101,11 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
               <button
                 type="button"
                 onClick={() => void cancel(r.id)}
-                className="glide-tap shrink-0 text-xs font-semibold text-red-500 hover:text-red-600"
+                className="glide-tap glide-label-mono shrink-0 rounded-full px-3 py-1 text-[11px] font-bold text-red-500"
+                style={{
+                  background:
+                    "color-mix(in srgb, #ef4444 14%, transparent)",
+                }}
               >
                 Cancel
               </button>
@@ -101,7 +114,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
         </ul>
       ) : (
         <p
-          className="mt-3 rounded-xl border border-dashed px-4 py-6 text-center text-sm text-[var(--glide-muted)]"
+          className="mt-3 rounded-2xl border border-dashed px-4 py-8 text-center text-sm text-[var(--glide-muted)]"
           style={{ borderColor: "var(--glide-border)" }}
         >
           No scheduled sends yet. Add one below.

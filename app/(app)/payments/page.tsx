@@ -3,7 +3,6 @@
 import { PageHeader } from "@/components/page-header";
 import {
   CalendarClock,
-  ChevronRight,
   HandCoins,
   QrCode,
   Send,
@@ -12,34 +11,37 @@ import {
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
-const PAYMENT_ACTIONS: {
+type Tile = {
   href: string;
   title: string;
   description: string;
   icon: LucideIcon;
-}[] = [
+  wide?: boolean;
+};
+
+const TILES: Tile[] = [
   {
     href: "/send",
-    title: "Send money",
-    description: "Pay a tag, wallet, or contact",
+    title: "Send",
+    description: "To a tag, wallet, or contact",
     icon: Send,
   },
   {
     href: "/send?scan=1",
-    title: "Scan to pay",
-    description: "Scan a QR code when sending",
+    title: "Scan",
+    description: "Pay with a QR code",
     icon: QrCode,
   },
   {
     href: "/request",
-    title: "Request cash",
-    description: "Get paid with a link or QR",
+    title: "Request",
+    description: "Get paid with a link",
     icon: HandCoins,
   },
   {
     href: "/scheduled",
-    title: "Scheduled sends",
-    description: "Rent, allowances, subscriptions",
+    title: "Schedule",
+    description: "Rent, allowances, subs",
     icon: CalendarClock,
   },
   {
@@ -47,6 +49,7 @@ const PAYMENT_ACTIONS: {
     title: "Split a bill",
     description: "Divide costs with the assistant",
     icon: Users,
+    wide: true,
   },
 ];
 
@@ -55,33 +58,48 @@ export default function PaymentsPage() {
     <>
       <PageHeader title="Payments" />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-8">
-        <p className="mt-1 text-sm glide-muted">
+        <p className="mt-1 text-sm text-[var(--glide-muted)]">
           Send, request, schedule, and split — all in one place.
         </p>
-        <ul className="mt-5 flex flex-col gap-2">
-          {PAYMENT_ACTIONS.map(({ href, title, description, icon: Icon }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                prefetch
-                className="glide-tap flex items-center gap-3.5 rounded-2xl px-4 py-3.5 glide-surface-card"
+        <div className="glide-stagger mt-5 grid grid-cols-2 gap-3">
+          {TILES.map(({ href, title, description, icon: Icon, wide }) => (
+            <Link
+              key={href}
+              href={href}
+              prefetch
+              className={`glide-tap group relative flex flex-col justify-between rounded-3xl border p-4 ${
+                wide ? "col-span-2 min-h-[7rem]" : "min-h-[9.5rem]"
+              }`}
+              style={{
+                background: "var(--glide-surface-elevated)",
+                borderColor: "var(--glide-border)",
+              }}
+            >
+              <span
+                className={`flex items-center justify-center rounded-2xl ${
+                  wide ? "h-11 w-11" : "h-12 w-12"
+                }`}
+                style={{
+                  background: "var(--glide-accent)",
+                  color: "var(--glide-bg)",
+                }}
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--glide-surface-container)]">
-                  <Icon className="h-5 w-5" strokeWidth={2} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold tracking-tight">
-                    {title}
-                  </span>
-                  <span className="mt-0.5 block text-xs glide-muted">
-                    {description}
-                  </span>
-                </span>
-                <ChevronRight className="h-5 w-5 shrink-0 glide-muted" strokeWidth={2} />
-              </Link>
-            </li>
+                <Icon
+                  className={wide ? "h-5 w-5" : "h-5 w-5"}
+                  strokeWidth={2.25}
+                />
+              </span>
+              <div className={wide ? "mt-3" : "mt-auto"}>
+                <p className="text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
+                  {title}
+                </p>
+                <p className="mt-0.5 text-[12px] font-medium text-[var(--glide-muted)]">
+                  {description}
+                </p>
+              </div>
+            </Link>
           ))}
-        </ul>
+        </div>
       </div>
     </>
   );
