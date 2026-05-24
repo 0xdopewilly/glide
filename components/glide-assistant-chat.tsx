@@ -558,11 +558,17 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
       {isPage ? (
         <header className="shrink-0 px-5 pb-3 pt-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-600 text-white">
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-2xl"
+              style={{
+                background: "var(--glide-accent)",
+                color: "var(--glide-bg)",
+              }}
+            >
               <Sparkles className="h-[18px] w-[18px]" />
             </span>
             <div>
-              <p className="text-base font-semibold tracking-tight">Glide</p>
+              <p className="text-base font-semibold tracking-tight">glidepay assistant</p>
               <p className="text-xs glide-muted">Send, swap, bridge. Just ask.</p>
             </div>
           </div>

@@ -1,4 +1,4 @@
-/** Shared input placeholders for Glide Tag / recipient fields */
-export const PLACEHOLDER_GLIDE_TAG = "Enter Glide Tag";
-export const PLACEHOLDER_GLIDE_TAG_OR_WALLET = "Glide Tag or wallet address";
-export const PLACEHOLDER_GLIDE_TAG_OR_ADDRESS = "Glide Tag or 0x…";
+/** Shared input placeholders for pay tag / recipient fields */
+export const PLACEHOLDER_GLIDE_TAG = "Enter pay tag";
+export const PLACEHOLDER_GLIDE_TAG_OR_WALLET = "Pay tag or wallet address";
+export const PLACEHOLDER_GLIDE_TAG_OR_ADDRESS = "Pay tag or 0x…";

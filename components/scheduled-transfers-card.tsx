@@ -107,7 +107,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
       <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.06em] glide-muted">
         New schedule
       </p>
-      <FormField id="sched-to" label="To (Glide Tag or address)" className="mt-3">
+      <FormField id="sched-to" label="To (pay tag or address)" className="mt-3">
         <input
           id="sched-to"
           value={destination}
