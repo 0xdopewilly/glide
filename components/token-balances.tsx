@@ -4,7 +4,6 @@ import { ChainIcon } from "@/components/chain-icon";
 import { TokenIcon } from "@/components/token-icon";
 import { getChainMeta, type GlideChainKey } from "@/lib/chain-meta";
 import { formatUsd } from "@/lib/format";
-import { getTokenDisplayName } from "@/lib/token-meta";
 import { isUsdcToken } from "@/lib/tokens";
 import type { GlideTokenBalance } from "@/lib/types";
 import Link from "next/link";
@@ -32,6 +31,14 @@ function groupByChain(tokens: GlideTokenBalance[]) {
   }));
 }
 
+function formatTokenAmount(amount: number) {
+  if (amount === 0) return "0";
+  if (amount < 0.0001) return amount.toExponential(2);
+  if (amount < 1) return amount.toFixed(6);
+  if (amount < 100) return amount.toFixed(4);
+  return amount.toFixed(2);
+}
+
 export function TokenBalances({ tokens }: { tokens: GlideTokenBalance[] }) {
   const visible = tokens.filter(
     (t) =>
@@ -46,19 +53,19 @@ export function TokenBalances({ tokens }: { tokens: GlideTokenBalance[] }) {
 
   return (
     <section className="mt-8" aria-label="Balances by network">
-      <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500 dark:text-white/50">
-        Your balances
+      <h2 className="glide-label-mono mb-3 text-[11px] font-semibold text-[var(--glide-muted)]">
+        Balances
       </h2>
       <div className="flex flex-col gap-5">
         {groups.map(({ chainId, meta, tokens: chainTokens }) => (
           <div key={chainId}>
-            <div className="mb-2 flex items-center gap-2">
-              <ChainIcon chainId={chainId} />
-              <p className="text-xs font-semibold tracking-tight text-neutral-700 dark:text-white/75">
+            <div className="mb-1 flex items-center gap-2">
+              <ChainIcon chainId={chainId} size="sm" />
+              <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
                 {meta.label}
               </p>
             </div>
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col">
               {chainTokens.map((token) => (
                 <li key={`${chainId}-${token.symbol}`}>
                   <TokenRow token={token} />
@@ -78,24 +85,25 @@ function TokenRow({ token }: { token: GlideTokenBalance }) {
     chainId === "arc-testnet" && isUsdcToken(symbol) && amount > 0;
 
   const inner = (
-    <div className="flex items-center gap-3 rounded-2xl bg-neutral-100 px-3 py-3 dark:bg-[#1c1c1e]">
+    <div
+      className="flex items-center gap-3 border-b py-3.5"
+      style={{ borderColor: "var(--glide-border)" }}
+    >
       <div className="relative shrink-0">
-        <TokenIcon symbol={symbol} size={44} />
-        {chainId !== "arc-testnet" ? (
-          <span className="absolute -bottom-0.5 -right-0.5 rounded-full ring-2 ring-neutral-100 dark:ring-[#1c1c1e]">
-            <ChainIcon chainId={chainId} size="sm" />
-          </span>
-        ) : null}
+        <TokenIcon symbol={symbol} size={40} />
       </div>
       <div className="min-w-0 flex-1 text-left">
-        <p className="text-[15px] font-semibold tracking-tight text-neutral-950 dark:text-white">
+        <p className="glide-label-mono text-[14px] font-bold text-[var(--glide-text)]">
           {symbol}
         </p>
-        <p className="mt-0.5 truncate text-xs font-medium text-neutral-500 dark:text-white/45">
-          {amount > 0 ? getTokenDisplayName(symbol) : "No balance"}
+        <p
+          className="mt-0.5 truncate text-[12px] font-medium tabular-nums text-[var(--glide-muted)]"
+          style={{ fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}
+        >
+          {amount > 0 ? `${formatTokenAmount(amount)} ${symbol}` : "No balance"}
         </p>
       </div>
-      <p className="shrink-0 text-[15px] font-semibold tabular-nums tracking-tight text-neutral-950 dark:text-white">
+      <p className="shrink-0 text-[15px] font-bold tabular-nums tracking-tight text-[var(--glide-text)]">
         ${formatUsd(amount)}
       </p>
     </div>
