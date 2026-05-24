@@ -552,7 +552,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
       className={
         isPage
           ? "flex min-h-0 flex-1 flex-col"
-          : "flex w-full flex-col overflow-hidden rounded-3xl border border-neutral-200/90 bg-white dark:border-white/10 dark:bg-[#141416]"
+          : "flex w-full flex-col overflow-hidden rounded-3xl border"
       }
     >
       {isPage ? (
@@ -579,7 +579,12 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
                 type="button"
                 disabled={busy}
                 onClick={() => void sendToAgent(prompt)}
-                className="glide-tap shrink-0 rounded-full border border-neutral-200/80 bg-white/80 px-3 py-1.5 text-xs font-semibold text-neutral-700 backdrop-blur-sm dark:border-white/10 dark:bg-white/5 dark:text-white/75"
+                className="glide-tap shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold"
+                style={{
+                  background: "var(--glide-surface-container)",
+                  borderColor: "var(--glide-border)",
+                  color: "var(--glide-text)",
+                }}
               >
                 {prompt}
               </button>
@@ -607,7 +612,13 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         ) : null}
         {busy && !processingAction ? (
           <div className="flex justify-start px-1 py-1">
-            <div className="glide-chat-typing flex gap-1.5 rounded-[20px] rounded-bl-[6px] border border-neutral-200/50 bg-white/90 px-4 py-3.5 dark:border-white/[0.06] dark:bg-[#1e1e22]">
+            <div
+              className="glide-chat-typing flex gap-1.5 rounded-[20px] rounded-bl-[6px] border px-4 py-3.5"
+              style={{
+                background: "var(--glide-surface-elevated)",
+                borderColor: "var(--glide-border)",
+              }}
+            >
               <span />
               <span />
               <span />
@@ -620,7 +631,13 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         onSubmit={handleSubmit}
         className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
       >
-        <div className="flex items-center gap-2 rounded-[28px] border border-neutral-200/70 bg-white/90 p-1.5 dark:border-white/[0.08] dark:bg-[#1a1a1e]/95">
+        <div
+          className="flex items-center gap-2 rounded-[28px] border p-1.5"
+          style={{
+            background: "var(--glide-surface-elevated)",
+            borderColor: "var(--glide-border)",
+          }}
+        >
           <label htmlFor="glide-assistant-input" className="sr-only">
             Message the assistant
           </label>
@@ -631,13 +648,18 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Message the assistant…"
             disabled={busy}
-            className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-[15px] font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-400 focus:outline-none disabled:opacity-60 dark:text-white dark:placeholder:text-white/35"
+            className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-[15px] font-medium placeholder:font-normal focus:outline-none disabled:opacity-60"
+            style={{ color: "var(--glide-text)" }}
             autoComplete="off"
           />
           <button
             type="submit"
             disabled={busy || !message.trim()}
-            className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white disabled:opacity-40"
+            className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
+            style={{
+              background: "var(--glide-accent)",
+              color: "var(--glide-bg)",
+            }}
             aria-label="Send"
           >
             <ArrowUp className="h-5 w-5" strokeWidth={2.5} />

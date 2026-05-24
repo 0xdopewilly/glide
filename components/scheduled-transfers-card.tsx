@@ -65,7 +65,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
 
   return (
     <div className={`rounded-2xl p-4 glide-surface-card ${className}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] glide-muted">
+      <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
         Active
       </p>
       {rows.length > 0 ? (
@@ -73,15 +73,18 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
           {rows.map((r) => (
             <li
               key={r.id}
-              className="flex items-center justify-between gap-3 rounded-xl bg-white/60 px-3.5 py-3 text-sm dark:bg-black/35"
+              className="flex items-center justify-between gap-3 rounded-xl px-3.5 py-3 text-sm"
+              style={{ background: "var(--glide-surface-container)" }}
             >
               <span className="min-w-0 leading-snug">
-                <span className="font-semibold">${r.amount}</span>
-                <span className="glide-muted"> → </span>
-                <span className="font-medium">
+                <span className="font-semibold text-[var(--glide-text)]">
+                  ${r.amount}
+                </span>
+                <span className="text-[var(--glide-muted)]"> → </span>
+                <span className="font-medium text-[var(--glide-text)]">
                   {r.recipientLabel ?? r.destination}
                 </span>
-                <span className="mt-0.5 block text-xs glide-muted">
+                <span className="mt-0.5 block text-xs text-[var(--glide-muted)]">
                   {scheduleFrequencyLabel(r.frequency)} · next{" "}
                   {formatNextScheduledRun(r.nextRunAt, r.frequency)}
                 </span>
@@ -89,7 +92,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
               <button
                 type="button"
                 onClick={() => void cancel(r.id)}
-                className="shrink-0 text-xs font-semibold text-red-500 hover:text-red-600"
+                className="glide-tap shrink-0 text-xs font-semibold text-red-500 hover:text-red-600"
               >
                 Cancel
               </button>
@@ -97,14 +100,15 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
           ))}
         </ul>
       ) : (
-        <p className="mt-3 rounded-xl border border-dashed px-4 py-6 text-center text-sm glide-muted"
+        <p
+          className="mt-3 rounded-xl border border-dashed px-4 py-6 text-center text-sm text-[var(--glide-muted)]"
           style={{ borderColor: "var(--glide-border)" }}
         >
           No scheduled sends yet. Add one below.
         </p>
       )}
 
-      <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.06em] glide-muted">
+      <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
         New schedule
       </p>
       <FormField id="sched-to" label="To (pay tag or address)" className="mt-3">
