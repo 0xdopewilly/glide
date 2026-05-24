@@ -26,10 +26,13 @@
   --glide-radius-md: 16px;
   --glide-radius-lg: 20px;
   --glide-radius-xl: 28px;
+  --glide-duration-fast: 140ms;
   --glide-duration-short: 200ms;
   --glide-duration-medium: 280ms;
+  --glide-duration-long: 380ms;
   --glide-ease: cubic-bezier(0.2, 0, 0, 1);
   --glide-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --glide-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --glide-gradient-from: #d6d8dd;
   --glide-gradient-to: #b9bcc4;
   --glide-glow-primary: rgba(12, 14, 20, 0.18);
@@ -226,18 +229,37 @@ body {
   }
 }
 
-/* Tap feedback — transform only (no opacity repaint) */
+/* Tap feedback — transform only (no opacity repaint), springy return */
 .glide-tap {
-  transition: transform 0.12s var(--glide-ease-out);
+  transition: transform 0.22s var(--glide-ease-spring);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  will-change: transform;
 }
 
 .glide-tap:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.94);
+  transition-duration: 60ms;
+  transition-timing-function: var(--glide-ease-out);
 }
 
-/* Bottom nav — spring tap handled by Framer; disable CSS scale to avoid double-dip */
+/* Keypad keys — deeper press, faster recovery, slight opacity dip */
+.glide-key-tap {
+  transition:
+    transform 0.22s var(--glide-ease-spring),
+    opacity 0.22s var(--glide-ease-out);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  will-change: transform, opacity;
+}
+
+.glide-key-tap:active:not(:disabled) {
+  transform: scale(0.86);
+  opacity: 0.65;
+  transition-duration: 60ms;
+}
+
+/* Bottom nav — light tap, no scale (label moves under finger anyway) */
 .glide-nav-tap {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -246,6 +268,65 @@ body {
 .glide-nav-tap:active {
   opacity: 1;
 }
+
+/* Bouncy slide-up — for sheets and modal content */
+@keyframes glide-slide-up-bouncy {
+  0% {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-up-bouncy {
+  animation: glide-slide-up-bouncy 380ms var(--glide-ease-spring) both;
+}
+
+/* Pop — quick scale pulse, used to draw attention to a value change.
+   Add via JS by toggling the class on/off (or with a key). */
+@keyframes glide-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.glide-pop {
+  animation: glide-pop 260ms var(--glide-ease-spring);
+}
+
+/* Stagger children entrance — apply to a flex/grid container.
+   Children fade up in sequence (40ms apart, up to 7+). */
+@keyframes glide-fade-up {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.glide-stagger > * {
+  animation: glide-fade-up 320ms var(--glide-ease-out) both;
+}
+
+.glide-stagger > *:nth-child(1) { animation-delay: 40ms; }
+.glide-stagger > *:nth-child(2) { animation-delay: 80ms; }
+.glide-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.glide-stagger > *:nth-child(4) { animation-delay: 160ms; }
+.glide-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.glide-stagger > *:nth-child(6) { animation-delay: 240ms; }
+.glide-stagger > *:nth-child(n+7) { animation-delay: 280ms; }
 
 /* Swap / bridge processing overlay */
 .glide-processing-glow {
