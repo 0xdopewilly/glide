@@ -14,6 +14,10 @@ const authorizedParties = [
   "http://localhost:3000",
   "https://glide-arc.vercel.app",
   ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
+  // Phone testing on local WiFi (dev-only; ignored in production).
+  ...(process.env.NODE_ENV === "development"
+    ? ["http://192.168.1.178:3000"]
+    : []),
 ];
 
 export default clerkMiddleware(

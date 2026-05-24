@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["192.168.1.178"],
   serverExternalPackages: [
     "@circle-fin/app-kit",
     "@circle-fin/adapter-circle-wallets",
