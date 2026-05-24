@@ -694,10 +694,19 @@ body {
   }
 
   .glide-btn-notch__inner--caps {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  /* Terminal-style label: mono + uppercase + small tracking.
+     Apply to page headers, section titles, tab labels, button labels. */
+  .glide-label-mono {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
 
   .glide-btn-notch--sm .glide-btn-notch__inner--caps {
