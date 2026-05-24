@@ -47,7 +47,7 @@ export async function userOwnsWallet(
   return user?.circleWalletId === walletId;
 }
 
-/** One Circle SCA per Clerk user — create on first sign-in. */
+/** One Circle SCA per Clerk user - create on first sign-in. */
 export async function getOrCreateWalletForUser(input: {
   userId: string;
   email: string;

@@ -2,7 +2,7 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { getPaymentRequestByCode } from "@/lib/payment-requests";
 import { NextRequest, NextResponse } from "next/server";
 
-/** GET — public payment request details (auth required to pay) */
+/** GET - public payment request details (auth required to pay) */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ code: string }> },
@@ -30,7 +30,7 @@ export async function GET(
   });
 }
 
-/** POST — mark request paid after successful send */
+/** POST - mark request paid after successful send */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ code: string }> },

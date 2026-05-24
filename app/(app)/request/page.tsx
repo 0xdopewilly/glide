@@ -115,7 +115,7 @@ export default function RequestPage() {
   const shareLink = async () => {
     if (!result?.url) return;
     const myTag = profile.username ? profile.username : "me";
-    const text = `Pay ${formatStableAmountWithCode(result.amount, result.token ?? token)} to ${myTag} on glidepay${result.note ? ` — ${result.note}` : ""}`;
+    const text = `Pay ${formatStableAmountWithCode(result.amount, result.token ?? token)} to ${myTag} on glidepay${result.note ? `. ${result.note}` : ""}`;
     if (navigator.share) {
       await navigator.share({ title: "glidepay payment request", text, url: result.url });
     } else {

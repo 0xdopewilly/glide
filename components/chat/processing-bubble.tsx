@@ -20,7 +20,7 @@ const STAGES: Record<ProcessingAction, { label: string; hint: string }[]> = {
   ],
   swap: [
     { label: "Swapping", hint: "USDC → EURC on Arc" },
-    { label: "Confirming", hint: "On-chain — usually under a minute" },
+    { label: "Confirming", hint: "On-chain - usually under a minute" },
     { label: "Finishing", hint: "Hang tight" },
   ],
   bridge: [

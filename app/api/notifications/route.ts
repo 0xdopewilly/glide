@@ -7,7 +7,7 @@ import {
 } from "@/lib/notifications";
 import { NextRequest, NextResponse } from "next/server";
 
-/** GET — inbox list; ?countOnly=1 for unread badge */
+/** GET - inbox list; ?countOnly=1 for unread badge */
 export async function GET(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ notifications, unreadCount });
 }
 
-/** PATCH { id } or { all: true } — mark read */
+/** PATCH { id } or { all: true } - mark read */
 export async function PATCH(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

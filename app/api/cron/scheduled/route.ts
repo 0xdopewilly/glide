@@ -16,7 +16,7 @@ import { formatResolvedRecipientLabel } from "@/lib/resolve-recipient";
 import { arcExplorerUrl } from "@/lib/transactions-db";
 import { NextRequest, NextResponse } from "next/server";
 
-/** GET — run due scheduled sends (protect with CRON_SECRET) */
+/** GET - run due scheduled sends (protect with CRON_SECRET) */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET?.trim();
   const auth = request.headers.get("authorization");

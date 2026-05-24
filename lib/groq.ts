@@ -1,6 +1,6 @@
 const GROQ_API = "https://api.groq.com/openai/v1/chat/completions";
 
-/** Default Groq model — fast, strong JSON for intents. Override with GROQ_MODEL. */
+/** Default Groq model - fast, strong JSON for intents. Override with GROQ_MODEL. */
 export const DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile";
 
 export type GroqMessage = {

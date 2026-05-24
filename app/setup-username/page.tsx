@@ -129,7 +129,7 @@ export default function SetupUsernamePage() {
         <h1 className="text-2xl font-bold tracking-tight">Pick your pay tag</h1>
         <p className="mt-2 text-sm leading-relaxed glide-muted">
           Friends can send you money with{" "}
-          <span className="font-semibold text-[var(--glide-accent)]">@you</span> — no wallet
+          <span className="font-semibold text-[var(--glide-accent)]">@you</span>. No wallet
           address needed.
         </p>
 

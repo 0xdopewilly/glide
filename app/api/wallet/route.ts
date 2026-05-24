@@ -47,7 +47,7 @@ function walletOptions(request: NextRequest) {
   return { includeOffArc };
 }
 
-/** GET — current user's wallet; optional ?walletId= with ownership check */
+/** GET - current user's wallet; optional ?walletId= with ownership check */
 export async function GET(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/** POST — get or create the authenticated user's Arc SCA */
+/** POST - get or create the authenticated user's Arc SCA */
 export async function POST() {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

@@ -38,7 +38,7 @@ export function formatSplitSuccessMessage(
 ): string {
   const tags = recipients.map((r) => `@${r}`).join(", ");
   const people = splitParticipantCount(recipients.length);
-  return `Split ${formatStableAmountWithCode(total, token)} (${people} people) — requested ${formatStableAmountWithCode(share, token)} each from ${tags}. They’ll get a pay link in Glide.`;
+  return `Split ${formatStableAmountWithCode(total, token)} (${people} people) - requested ${formatStableAmountWithCode(share, token)} each from ${tags}. They’ll get a pay link in Glide.`;
 }
 
 export function formatSplitPartialMessage(

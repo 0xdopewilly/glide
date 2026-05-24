@@ -4,7 +4,7 @@
  *  The Clipboard API (`navigator.clipboard.writeText`) requires a secure context
  *  (HTTPS or localhost). On HTTP/LAN-IP dev, it silently rejects. The
  *  `document.execCommand("copy")` path works in insecure contexts and on older
- *  Android Chrome — slightly hacky but reliable. */
+ *  Android Chrome - slightly hacky but reliable. */
 export async function copyText(value: string): Promise<boolean> {
   if (!value) return false;
   if (typeof window === "undefined") return false;
@@ -19,7 +19,7 @@ export async function copyText(value: string): Promise<boolean> {
     }
   }
 
-  // Legacy execCommand fallback — works on HTTP and older Chrome.
+  // Legacy execCommand fallback - works on HTTP and older Chrome.
   try {
     const ta = document.createElement("textarea");
     ta.value = value;

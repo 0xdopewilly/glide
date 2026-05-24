@@ -4,7 +4,7 @@ import { isUsernameAvailable } from "@/lib/usernames";
 import { isValidUsername, normalizeUsername } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
-/** POST { username } — claim handle once (onboarding). */
+/** POST { username } - claim handle once (onboarding). */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

@@ -160,7 +160,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
       </FormField>
       {frequency === "minutely" ? (
         <p className="mt-2 text-xs leading-relaxed glide-muted">
-          For testing only. Vercel Hobby cron runs once per day — trigger runs
+          For testing only. Vercel Hobby cron runs once per day. Trigger runs
           yourself:{" "}
           <code className="text-[11px]">GET /api/cron/scheduled</code> with{" "}
           <code className="text-[11px]">Authorization: Bearer CRON_SECRET</code>

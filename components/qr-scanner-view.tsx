@@ -149,7 +149,7 @@ export function QrScannerView() {
         );
 
         if (cancelledRef.current) {
-          // Cleanup ran while we were awaiting start — stop immediately.
+          // Cleanup ran while we were awaiting start - stop immediately.
           await silentStop(scanner);
           scannerRef.current = null;
           return;

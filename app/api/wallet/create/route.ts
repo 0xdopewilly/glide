@@ -3,7 +3,7 @@ import { getOrCreateWalletForUser } from "@/lib/users";
 import { fetchWalletBalance } from "@/lib/wallet-service";
 import { NextResponse } from "next/server";
 
-/** POST — alias for authenticated wallet provisioning */
+/** POST - alias for authenticated wallet provisioning */
 export async function POST() {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

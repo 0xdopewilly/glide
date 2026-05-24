@@ -1,4 +1,4 @@
-/** Amount display — static (no digit animation; avoids layout thrash). */
+/** Amount display - static (no digit animation; avoids layout thrash). */
 export function AnimatedAmount({
   value,
   prefix,

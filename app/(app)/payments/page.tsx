@@ -64,7 +64,7 @@ export default function PaymentsPage() {
       <PageHeader title="Payments" />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-8">
         <p className="mt-1 text-sm text-[var(--glide-muted)]">
-          Send, request, schedule, and split — all in one place.
+          Send, request, schedule, and split. All in one place.
         </p>
         <div className="glide-stagger mt-5 grid grid-cols-2 gap-3">
           {TILES.map(({ href, title, description, icon: Icon }) => (

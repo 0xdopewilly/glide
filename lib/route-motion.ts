@@ -1,7 +1,7 @@
 /** Tab order (left → right) for horizontal slide direction. */
 const TAB_ORDER = ["/", "/payments", "/ask", "/trade", "/activity"] as const;
 
-/** Full-screen flows — treated as “forward” from home. */
+/** Full-screen flows - treated as “forward” from home. */
 const FLOW_ROUTES = [
   "/send",
   "/receive",

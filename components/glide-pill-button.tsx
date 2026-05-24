@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-/** Primary CTA — matches onboarding Continue button. */
+/** Primary CTA - matches onboarding Continue button. */
 export function GlidePillButton({
   children,
   onClick,

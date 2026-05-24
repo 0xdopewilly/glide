@@ -1,4 +1,4 @@
-/** Token logos — local assets under /public/tokens when available. */
+/** Token logos - local assets under /public/tokens when available. */
 export const TOKEN_LOGOS: Record<string, string> = {
   USDC: "/tokens/usdc.png",
   USDCE: "/tokens/usdc.png",

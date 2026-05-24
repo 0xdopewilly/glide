@@ -44,7 +44,7 @@ export function isSwapOrBridgeMessage(text: string): boolean {
   return /\b(swap|convert|bridge)\b/i.test(text);
 }
 
-/** Small-talk / acknowledgement / questions — NOT a request to move money.
+/** Small-talk / acknowledgement / questions - NOT a request to move money.
  *  Anything matching this should bypass the "auto re-execute send from history" path. */
 export function isSmallTalkOrQuestion(text: string): boolean {
   const t = text.trim().toLowerCase();
@@ -61,7 +61,7 @@ export function isSmallTalkOrQuestion(text: string): boolean {
   if (/^(hi|hello|hey|yo|sup|hola|gm|good morning|good evening)[!.\s]*$/.test(t)) {
     return true;
   }
-  // Information-seeking — these are questions, not actions
+  // Information-seeking - these are questions, not actions
   if (
     /^(what|how|why|where|when|who|which|is|are|can|does|do|should|could|would|tell me|explain|describe)\b/.test(
       t,
@@ -275,7 +275,7 @@ export function extractSplitRecipients(text: string): string[] {
   return [...handles];
 }
 
-/** split $60 with @a @b — you paid; request each friend's share of the bill. */
+/** split $60 with @a @b - you paid; request each friend's share of the bill. */
 export function parseSplitFromMessage(text: string): {
   total: string;
   recipients: string[];
@@ -293,7 +293,7 @@ export function parseSplitFromMessage(text: string): {
   return { total, recipients, token: extractTokenFromText(trimmed) ?? "USDC" };
 }
 
-/** request $10 USDC from @khadee — ask someone to pay you. */
+/** request $10 USDC from @khadee - ask someone to pay you. */
 export function parseRequestFromMessage(text: string): {
   amount: string;
   token: StableSendToken;

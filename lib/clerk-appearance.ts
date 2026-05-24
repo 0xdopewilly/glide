@@ -109,5 +109,5 @@ export function getClerkAppearance(theme: "light" | "dark") {
   return theme === "dark" ? darkAppearance : lightAppearance;
 }
 
-/** @deprecated Use getClerkAppearance with theme — kept for type re-exports */
+/** @deprecated Use getClerkAppearance with theme - kept for type re-exports */
 export const clerkAppearance = darkAppearance;

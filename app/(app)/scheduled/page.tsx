@@ -30,7 +30,7 @@ export default function ScheduledPage() {
               Recurring sends
             </p>
             <p className="mt-1 text-xs leading-relaxed text-[var(--glide-muted)]">
-              Rent, allowances, and subscriptions — processed once per day on the
+              Rent, allowances, and subscriptions. Processed once per day on the
               server. Cancel anytime.
             </p>
           </div>

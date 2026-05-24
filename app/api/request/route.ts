@@ -5,7 +5,7 @@ import { findUserByEmail, findUserByUsername } from "@/lib/usernames";
 import { isValidUsername, normalizeUsername, parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
-/** POST { amount, note?, glideTag?, email? } — create payment request */
+/** POST { amount, note?, glideTag?, email? } - create payment request */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

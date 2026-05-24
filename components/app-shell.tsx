@@ -8,7 +8,7 @@ const FULL_BLEED_ROUTES = ["/send", "/receive", "/swap", "/bridge", "/request", 
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
 
-/** Exact route or child path only — avoids `/payments` matching `/pay`. */
+/** Exact route or child path only - avoids `/payments` matching `/pay`. */
 function isFullBleedRoute(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(`${route}/`);
 }

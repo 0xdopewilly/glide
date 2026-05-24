@@ -52,7 +52,7 @@ function getCircleSigningTransport(
 }
 
 /**
- * Circle signing + public RPC for reads — fixes native-balance RPC failures on testnets.
+ * Circle signing + public RPC for reads - fixes native-balance RPC failures on testnets.
  */
 export function createGlideBridgeAdapter(options: GlideBridgeAdapterOptions) {
   return new ViemAdapter(

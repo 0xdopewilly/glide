@@ -1,4 +1,4 @@
-/** Step swap — instant (no animation; avoids stacked remount + enter jank). */
+/** Step swap - instant (no animation; avoids stacked remount + enter jank). */
 export function FlowStepMotion({
   children,
 }: {

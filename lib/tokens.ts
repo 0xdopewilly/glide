@@ -1,4 +1,4 @@
-/** Arc testnet USDC — Circle native token uses empty address on transfers. */
+/** Arc testnet USDC - Circle native token uses empty address on transfers. */
 export const ARC_USDC_TOKEN_ADDRESS = "";
 
 /** Arc testnet EURC (Circle / Arc docs). */

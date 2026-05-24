@@ -12,7 +12,7 @@ import { parseMoneyAmount } from "@/lib/validation";
 import { assertSufficientBalance } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
-/** POST { walletId, amount, network } — bridge USDC from Arc via CCTP */
+/** POST { walletId, amount, network } - bridge USDC from Arc via CCTP */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

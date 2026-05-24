@@ -154,7 +154,7 @@ async function resolveSendBatchRecipient(
   };
 }
 
-/** POST { message, history? } — Groq assistant with full conversation context */
+/** POST { message, history? } - Groq assistant with full conversation context */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

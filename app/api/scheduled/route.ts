@@ -9,7 +9,7 @@ import {
 import { parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
-/** GET — list active scheduled transfers */
+/** GET - list active scheduled transfers */
 export async function GET() {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ scheduled: row });
 }
 
-/** DELETE ?id= — cancel scheduled transfer */
+/** DELETE ?id= - cancel scheduled transfer */
 export async function DELETE(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

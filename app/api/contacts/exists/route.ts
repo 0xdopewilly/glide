@@ -5,7 +5,7 @@ import {
 } from "@/lib/contacts-db";
 import { NextRequest, NextResponse } from "next/server";
 
-/** GET ?wallet=0x…&name=Khadee — is this payee already saved? */
+/** GET ?wallet=0x…&name=Khadee - is this payee already saved? */
 export async function GET(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

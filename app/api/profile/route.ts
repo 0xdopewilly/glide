@@ -2,10 +2,10 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-/** Stored as data URL in Postgres — client compresses before upload. */
+/** Stored as data URL in Postgres - client compresses before upload. */
 const MAX_AVATAR_BYTES = 1_500_000;
 
-/** GET — current profile from Supabase */
+/** GET - current profile from Supabase */
 export async function GET() {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
@@ -27,7 +27,7 @@ export async function GET() {
   });
 }
 
-/** PATCH { displayName?, email?, avatarUrl? } — persist profile */
+/** PATCH { displayName?, email?, avatarUrl? } - persist profile */
 export async function PATCH(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

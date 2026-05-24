@@ -4,7 +4,7 @@ import { getOrCreateWalletForUser } from "@/lib/users";
 import { fetchWalletById } from "@/lib/wallet-service";
 import { NextResponse } from "next/server";
 
-/** POST — request testnet USDC for the signed-in user's Arc wallet (Circle faucet). */
+/** POST - request testnet USDC for the signed-in user's Arc wallet (Circle faucet). */
 export async function POST() {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

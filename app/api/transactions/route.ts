@@ -26,7 +26,7 @@ function mergeTransactions(lists: GlideTransaction[][]): GlideTransaction[] {
   });
 }
 
-/** GET ?walletId= — on-chain activity from Circle, cached in Supabase */
+/** GET ?walletId= - on-chain activity from Circle, cached in Supabase */
 export async function GET(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

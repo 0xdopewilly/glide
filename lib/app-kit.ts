@@ -75,7 +75,7 @@ export async function executeArcSwap(input: {
       config: {
         slippageBps: 300,
         kitKey,
-        // Circle SCAs may be undeployed until first tx — permit fails; approve works.
+        // Circle SCAs may be undeployed until first tx - permit fails; approve works.
         allowanceStrategy: "approve",
       },
     });
@@ -113,7 +113,7 @@ export async function executeArcSwap(input: {
     ) {
       const status = kitKeyStatus();
       if (!status.ok) {
-        throw new Error(status.hint ?? "Swap unavailable — kit key not configured.");
+        throw new Error(status.hint ?? "Swap unavailable - kit key not configured.");
       }
       throw new Error(
         "Circle rejected your Kit Key (wrong project or revoked). In Circle Console, create a new Kit Key under the same app as CIRCLE_API_KEY, update CIRCLE_KIT_KEY on Vercel, redeploy, then check /api/health/kit.",
@@ -202,7 +202,7 @@ export async function executeArcBridge(input: {
     ) {
       const status = kitKeyStatus();
       if (!status.ok) {
-        throw new Error(status.hint ?? "Bridge unavailable — check Circle API credentials.");
+        throw new Error(status.hint ?? "Bridge unavailable - check Circle API credentials.");
       }
       if (!status.circleApiKeySet || !status.circleEntitySecretSet) {
         throw new Error(

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-/** GET /api/health/db — quick check that Prisma can reach the database. */
+/** GET /api/health/db - quick check that Prisma can reach the database. */
 export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;

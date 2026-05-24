@@ -25,7 +25,7 @@ const WELCOME: StoredChatMessage = {
   id: "welcome",
   role: "assistant",
   kind: "text",
-  text: "Hi! I'm Glide Assist — send, request, split bills, swap, or bridge. What do you need?",
+  text: "Hi! I'm Glide Assist - send, request, split bills, swap, or bridge. What do you need?",
 };
 
 function key(userId: string) {
@@ -49,7 +49,7 @@ function normalizeHistory(messages: StoredChatMessage[]): StoredChatMessage[] {
   const welcome = out[0];
   if (
     welcome?.id === "welcome" &&
-    (welcome.text?.includes("—") || welcome.text?.includes("–"))
+    (welcome.text?.includes("-") || welcome.text?.includes("–"))
   ) {
     out[0] = { ...WELCOME };
   }

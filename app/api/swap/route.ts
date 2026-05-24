@@ -21,7 +21,7 @@ function prefixFor(token: SwapToken): string {
   return "$";
 }
 
-/** POST { walletId, amount, tokenIn?, tokenOut? } — token swap on Arc testnet via Circle App Kit.
+/** POST { walletId, amount, tokenIn?, tokenOut? } - token swap on Arc testnet via Circle App Kit.
  *  Arc supports USDC, EURC, cirBTC. Defaults to USDC → EURC. */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();

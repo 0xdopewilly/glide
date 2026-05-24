@@ -1,4 +1,4 @@
-/** Shared motion — use CSS classes; only transform + opacity on the GPU. */
+/** Shared motion - use CSS classes; only transform + opacity on the GPU. */
 
 /** Primary ease (iOS/Material-style deceleration). */
 export const GLIDE_EASE_CSS = "cubic-bezier(0.32, 0.72, 0, 1)";

@@ -100,7 +100,7 @@ export default function BridgePage() {
             >
               <KitSetupBanner mode="bridge" />
               <div className="relative flex flex-col px-5">
-                {/* FROM card — USDC on Arc */}
+                {/* FROM card - USDC on Arc */}
                 <div
                   className="rounded-3xl border p-5"
                   style={{
@@ -170,7 +170,7 @@ export default function BridgePage() {
                   </span>
                 </div>
 
-                {/* TO card — destination network */}
+                {/* TO card - destination network */}
                 <div
                   className="rounded-3xl border p-5"
                   style={{

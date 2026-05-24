@@ -1,4 +1,4 @@
-/** Static accent wash — no blur layers, no animation (GPU-friendly). */
+/** Static accent wash - no blur layers, no animation (GPU-friendly). */
 export function GlideGradient({
   className = "",
 }: {

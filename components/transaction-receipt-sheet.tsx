@@ -46,7 +46,7 @@ async function renderReceiptCanvas(opts: {
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
-  // Background — solid navy with subtle gradient sheen
+  // Background - solid navy with subtle gradient sheen
   const grad = ctx.createLinearGradient(0, 0, 0, H);
   grad.addColorStop(0, "#0e1a3a");
   grad.addColorStop(1, "#06112c");
@@ -90,7 +90,7 @@ async function renderReceiptCanvas(opts: {
     const logoH = logoW * ratio;
     ctx.drawImage(logo, (W - logoW) / 2, cardY + 90, logoW, logoH);
   } catch {
-    /* logo failed to load — skip */
+    /* logo failed to load - skip */
   }
 
   const cx = W / 2;

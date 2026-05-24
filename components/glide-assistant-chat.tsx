@@ -28,7 +28,7 @@ const WELCOME: StoredChatMessage = {
   id: "welcome",
   role: "assistant",
   kind: "text",
-  text: "Hi! I'm Billy — send, request, split bills, swap, or bridge. What do you need?",
+  text: "Hi! I'm Billy. Send, request, split bills, swap, or bridge. What do you need?",
 };
 
 const QUICK_PROMPTS = [
@@ -429,7 +429,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           id: `asst-${Date.now()}`,
           role: "assistant",
           kind: "text",
-          text: "Got it — they're already in your contacts.",
+          text: "Got it. They're already in your contacts.",
         });
         return;
       }

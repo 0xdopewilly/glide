@@ -9,7 +9,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/health/kit",
 ]);
 
-/** Dev instance on Vercel — no custom domain in Clerk; allow these origins explicitly. */
+/** Dev instance on Vercel - no custom domain in Clerk; allow these origins explicitly. */
 const authorizedParties = [
   "http://localhost:3000",
   "https://glide-arc.vercel.app",

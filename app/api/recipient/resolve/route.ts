@@ -7,7 +7,7 @@ import {
 } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
-/** GET ?q=... — verify recipient exists (wallet, @username, or contact). */
+/** GET ?q=... - verify recipient exists (wallet, @username, or contact). */
 export async function GET(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;

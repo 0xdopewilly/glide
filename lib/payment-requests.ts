@@ -43,7 +43,7 @@ export async function createPaymentRequest(input: {
         },
       });
     } catch {
-      /* code collision — retry */
+      /* code collision - retry */
     }
   }
   throw new Error("Could not create payment request");
