@@ -23,24 +23,30 @@ export default function ReceivePage() {
 
   return (
     <FlowPage title="Receive" backHref="/">
-      <div className="flex flex-col px-5 pb-8">
+      <div className="slide-up-bouncy flex flex-col px-5 pb-8">
         <div className="mt-6 flex flex-col items-center text-center">
           <UserAvatar size="lg" />
-          <p className="mt-4 text-xl font-semibold tracking-tight">
+          <p className="mt-4 text-[20px] font-semibold tracking-tight text-[var(--glide-text)]">
             {profile.displayName.trim() || "Guest"}
           </p>
-          <p className="mt-1 text-sm glide-muted">
-            Share your address to receive USDC or EURC on Arc
+          <p className="glide-label-mono mt-2 text-[11px] font-semibold text-[var(--glide-muted)]">
+            Share your address · USDC or EURC on Arc
           </p>
         </div>
 
         <ReceiveQr address={address} />
 
-        <div className="mt-6 rounded-2xl border px-4 py-5 glide-surface-card">
-          <p className="text-xs font-medium uppercase tracking-[0.1em] glide-muted">
+        <div
+          className="mt-6 rounded-2xl border px-4 py-5"
+          style={{
+            background: "var(--glide-surface-elevated)",
+            borderColor: "var(--glide-border)",
+          }}
+        >
+          <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
             Your address
           </p>
-          <p className="mt-3 break-all font-mono text-sm leading-relaxed">
+          <p className="mt-3 break-all font-mono text-sm leading-relaxed text-[var(--glide-text)]">
             {loading && !address
               ? "Loading your account"
               : address || "Account not ready"}
@@ -53,10 +59,11 @@ export default function ReceivePage() {
           type="button"
           onClick={() => void share()}
           disabled={!address}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-sm font-semibold transition-opacity disabled:opacity-40"
+          className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-[11px] font-semibold transition-opacity disabled:opacity-40"
           style={{
-            borderColor: "var(--glide-border)",
-            color: "var(--glide-text)",
+            background: "var(--glide-accent)",
+            color: "var(--glide-bg)",
+            borderColor: "var(--glide-accent)",
           }}
         >
           <Share2 className="h-4 w-4" />
