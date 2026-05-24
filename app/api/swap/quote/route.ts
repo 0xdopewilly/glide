@@ -5,8 +5,6 @@ import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
-// App Kit pulls in node-native crypto / streaming primitives — pin to Node.
-export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const SUPPORTED = new Set(["USDC", "EURC", "cirBTC"]);

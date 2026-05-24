@@ -8,8 +8,6 @@ import { parseMoneyAmount } from "@/lib/validation";
 import { assertSufficientBalance } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
-// Arc App Kit pulls in node-native primitives — pin to Node, not Edge.
-export const runtime = "nodejs";
 // Arc App Kit swaps can take 15-30s when the SCA needs approve + execute.
 // Default 10s timeout was returning HTML, breaking the client JSON parse.
 export const maxDuration = 60;
