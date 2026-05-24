@@ -126,7 +126,7 @@ export default function RequestPage() {
       <div className="flex flex-col px-5 pb-8">
         {!result ? (
           <>
-            <p className="mt-1 text-center text-sm glide-muted">
+            <p className="glide-label-mono mt-1 text-center text-[11px] font-semibold text-[var(--glide-muted)]">
               Ask someone to pay you on Glide
             </p>
 
@@ -159,7 +159,11 @@ export default function RequestPage() {
               <StableTokenSegment value={token} onChange={setToken} />
             </div>
 
-            <p className="mt-8 text-center text-5xl font-bold tabular-nums tracking-tight">
+            <p
+              key={amount}
+              className="glide-pop mt-8 text-center text-[64px] font-bold leading-none tabular-nums tracking-[-0.03em]"
+              style={{ color: "var(--glide-text)" }}
+            >
               {currencyPrefixForToken(token)}
               {formatAmount(amount)}
             </p>
@@ -234,12 +238,15 @@ export default function RequestPage() {
             </GlideButton>
           </>
         ) : (
-          <div className="mt-4 flex flex-col items-center text-center">
+          <div className="slide-up-bouncy mt-4 flex flex-col items-center text-center">
             {result.targetGlideTag || result.targetEmail ? (
-              <p className="mb-4 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+              <p
+                className="glide-label-mono mb-4 text-[11px] font-semibold"
+                style={{ color: "var(--glide-success)" }}
+              >
                 {result.targetOnGlide
-                  ? `Request sent — they will get a notification on Glide`
-                  : `Pay link ready for ${result.targetEmail}`}
+                  ? `Request sent · push notification incoming`
+                  : `Pay link ready · ${result.targetEmail}`}
               </p>
             ) : null}
 
@@ -255,20 +262,36 @@ export default function RequestPage() {
                 />
               </div>
             ) : null}
-            <p className="mt-6 text-2xl font-bold">
+            <p
+              className="mt-6 text-[28px] font-bold tracking-[-0.02em]"
+              style={{ color: "var(--glide-text)" }}
+            >
               {formatStableAmountWithCode(result.amount, result.token ?? token)}
             </p>
             {result.note ? (
-              <p className="mt-1 text-sm glide-muted">&ldquo;{result.note}&rdquo;</p>
+              <p className="mt-1 text-sm text-[var(--glide-muted)]">
+                &ldquo;{result.note}&rdquo;
+              </p>
             ) : null}
-            <p className="mt-4 break-all rounded-xl bg-[var(--glide-surface-container)] px-3 py-2 font-mono text-xs">
+            <p
+              className="mt-4 break-all rounded-xl px-3 py-2 font-mono text-xs"
+              style={{
+                background: "var(--glide-surface-container)",
+                color: "var(--glide-muted)",
+              }}
+            >
               {result.url}
             </p>
             <div className="mt-6 flex w-full max-w-sm gap-2">
               <button
                 type="button"
                 onClick={() => void copyLink()}
-                className="glide-tonal-card glide-tap flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold"
+                className="glide-tap glide-label-mono flex flex-1 items-center justify-center gap-2 rounded-full border py-3 text-[11px] font-semibold"
+                style={{
+                  background: "var(--glide-surface-container)",
+                  borderColor: "var(--glide-border)",
+                  color: "var(--glide-text)",
+                }}
               >
                 <Copy className="h-4 w-4" />
                 {copied ? "Copied" : "Copy"}
@@ -276,7 +299,11 @@ export default function RequestPage() {
               <button
                 type="button"
                 onClick={() => void shareLink()}
-                className="glide-tap flex flex-1 items-center justify-center gap-2 rounded-full bg-[var(--glide-accent)] py-3 text-sm font-semibold text-white"
+                className="glide-tap glide-label-mono flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[11px] font-semibold"
+                style={{
+                  background: "var(--glide-accent)",
+                  color: "var(--glide-bg)",
+                }}
               >
                 <Share2 className="h-4 w-4" />
                 Share
@@ -285,7 +312,7 @@ export default function RequestPage() {
             {result.targetEmail && !result.targetOnGlide ? (
               <a
                 href={`mailto:${result.targetEmail}?subject=${encodeURIComponent("Payment request on Glide")}&body=${encodeURIComponent(result.url)}`}
-                className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-violet-600 dark:text-violet-300"
+                className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--glide-text)]"
               >
                 <Mail className="h-4 w-4" />
                 Email pay link
@@ -300,16 +327,19 @@ export default function RequestPage() {
                 setGlideTag("");
                 setEmail("");
               }}
-              className="mt-6 text-sm font-medium text-violet-500"
+              className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)] transition-opacity hover:opacity-70"
             >
               New request
             </button>
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs glide-muted">
+        <p className="mt-8 text-center text-xs text-[var(--glide-muted)]">
           Need testnet USDC or EURC?{" "}
-          <Link href="/receive" className="font-semibold text-violet-500 underline">
+          <Link
+            href="/receive"
+            className="font-semibold text-[var(--glide-text)] underline"
+          >
             Get testnet funds
           </Link>
         </p>
