@@ -12,6 +12,8 @@ import { parseMoneyAmount } from "@/lib/validation";
 import { assertSufficientBalance } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
+// Arc App Kit pulls in node-native primitives — pin to Node, not Edge.
+export const runtime = "nodejs";
 // CCTP bridges do burn + attestation + mint and routinely take 20-40s.
 // Default Vercel timeout (10s) was returning the HTML timeout page.
 export const maxDuration = 60;

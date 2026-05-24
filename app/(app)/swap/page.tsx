@@ -32,6 +32,7 @@ export default function SwapPage() {
   const [receivedAmount, setReceivedAmount] = useState<string | null>(null);
   const [quoteAmount, setQuoteAmount] = useState<string | null>(null);
   const [quoting, setQuoting] = useState(false);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
 
   const fromBalance =
     fromToken === "USDC"
@@ -77,11 +78,13 @@ export default function SwapPage() {
   useEffect(() => {
     if (!wallet || !(parsed > 0) || fromToken === toToken || overBalance) {
       setQuoteAmount(null);
+      setQuoteError(null);
       setQuoting(false);
       return;
     }
     const controller = new AbortController();
     setQuoting(true);
+    setQuoteError(null);
     const timer = window.setTimeout(async () => {
       try {
         const res = await fetch("/api/swap/quote", {
@@ -95,14 +98,27 @@ export default function SwapPage() {
           }),
           signal: controller.signal,
         });
+        const ct = res.headers.get("content-type") ?? "";
+        const data = ct.includes("application/json")
+          ? ((await res.json()) as { amountOut?: string; error?: string })
+          : {};
         if (!res.ok) {
           setQuoteAmount(null);
+          setQuoteError(
+            data.error ??
+              (res.status >= 500
+                ? "Quote service error"
+                : "Could not fetch quote"),
+          );
           return;
         }
-        const data = (await res.json()) as { amountOut?: string };
         setQuoteAmount(data.amountOut ?? null);
-      } catch {
-        /* aborted or network */
+        if (!data.amountOut) {
+          setQuoteError("No quote returned for this pair");
+        }
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
+        setQuoteError("Network error fetching quote");
       } finally {
         setQuoting(false);
       }
@@ -222,7 +238,7 @@ export default function SwapPage() {
                         ? "Fetching quote…"
                         : quoteAmount
                           ? "Estimated"
-                          : "Quote unavailable"
+                          : (quoteError ?? "Quote unavailable")
                       : undefined
                   }
                   readOnly
