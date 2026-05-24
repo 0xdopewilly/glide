@@ -15,7 +15,7 @@ export default function AppTemplate({ children }: { children: React.ReactNode })
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  const animClass = isPopRef.current ? "" : "slide-from-right";
+  const animClass = isPopRef.current ? "" : "slide-up";
 
   useEffect(() => {
     isPopRef.current = false;

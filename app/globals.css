@@ -4,24 +4,24 @@
 
 :root {
   color-scheme: light;
-  /* Material You–style roles */
-  --glide-bg: #e9ecf4;
-  --glide-shell: #f7f8fc;
+  /* Monochrome terminal: near-white surfaces, dark CTAs, status colors only. */
+  --glide-bg: #f4f5f7;
+  --glide-shell: #fafbfc;
   --glide-surface: #ffffff;
   --glide-surface-elevated: #ffffff;
-  --glide-surface-container: #eef0f6;
-  --glide-surface-container-high: #e4e7f0;
-  --glide-nav-surface: #f7f8fc;
-  --glide-primary-container: rgba(59, 127, 212, 0.14);
-  --glide-success-container: rgba(13, 159, 110, 0.14);
-  --glide-text: #1a1c22;
-  --glide-muted: #5c6478;
-  --glide-border: rgba(26, 28, 34, 0.08);
+  --glide-surface-container: #eef0f4;
+  --glide-surface-container-high: #e3e6ec;
+  --glide-nav-surface: #fafbfc;
+  --glide-primary-container: rgba(12, 14, 20, 0.08);
+  --glide-success-container: rgba(45, 153, 86, 0.14);
+  --glide-text: #0c0e14;
+  --glide-muted: #5c606c;
+  --glide-border: rgba(12, 14, 20, 0.08);
   --glide-input: #ffffff;
-  --glide-accent: #2563eb;
-  --glide-accent-hover: #1d4ed8;
-  --glide-success: #0d9f6e;
-  --glide-on-nav-inactive: #6b7288;
+  --glide-accent: #0c0e14;
+  --glide-accent-hover: #1d1f27;
+  --glide-success: #2d9956;
+  --glide-on-nav-inactive: #6b6f78;
   --glide-radius-sm: 12px;
   --glide-radius-md: 16px;
   --glide-radius-lg: 20px;
@@ -30,39 +30,40 @@
   --glide-duration-medium: 280ms;
   --glide-ease: cubic-bezier(0.2, 0, 0, 1);
   --glide-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
-  --glide-gradient-from: #3b7fd4;
-  --glide-gradient-to: #7c8fd4;
-  --glide-glow-primary: rgba(59, 127, 212, 0.45);
-  --glide-glow-secondary: rgba(124, 143, 212, 0.38);
-  --glide-glow-accent: rgba(56, 189, 248, 0.32);
-  --glide-glow-warm: rgba(251, 146, 60, 0.2);
+  --glide-gradient-from: #d6d8dd;
+  --glide-gradient-to: #b9bcc4;
+  --glide-glow-primary: rgba(12, 14, 20, 0.18);
+  --glide-glow-secondary: rgba(12, 14, 20, 0.10);
+  --glide-glow-accent: rgba(12, 14, 20, 0.10);
+  --glide-glow-warm: rgba(12, 14, 20, 0.06);
 }
 
 .dark {
   color-scheme: dark;
-  --glide-bg: #010102;
-  --glide-shell: #030304;
-  --glide-surface: #0a0a0e;
-  --glide-surface-elevated: #121218;
-  --glide-surface-container: #0e0e12;
-  --glide-surface-container-high: #181820;
-  --glide-nav-surface: #030304;
-  --glide-primary-container: rgba(110, 184, 240, 0.16);
+  /* Monochrome terminal: near-black surfaces, white CTAs, status colors only. */
+  --glide-bg: #08090c;
+  --glide-shell: #0b0c10;
+  --glide-surface: #13141a;
+  --glide-surface-elevated: #181a21;
+  --glide-surface-container: #14161c;
+  --glide-surface-container-high: #1d1f27;
+  --glide-nav-surface: #0b0c10;
+  --glide-primary-container: rgba(255, 255, 255, 0.10);
   --glide-success-container: rgba(74, 222, 128, 0.14);
-  --glide-text: #f2f2f5;
-  --glide-muted: #9ca3af;
+  --glide-text: #f5f6f8;
+  --glide-muted: #8a8e96;
   --glide-border: rgba(255, 255, 255, 0.08);
-  --glide-input: rgba(255, 255, 255, 0.06);
-  --glide-accent: #6eb8f0;
-  --glide-accent-hover: #5aa8e8;
+  --glide-input: rgba(255, 255, 255, 0.04);
+  --glide-accent: #ffffff;
+  --glide-accent-hover: #ebebed;
   --glide-success: #4ade80;
   --glide-on-nav-inactive: rgba(255, 255, 255, 0.45);
-  --glide-gradient-from: #5a9fd4;
-  --glide-gradient-to: #8b9fd4;
-  --glide-glow-primary: rgba(90, 159, 212, 0.35);
-  --glide-glow-secondary: rgba(139, 159, 212, 0.28);
-  --glide-glow-accent: rgba(79, 120, 180, 0.15);
-  --glide-glow-warm: rgba(251, 146, 60, 0.06);
+  --glide-gradient-from: #2a2d35;
+  --glide-gradient-to: #444853;
+  --glide-glow-primary: rgba(255, 255, 255, 0.18);
+  --glide-glow-secondary: rgba(255, 255, 255, 0.10);
+  --glide-glow-accent: rgba(255, 255, 255, 0.10);
+  --glide-glow-warm: rgba(255, 255, 255, 0.06);
 }
 
 body {
@@ -543,6 +544,21 @@ body {
 
 .slide-from-left {
   animation: glide-slide-from-left var(--glide-duration-medium) var(--glide-ease-out);
+}
+
+@keyframes glide-slide-up {
+  from {
+    transform: translateY(28px);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-up {
+  animation: glide-slide-up var(--glide-duration-medium) var(--glide-ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
