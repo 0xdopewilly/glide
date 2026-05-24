@@ -20,8 +20,6 @@ export function BalanceHero({
   const displayTotal = totalUsd ?? balance;
   const { hideBalance, setHideBalance } = usePrivacy();
   const realText = `$${formatUsd(displayTotal)}`;
-  // Length-matched bullets so layout doesn't jump when toggling.
-  const masked = "•".repeat(Math.max(realText.length - 1, 4));
 
   return (
     <section className="flex flex-col items-start px-0 pb-2 pt-4 text-left">
@@ -49,11 +47,13 @@ export function BalanceHero({
         className="glide-tap mt-2 inline-block text-left"
       >
         <h1
-          className={`glide-scale-in text-[3.5rem] font-bold leading-[1.05] tracking-[-0.04em] text-[var(--glide-text)] sm:text-[3.75rem] tabular-nums ${
-            loading ? "opacity-50" : ""
-          }`}
+          className={`glide-scale-in font-bold leading-[1.05] text-[var(--glide-text)] tabular-nums ${
+            hideBalance
+              ? "text-[2.5rem] tracking-[0.18em]"
+              : "text-[3.5rem] tracking-[-0.04em] sm:text-[3.75rem]"
+          } ${loading ? "opacity-50" : ""}`}
         >
-          {hideBalance ? masked : realText}
+          {hideBalance ? "······" : realText}
         </h1>
       </button>
     </section>

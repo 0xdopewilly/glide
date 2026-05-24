@@ -28,7 +28,7 @@ function BottomNavInner() {
   const pathname = usePathname();
   const { totalUsd } = useBalance();
   const { hideBalance } = usePrivacy();
-  const balanceLabel = hideBalance ? "•••" : formatNavBalance(totalUsd);
+  const balanceLabel = hideBalance ? "···" : formatNavBalance(totalUsd);
   const homeActive = pathname === "/";
 
   return (

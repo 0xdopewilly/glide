@@ -2,6 +2,7 @@
 
 import { ChainIcon } from "@/components/chain-icon";
 import { TokenIcon } from "@/components/token-icon";
+import { usePrivacy } from "@/context/privacy-context";
 import { getChainMeta, type GlideChainKey } from "@/lib/chain-meta";
 import { formatUsd } from "@/lib/format";
 import { isUsdcToken } from "@/lib/tokens";
@@ -40,6 +41,7 @@ function formatTokenAmount(amount: number) {
 }
 
 export function TokenBalances({ tokens }: { tokens: GlideTokenBalance[] }) {
+  const { hideBalance } = usePrivacy();
   const visible = tokens.filter(
     (t) =>
       t.amount > 0 ||
@@ -68,7 +70,7 @@ export function TokenBalances({ tokens }: { tokens: GlideTokenBalance[] }) {
             <ul className="glide-stagger flex flex-col">
               {chainTokens.map((token) => (
                 <li key={`${chainId}-${token.symbol}`}>
-                  <TokenRow token={token} />
+                  <TokenRow token={token} hideBalance={hideBalance} />
                 </li>
               ))}
             </ul>
@@ -79,10 +81,23 @@ export function TokenBalances({ tokens }: { tokens: GlideTokenBalance[] }) {
   );
 }
 
-function TokenRow({ token }: { token: GlideTokenBalance }) {
+function TokenRow({
+  token,
+  hideBalance,
+}: {
+  token: GlideTokenBalance;
+  hideBalance: boolean;
+}) {
   const { symbol, amount, chainId } = token;
   const canSwap =
     chainId === "arc-testnet" && isUsdcToken(symbol) && amount > 0;
+
+  const subtitle = hideBalance
+    ? "····"
+    : amount > 0
+      ? `${formatTokenAmount(amount)} ${symbol}`
+      : "No balance";
+  const usdLabel = hideBalance ? "····" : `$${formatUsd(amount)}`;
 
   const inner = (
     <div
@@ -97,14 +112,20 @@ function TokenRow({ token }: { token: GlideTokenBalance }) {
           {symbol}
         </p>
         <p
-          className="mt-0.5 truncate text-[12px] font-medium tabular-nums text-[var(--glide-muted)]"
+          className={`mt-0.5 truncate text-[12px] font-medium tabular-nums text-[var(--glide-muted)] ${
+            hideBalance ? "tracking-[0.18em]" : ""
+          }`}
           style={{ fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}
         >
-          {amount > 0 ? `${formatTokenAmount(amount)} ${symbol}` : "No balance"}
+          {subtitle}
         </p>
       </div>
-      <p className="shrink-0 text-[15px] font-bold tabular-nums tracking-tight text-[var(--glide-text)]">
-        ${formatUsd(amount)}
+      <p
+        className={`shrink-0 text-[15px] font-bold tabular-nums tracking-tight text-[var(--glide-text)] ${
+          hideBalance ? "tracking-[0.18em]" : ""
+        }`}
+      >
+        {usdLabel}
       </p>
     </div>
   );
