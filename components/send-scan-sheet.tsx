@@ -17,24 +17,41 @@ export function SendScanSheet({
       <button
         type="button"
         aria-label="Close scanner"
-        className="absolute inset-0 bg-black/55"
+        className="absolute inset-0"
+        style={{
+          background: "color-mix(in srgb, var(--glide-bg) 78%, transparent)",
+        }}
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Scan QR code"
-        className="glide-sheet-open relative mt-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-white dark:bg-[#141416]"
+        className="slide-up-bouncy relative mt-auto flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[28px] border-t border-x"
+        style={{
+          background: "var(--glide-surface-elevated)",
+          borderColor: "var(--glide-border)",
+        }}
       >
-        <div className="flex items-center justify-between border-b px-5 py-4 dark:border-white/10">
-          <h2 className="text-lg font-semibold tracking-tight">Scan to pay</h2>
+        <div
+          className="flex items-center justify-between border-b px-5 py-4"
+          style={{ borderColor: "var(--glide-border)" }}
+        >
+          <h2 className="text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
+            Scan to pay
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="glide-tap flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-[#1c1c1e]"
+            className="glide-tap flex h-9 w-9 items-center justify-center rounded-full border"
+            style={{
+              background: "var(--glide-surface-container)",
+              borderColor: "var(--glide-border)",
+              color: "var(--glide-text)",
+            }}
             aria-label="Close"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" strokeWidth={2.25} />
           </button>
         </div>
         <div className="overflow-y-auto px-5 pb-8 pt-4">

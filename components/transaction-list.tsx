@@ -121,22 +121,26 @@ function TransactionRow({
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!explorerUrl && !txHash) return;
-    try {
-      if (navigator.share) {
+    if (navigator.share) {
+      try {
         await navigator.share({
           title: "glidepay transaction",
           text: shareText,
           url: explorerUrl,
         });
-        return;
+      } catch (err) {
+        // AbortError = user cancelled the share sheet. Do nothing.
+        // Any other error: fall through to clipboard copy below.
+        if ((err as Error)?.name === "AbortError") return;
       }
+    }
+    // No native share OR share failed for a non-cancel reason → copy to clipboard.
+    try {
       await navigator.clipboard.writeText(explorerUrl ?? txHash ?? shareText);
       setShareLabel("Copied");
       window.setTimeout(() => setShareLabel("Share"), 2000);
     } catch {
-      if (explorerUrl) {
-        window.open(explorerUrl, "_blank", "noopener,noreferrer");
-      }
+      /* clipboard blocked — silently fail */
     }
   };
 
@@ -158,22 +162,22 @@ function TransactionRow({
     <article
       className="overflow-hidden rounded-2xl border transition-all"
       style={{
-        background: "var(--glide-surface-elevated)",
+        background: expanded
+          ? "var(--glide-surface-elevated)"
+          : "var(--glide-surface-container)",
         borderColor: expanded
-          ? "color-mix(in srgb, var(--glide-text) 18%, transparent)"
+          ? "color-mix(in srgb, var(--glide-text) 14%, transparent)"
           : "var(--glide-border)",
       }}
     >
       <button
         type="button"
         onClick={onToggle}
-        className="glide-tap flex w-full items-center gap-3 px-3.5 py-3.5 text-left"
+        className="glide-tap flex w-full items-center gap-3.5 px-4 py-4 text-left"
         aria-expanded={expanded}
       >
         <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            isCredit ? "" : ""
-          }`}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
           style={
             isCredit
               ? {
@@ -186,29 +190,24 @@ function TransactionRow({
                 }
           }
         >
-          <Icon className="h-[18px] w-[18px]" strokeWidth={2.25} />
+          <Icon className="h-[19px] w-[19px]" strokeWidth={2.5} />
         </span>
 
         <div className="min-w-0 flex-1">
           <p
-            className="truncate text-[15px] font-semibold tracking-tight"
+            className="truncate text-[15px] font-bold tracking-tight"
             style={{ color: "var(--glide-text)" }}
           >
             {title}
           </p>
-          <p className="mt-0.5 truncate text-xs font-medium capitalize text-[var(--glide-muted)]">
+          <p className="mt-0.5 truncate text-[12px] font-medium capitalize text-[var(--glide-muted)]">
             {subtitle}
           </p>
-          {note && !expanded ? (
-            <p className="mt-0.5 truncate text-xs text-[var(--glide-muted)] opacity-70">
-              {note}
-            </p>
-          ) : null}
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 flex-col items-end gap-1">
           <p
-            className={`text-[15px] font-bold tabular-nums tracking-tight ${
+            className={`text-[16px] font-bold tabular-nums tracking-tight ${
               blurAmounts ? "glide-amount-blur" : ""
             }`}
             style={
@@ -220,11 +219,12 @@ function TransactionRow({
             {blurAmounts ? "•••" : amount}
           </p>
           <span
-            className={`inline-flex text-[var(--glide-muted)] transition-transform duration-200 ${
+            className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[var(--glide-muted)] transition-transform duration-200 ${
               expanded ? "rotate-180" : ""
             }`}
+            style={{ background: "var(--glide-surface-container-high)" }}
           >
-            <ChevronDown className="h-4 w-4" strokeWidth={2.5} />
+            <ChevronDown className="h-3 w-3" strokeWidth={2.5} />
           </span>
         </div>
       </button>
