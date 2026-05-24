@@ -64,27 +64,38 @@ export default function BridgePage() {
         />
         <FlowStepMotion stepKey={step}>
         {step === "success" ? (
-          <div className="flex flex-1 flex-col items-center px-6 pt-10 text-center">
+          <div className="slide-up-bouncy flex flex-1 flex-col items-center px-6 pt-10 text-center">
             <div
-              className="flex h-24 w-24 items-center justify-center rounded-full"
+              className="glide-pop flex h-24 w-24 items-center justify-center rounded-full"
               style={{ background: "var(--glide-accent)" }}
             >
-              <Check className="h-12 w-12 text-white" strokeWidth={2.5} />
+              <Check
+                className="h-12 w-12"
+                strokeWidth={2.5}
+                style={{ color: "var(--glide-bg)" }}
+              />
             </div>
-            <h1 className="mt-8 text-2xl font-bold tracking-tight">Bridge started</h1>
-            <p className="mt-2 text-lg glide-muted">
-              ${parsed.toFixed(2)} USDC to {networkLabel}
+            <h1 className="glide-label-mono mt-8 text-[13px] font-bold text-[var(--glide-muted)]">
+              Bridge started
+            </h1>
+            <p className="mt-4 text-[32px] font-bold tracking-[-0.02em] text-[var(--glide-text)]">
+              ${parsed.toFixed(2)}
+            </p>
+            <p className="glide-label-mono mt-2 text-[11px] font-semibold text-[var(--glide-muted)]">
+              USDC → {networkLabel}
             </p>
             <GlideButton
               onClick={() => router.push("/activity")}
               className="mt-auto mb-8 max-w-sm"
-              uppercase={false}
             >
               View activity
             </GlideButton>
           </div>
         ) : (
-          <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col pb-8">
+          <form
+            onSubmit={(e) => void handleSubmit(e)}
+            className="slide-up-bouncy flex flex-col pb-8"
+          >
             <KitSetupBanner mode="bridge" />
             <div className="flex flex-col px-5">
               <FormField id="bridge-network" label="Destination network" className="mt-2">
@@ -121,7 +132,7 @@ export default function BridgePage() {
               <GlidePillButton
                 type="submit"
                 disabled={!canSubmit}
-                className="mt-8 w-full justify-center py-3.5"
+                className="mt-8 w-full"
               >
                 {submitting ? "Processing" : "Confirm bridge"}
               </GlidePillButton>
