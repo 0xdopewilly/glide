@@ -229,9 +229,10 @@ body {
   }
 }
 
-/* Tap feedback — dramatic scale, springy return. Cranked up so it's UNMISSABLE. */
+/* Tap feedback — press is INSTANT (0ms), release is bouncy. The action behind
+   onClick fires on tap-up; visual feedback never gates the action. */
 .glide-tap {
-  transition: transform 0.28s var(--glide-ease-spring);
+  transition: transform 0.22s var(--glide-ease-spring);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   will-change: transform;
@@ -239,16 +240,15 @@ body {
 
 .glide-tap:active:not(:disabled) {
   transform: scale(0.88);
-  transition-duration: 70ms;
-  transition-timing-function: var(--glide-ease-out);
+  transition-duration: 0ms;
 }
 
-/* Keypad keys — deep press, opacity dip. You should FEEL each key. */
+/* Keypad keys — instant press, bouncy release. */
 .glide-key-tap {
   transition:
-    transform 0.30s var(--glide-ease-spring),
-    opacity 0.30s var(--glide-ease-out),
-    background-color 0.30s var(--glide-ease-out);
+    transform 0.24s var(--glide-ease-spring),
+    opacity 0.24s var(--glide-ease-out),
+    background-color 0.24s var(--glide-ease-out);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   will-change: transform, opacity;
@@ -259,7 +259,7 @@ body {
   transform: scale(0.80);
   opacity: 0.5;
   background-color: var(--glide-surface-container-high);
-  transition-duration: 70ms;
+  transition-duration: 0ms;
 }
 
 /* Bottom nav — light tap, no scale (label moves under finger anyway) */
@@ -285,7 +285,7 @@ body {
 }
 
 .slide-up-bouncy {
-  animation: glide-slide-up-bouncy 520ms var(--glide-ease-spring) both;
+  animation: glide-slide-up-bouncy 360ms var(--glide-ease-spring) both;
 }
 
 /* Pop — dramatic scale pulse. */
@@ -322,16 +322,16 @@ body {
 }
 
 .glide-stagger > * {
-  animation: glide-fade-up 420ms var(--glide-ease-spring) both;
+  animation: glide-fade-up 320ms var(--glide-ease-spring) both;
 }
 
-.glide-stagger > *:nth-child(1) { animation-delay: 50ms; }
-.glide-stagger > *:nth-child(2) { animation-delay: 110ms; }
-.glide-stagger > *:nth-child(3) { animation-delay: 170ms; }
-.glide-stagger > *:nth-child(4) { animation-delay: 230ms; }
-.glide-stagger > *:nth-child(5) { animation-delay: 290ms; }
-.glide-stagger > *:nth-child(6) { animation-delay: 350ms; }
-.glide-stagger > *:nth-child(n+7) { animation-delay: 410ms; }
+.glide-stagger > *:nth-child(1) { animation-delay: 30ms; }
+.glide-stagger > *:nth-child(2) { animation-delay: 70ms; }
+.glide-stagger > *:nth-child(3) { animation-delay: 110ms; }
+.glide-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.glide-stagger > *:nth-child(5) { animation-delay: 190ms; }
+.glide-stagger > *:nth-child(6) { animation-delay: 230ms; }
+.glide-stagger > *:nth-child(n+7) { animation-delay: 270ms; }
 
 /* Processing arrow — gentle nudge right-then-back, communicates direction. */
 @keyframes glide-arrow-pulse {
@@ -379,7 +379,7 @@ body {
 }
 
 .glide-scale-in {
-  animation: glide-scale-in 560ms var(--glide-ease-spring) both;
+  animation: glide-scale-in 380ms var(--glide-ease-spring) both;
 }
 
 /* Swap / bridge processing overlay */
@@ -693,7 +693,7 @@ body {
 }
 
 .slide-up {
-  animation: glide-slide-up 460ms var(--glide-ease-spring) both;
+  animation: glide-slide-up 280ms var(--glide-ease-spring) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
