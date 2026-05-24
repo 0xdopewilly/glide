@@ -33,7 +33,7 @@ function BottomNavInner() {
 
   return (
     <nav className="glide-m3-nav w-full shrink-0" aria-label="Main">
-      <ul className="flex h-[3.5rem] items-stretch px-1 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1">
+      <ul className="flex h-[4.25rem] items-stretch px-1 pb-[max(0.45rem,env(safe-area-inset-bottom))] pt-1">
         <li className="flex min-w-0 flex-1">
           <Link
             href="/"
