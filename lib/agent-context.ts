@@ -44,8 +44,44 @@ export function isSwapOrBridgeMessage(text: string): boolean {
   return /\b(swap|convert|bridge)\b/i.test(text);
 }
 
+/** Small-talk / acknowledgement / questions — NOT a request to move money.
+ *  Anything matching this should bypass the "auto re-execute send from history" path. */
+export function isSmallTalkOrQuestion(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  if (!t) return true;
+  // Pure acknowledgements / thanks / agreement
+  if (
+    /^(thanks?( you| u)?( so much)?!*\.?$|^thx!*\.?$|^ty!*\.?$|^tysm!*\.?$|^cool!*\.?$|^nice!*\.?$|^great!*\.?$|^awesome!*\.?$|^perfect!*\.?$|^sweet!*\.?$|^ok(ay)?!*\.?$|^kk!*\.?$|^got it!*\.?$|^sounds good!*\.?$|^no problem!*\.?$|^np!*\.?$|^bet!*\.?$|^word!*\.?$|^👍+$|^❤️+$|^🙏+$)/.test(
+      t,
+    )
+  ) {
+    return true;
+  }
+  // Greetings
+  if (/^(hi|hello|hey|yo|sup|hola|gm|good morning|good evening)[!.\s]*$/.test(t)) {
+    return true;
+  }
+  // Information-seeking — these are questions, not actions
+  if (
+    /^(what|how|why|where|when|who|which|is|are|can|does|do|should|could|would|tell me|explain|describe)\b/.test(
+      t,
+    )
+  ) {
+    // ...unless the question is explicitly about doing a money action
+    if (/\b(send|pay|swap|bridge|request|split|transfer|move)\b/.test(t)) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
 export function isNonSendMoneyMessage(text: string): boolean {
-  return isSwapOrBridgeMessage(text) || /\b(split|request)\b/i.test(text);
+  return (
+    isSwapOrBridgeMessage(text) ||
+    /\b(split|request)\b/i.test(text) ||
+    isSmallTalkOrQuestion(text)
+  );
 }
 
 export function extractAmountFromText(text: string): string | null {

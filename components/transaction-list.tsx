@@ -1,5 +1,6 @@
 "use client";
 
+import { TransactionReceiptSheet } from "@/components/transaction-receipt-sheet";
 import { activityRowMeta } from "@/lib/activity";
 import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
@@ -102,46 +103,16 @@ function TransactionRow({
   const { title, amount, variant, status, explorerUrl, txHash, note, kind } = tx;
   const isCredit = variant === "credit";
   const { blurAmounts } = usePrivacy();
-  const [shareLabel, setShareLabel] = useState("Share");
   const [hashCopied, setHashCopied] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const Icon = kind ? KIND_ICON[kind] : ArrowUpRight;
   const subtitle = showTime
     ? activityRowMeta(tx)
     : [tx.meta, status].filter(Boolean).join(" · ");
 
-  const shareText = [
-    title,
-    amount,
-    txHash ? `Tx: ${txHash}` : null,
-    explorerUrl ?? null,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const handleShare = async (e: React.MouseEvent) => {
+  const openReceipt = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!explorerUrl && !txHash) return;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "glidepay transaction",
-          text: shareText,
-          url: explorerUrl,
-        });
-      } catch (err) {
-        // AbortError = user cancelled the share sheet. Do nothing.
-        // Any other error: fall through to clipboard copy below.
-        if ((err as Error)?.name === "AbortError") return;
-      }
-    }
-    // No native share OR share failed for a non-cancel reason → copy to clipboard.
-    try {
-      await navigator.clipboard.writeText(explorerUrl ?? txHash ?? shareText);
-      setShareLabel("Copied");
-      window.setTimeout(() => setShareLabel("Share"), 2000);
-    } catch {
-      /* clipboard blocked — silently fail */
-    }
+    setReceiptOpen(true);
   };
 
   const copyHash = async (e: React.MouseEvent) => {
@@ -300,7 +271,7 @@ function TransactionRow({
               {canShare ? (
                 <button
                   type="button"
-                  onClick={handleShare}
+                  onClick={openReceipt}
                   className="glide-tap glide-label-mono inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-bold"
                   style={{
                     background: "var(--glide-surface-container)",
@@ -309,13 +280,18 @@ function TransactionRow({
                   }}
                 >
                   <Share2 className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  {shareLabel}
+                  Receipt
                 </button>
               ) : null}
             </div>
           </div>
         </div>
       ) : null}
+      <TransactionReceiptSheet
+        tx={tx}
+        open={receiptOpen}
+        onClose={() => setReceiptOpen(false)}
+      />
     </article>
   );
 }
