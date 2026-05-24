@@ -52,10 +52,10 @@ export function AppHeader({
     <Link
       href="/"
       className="glide-tap inline-flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-2 transition-opacity hover:opacity-90"
-      aria-label="Glide home"
+      aria-label="glidepay home"
     >
       <GlideLogo size="sm" linked={false} glow={false} />
-      <span className="text-[17px] font-bold tracking-[-0.03em]">Glide</span>
+      <span className="text-[18px] font-extrabold tracking-[-0.02em]">glidepay</span>
     </Link>
   ) : (
     <span className="h-10 w-10 shrink-0" aria-hidden />

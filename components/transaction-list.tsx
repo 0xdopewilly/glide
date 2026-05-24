@@ -108,7 +108,7 @@ function TransactionRow({
     try {
       if (navigator.share) {
         await navigator.share({
-          title: "Glide transaction",
+          title: "glidepay transaction",
           text: shareText,
           url: explorerUrl,
         });

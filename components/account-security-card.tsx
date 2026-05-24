@@ -25,7 +25,7 @@ export function AccountSecurityCard() {
             >
               Automatic account:
             </strong>{" "}
-            Glide creates a smart account for you on Arc when you first open the
+            glidepay creates a smart account for you on Arc when you first open the
             app. You sign in with your profile. No browser extension and no
             seed phrase to write down.
           </span>

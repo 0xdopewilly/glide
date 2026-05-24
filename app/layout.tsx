@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Glide",
+  title: "glidepay",
   description: "Move money instantly. Simple, fast, and familiar.",
   icons: {
     icon: [
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     shortcut: "/favicon-32x32.png",
   },
   appleWebApp: {
-    title: "Glide",
+    title: "glidepay",
     capable: true,
     statusBarStyle: "black-translucent",
   },

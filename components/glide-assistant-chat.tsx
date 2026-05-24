@@ -28,7 +28,7 @@ const WELCOME: StoredChatMessage = {
   id: "welcome",
   role: "assistant",
   kind: "text",
-  text: "Hi! I'm Glide Assist — send, request, split bills, swap, or bridge. What do you need?",
+  text: "Hi! I'm the glidepay assistant — send, request, split bills, swap, or bridge. What do you need?",
 };
 
 const QUICK_PROMPTS = [
@@ -487,7 +487,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           id: `err-${Date.now()}`,
           role: "assistant",
           kind: "text",
-          text: "Couldn't reach Glide assistant. Try again.",
+          text: "Couldn't reach the assistant. Try again.",
         });
       } finally {
         setBusy(false);
@@ -616,14 +616,14 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
       >
         <div className="flex items-center gap-2 rounded-[28px] border border-neutral-200/70 bg-white/90 p-1.5 dark:border-white/[0.08] dark:bg-[#1a1a1e]/95">
           <label htmlFor="glide-assistant-input" className="sr-only">
-            Message Glide
+            Message the assistant
           </label>
           <input
             ref={inputRef}
             id="glide-assistant-input"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Message Glide…"
+            placeholder="Message the assistant…"
             disabled={busy}
             className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-[15px] font-medium text-neutral-950 placeholder:font-normal placeholder:text-neutral-400 focus:outline-none disabled:opacity-60 dark:text-white dark:placeholder:text-white/35"
             autoComplete="off"

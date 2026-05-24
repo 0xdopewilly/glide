@@ -19,7 +19,7 @@ const SLIDES = [
   {
     tag: "Built for Trust",
     title: "Security that feels invisible.",
-    body: "No seed phrases. Email or Google sign-in, and Glide handles the wallet for you.",
+    body: "No seed phrases. Email or Google sign-in, and glidepay handles the wallet for you.",
   },
   {
     tag: "Limitless Potential",

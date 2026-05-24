@@ -13,9 +13,9 @@ export default function ReceivePage() {
 
   const share = async () => {
     if (!address) return;
-    const text = `Pay me on Glide: ${address}`;
+    const text = `Pay me on glidepay: ${address}`;
     if (navigator.share) {
-      await navigator.share({ title: "Glide", text });
+      await navigator.share({ title: "glidepay", text });
       return;
     }
     await navigator.clipboard.writeText(address);

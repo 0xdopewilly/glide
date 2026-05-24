@@ -21,7 +21,7 @@ const PAYMENT_ACTIONS: {
   {
     href: "/send",
     title: "Send money",
-    description: "Pay a Glide Tag, wallet, or contact",
+    description: "Pay a tag, wallet, or contact",
     icon: Send,
   },
   {
@@ -45,7 +45,7 @@ const PAYMENT_ACTIONS: {
   {
     href: "/ask?q=Split a bill with my friends",
     title: "Split a bill",
-    description: "Divide costs with Glide Assist",
+    description: "Divide costs with the assistant",
     icon: Users,
   },
 ];

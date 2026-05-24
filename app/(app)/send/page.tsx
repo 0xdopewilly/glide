@@ -133,7 +133,7 @@ export default function SendPage() {
             setResolveState("fail");
             setResolvedMeta(null);
             setResolveMessage(
-              data.message ?? "Recipient not found on Glide",
+              data.message ?? "Recipient not found on glidepay",
             );
           }
         } catch {
@@ -202,7 +202,7 @@ export default function SendPage() {
       return `You only have ${formatStableAmount(tokenBalance, token)}`;
     }
     if (recipientOk) return null;
-    return "Use a wallet address (0x…), Glide Tag, or contact name";
+    return "Use a wallet address (0x…), pay tag, or contact name";
   }, [
     recipient,
     resolveState,
@@ -326,7 +326,7 @@ export default function SendPage() {
               From
             </span>
             <span className="text-sm font-bold text-[var(--glide-text)]">
-              Glide · {token}
+              glidepay · {token}
             </span>
           </div>
 
@@ -431,7 +431,7 @@ export default function SendPage() {
                 {kind === "wallet"
                   ? "Wallet address"
                   : kind === "username"
-                    ? "Glide Tag"
+                    ? "Pay tag"
                     : "Contact name"}
               </div>
             ) : null}

@@ -96,15 +96,15 @@ export default function ProfilePage() {
           </p>
           {profile.username ? (
             <p className="mt-1 text-sm font-medium glide-text-gradient">
-              Glide Tag · {profile.username}
+              Pay tag · {profile.username}
             </p>
           ) : (
             <button
               type="button"
               onClick={() => router.push("/setup-username")}
-              className="mt-2 text-sm font-semibold text-violet-600 dark:text-violet-300"
+              className="mt-2 text-sm font-semibold text-[var(--glide-accent)]"
             >
-              Claim your Glide Tag →
+              Claim your pay tag →
             </button>
           )}
           <p className="mt-2 text-sm font-medium glide-muted">

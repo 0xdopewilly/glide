@@ -13,7 +13,7 @@ const ICON_NAV: {
   icon: typeof Wallet;
 }[] = [
   { href: "/payments", label: "Payments", icon: Wallet },
-  { href: "/ask", label: "Glide Assist", icon: Sparkles },
+  { href: "/ask", label: "Assist", icon: Sparkles },
   { href: "/trade", label: "Trade", icon: ArrowLeftRight },
   { href: "/activity", label: "Activity", icon: Clock },
 ];

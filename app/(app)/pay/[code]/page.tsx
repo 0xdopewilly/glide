@@ -75,7 +75,7 @@ export default function PayRequestPage({
               Pay {label}
               {info.requester.username ? (
                 <span className="block text-xs font-normal glide-muted">
-                  Glide Tag
+                  Pay tag
                 </span>
               ) : null}
             </p>

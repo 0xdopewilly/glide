@@ -4,24 +4,24 @@
 
 :root {
   color-scheme: light;
-  /* Monochrome terminal: near-white surfaces, dark CTAs, status colors only. */
-  --glide-bg: #f4f5f7;
-  --glide-shell: #fafbfc;
+  /* glidepay light: soft cream-blue, navy text, navy primary. */
+  --glide-bg: #f4f6fc;
+  --glide-shell: #fafbff;
   --glide-surface: #ffffff;
   --glide-surface-elevated: #ffffff;
-  --glide-surface-container: #eef0f4;
-  --glide-surface-container-high: #e3e6ec;
-  --glide-nav-surface: #fafbfc;
-  --glide-primary-container: rgba(12, 14, 20, 0.08);
+  --glide-surface-container: #eef1fa;
+  --glide-surface-container-high: #e3e8f5;
+  --glide-nav-surface: #fafbff;
+  --glide-primary-container: rgba(30, 58, 138, 0.10);
   --glide-success-container: rgba(45, 153, 86, 0.14);
-  --glide-text: #0c0e14;
-  --glide-muted: #5c606c;
-  --glide-border: rgba(12, 14, 20, 0.08);
+  --glide-text: #0a1530;
+  --glide-muted: #5c647c;
+  --glide-border: rgba(10, 21, 48, 0.08);
   --glide-input: #ffffff;
-  --glide-accent: #0c0e14;
-  --glide-accent-hover: #1d1f27;
+  --glide-accent: #1e3a8a;
+  --glide-accent-hover: #1a3279;
   --glide-success: #2d9956;
-  --glide-on-nav-inactive: #6b6f78;
+  --glide-on-nav-inactive: #6b7188;
   --glide-radius-sm: 12px;
   --glide-radius-md: 16px;
   --glide-radius-lg: 20px;
@@ -33,38 +33,38 @@
   --glide-ease: cubic-bezier(0.2, 0, 0, 1);
   --glide-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   --glide-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --glide-gradient-from: #d6d8dd;
-  --glide-gradient-to: #b9bcc4;
-  --glide-glow-primary: rgba(12, 14, 20, 0.18);
-  --glide-glow-secondary: rgba(12, 14, 20, 0.10);
-  --glide-glow-accent: rgba(12, 14, 20, 0.10);
-  --glide-glow-warm: rgba(12, 14, 20, 0.06);
+  --glide-gradient-from: #1e3a8a;
+  --glide-gradient-to: #3b5cca;
+  --glide-glow-primary: rgba(30, 58, 138, 0.18);
+  --glide-glow-secondary: rgba(30, 58, 138, 0.10);
+  --glide-glow-accent: rgba(30, 58, 138, 0.12);
+  --glide-glow-warm: rgba(30, 58, 138, 0.06);
 }
 
 .dark {
   color-scheme: dark;
-  /* Monochrome terminal: near-black surfaces, white CTAs, status colors only. */
-  --glide-bg: #08090c;
-  --glide-shell: #0b0c10;
-  --glide-surface: #13141a;
-  --glide-surface-elevated: #181a21;
-  --glide-surface-container: #14161c;
-  --glide-surface-container-high: #1d1f27;
-  --glide-nav-surface: #0b0c10;
+  /* glidepay dark: deep midnight navy, white CTAs, friendly contrast. */
+  --glide-bg: #0a1530;
+  --glide-shell: #0e1a3a;
+  --glide-surface: #142450;
+  --glide-surface-elevated: #1a2c5e;
+  --glide-surface-container: #122046;
+  --glide-surface-container-high: #1f3470;
+  --glide-nav-surface: #0e1a3a;
   --glide-primary-container: rgba(255, 255, 255, 0.10);
   --glide-success-container: rgba(74, 222, 128, 0.14);
-  --glide-text: #f5f6f8;
-  --glide-muted: #8a8e96;
-  --glide-border: rgba(255, 255, 255, 0.08);
-  --glide-input: rgba(255, 255, 255, 0.04);
+  --glide-text: #ffffff;
+  --glide-muted: #8b95b5;
+  --glide-border: rgba(255, 255, 255, 0.10);
+  --glide-input: rgba(255, 255, 255, 0.06);
   --glide-accent: #ffffff;
   --glide-accent-hover: #ebebed;
   --glide-success: #4ade80;
-  --glide-on-nav-inactive: rgba(255, 255, 255, 0.45);
-  --glide-gradient-from: #2a2d35;
-  --glide-gradient-to: #444853;
+  --glide-on-nav-inactive: rgba(255, 255, 255, 0.50);
+  --glide-gradient-from: #1e3a8a;
+  --glide-gradient-to: #3b5cca;
   --glide-glow-primary: rgba(255, 255, 255, 0.18);
-  --glide-glow-secondary: rgba(255, 255, 255, 0.10);
+  --glide-glow-secondary: rgba(59, 92, 202, 0.20);
   --glide-glow-accent: rgba(255, 255, 255, 0.10);
   --glide-glow-warm: rgba(255, 255, 255, 0.06);
 }
@@ -775,19 +775,20 @@ body {
   }
 
   .glide-btn-notch__inner--caps {
-    font-family: var(--font-geist-mono), ui-monospace, monospace;
-    font-size: 12px;
+    font-family: var(--font-jakarta), var(--font-geist-sans), sans-serif;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
-  /* Terminal-style label: mono + uppercase + small tracking.
-     Apply to page headers, section titles, tab labels, button labels. */
+  /* Soft small label (used to be mono caps under terminal aesthetic).
+     Kept as uppercase + tracked, no mono font — friendly fintech style. */
   .glide-label-mono {
-    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-family: var(--font-jakarta), var(--font-geist-sans), sans-serif;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
+    font-weight: 700;
   }
 
   .glide-btn-notch--sm .glide-btn-notch__inner--caps {

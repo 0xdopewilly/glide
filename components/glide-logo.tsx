@@ -37,7 +37,7 @@ export function GlideLogo({
       <Link
         href="/"
         className="inline-flex transition-transform duration-200 active:scale-95"
-        aria-label="Glide home"
+        aria-label="glidepay home"
       >
         {content}
       </Link>

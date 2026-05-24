@@ -69,7 +69,7 @@ export default function RequestPage() {
   const createRequest = async () => {
     if (parsed <= 0) return;
     if (mode === "person" && !glideTag.trim() && !email.trim()) {
-      setError("Enter a Glide Tag or email");
+      setError("Enter a pay tag or email");
       return;
     }
 
@@ -93,7 +93,7 @@ export default function RequestPage() {
 
       if (mode === "person" && data.targetEmail && !data.targetOnGlide) {
         const payLabel = formatStableAmountWithCode(data.amount, data.token ?? token);
-        const mailto = `mailto:${data.targetEmail}?subject=${encodeURIComponent(`Payment request on Glide`)}&body=${encodeURIComponent(`Please pay ${payLabel} on Glide: ${data.url}`)}`;
+        const mailto = `mailto:${data.targetEmail}?subject=${encodeURIComponent(`Payment request on glidepay`)}&body=${encodeURIComponent(`Please pay ${payLabel} on glidepay: ${data.url}`)}`;
         window.location.href = mailto;
       }
     } catch (e) {
@@ -113,9 +113,9 @@ export default function RequestPage() {
   const shareLink = async () => {
     if (!result?.url) return;
     const myTag = profile.username ? profile.username : "me";
-    const text = `Pay ${formatStableAmountWithCode(result.amount, result.token ?? token)} to ${myTag} on Glide${result.note ? ` — ${result.note}` : ""}`;
+    const text = `Pay ${formatStableAmountWithCode(result.amount, result.token ?? token)} to ${myTag} on glidepay${result.note ? ` — ${result.note}` : ""}`;
     if (navigator.share) {
-      await navigator.share({ title: "Glide payment request", text, url: result.url });
+      await navigator.share({ title: "glidepay payment request", text, url: result.url });
     } else {
       await copyLink();
     }
@@ -127,7 +127,7 @@ export default function RequestPage() {
         {!result ? (
           <>
             <p className="glide-label-mono mt-1 text-center text-[11px] font-semibold text-[var(--glide-muted)]">
-              Ask someone to pay you on Glide
+              Ask someone to pay you on glidepay
             </p>
 
             <div className="glide-m3-segment mt-4 flex rounded-full p-1">
@@ -140,7 +140,7 @@ export default function RequestPage() {
                     : "text-[var(--glide-muted)]"
                 }`}
               >
-                Glide Tag or email
+                Pay tag or email
               </button>
               <button
                 type="button"
@@ -173,7 +173,7 @@ export default function RequestPage() {
 
             {mode === "person" ? (
               <div className="mt-6 space-y-4">
-                <FormField id="req-tag" label="Glide Tag">
+                <FormField id="req-tag" label="Pay tag">
                   <div className="relative">
                     <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base font-medium glide-muted">
                       @
@@ -206,7 +206,7 @@ export default function RequestPage() {
                   />
                 </FormField>
                 <p className="text-xs leading-relaxed glide-muted">
-                  If they are on Glide with this email or Glide Tag, they get a push
+                  If they are on glidepay with this email or pay tag, they get a push
                   notification. Otherwise we open your email app with the pay link.
                 </p>
               </div>
@@ -245,7 +245,7 @@ export default function RequestPage() {
                 style={{ color: "var(--glide-success)" }}
               >
                 {result.targetOnGlide
-                  ? `Request sent · push notification incoming`
+                  ? "Request sent · push notification incoming"
                   : `Pay link ready · ${result.targetEmail}`}
               </p>
             ) : null}
@@ -311,7 +311,7 @@ export default function RequestPage() {
             </div>
             {result.targetEmail && !result.targetOnGlide ? (
               <a
-                href={`mailto:${result.targetEmail}?subject=${encodeURIComponent("Payment request on Glide")}&body=${encodeURIComponent(result.url)}`}
+                href={`mailto:${result.targetEmail}?subject=${encodeURIComponent("Payment request on glidepay")}&body=${encodeURIComponent(result.url)}`}
                 className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[var(--glide-text)]"
               >
                 <Mail className="h-4 w-4" />

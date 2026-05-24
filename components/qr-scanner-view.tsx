@@ -166,7 +166,7 @@ export function QrScannerView() {
           id="manual-address"
           value={manual}
           onChange={(e) => setManual(e.target.value)}
-          placeholder="0x… or Glide pay link"
+          placeholder="0x… or glidepay link"
           className="mt-2 w-full rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 font-mono text-sm dark:border-white/10 dark:bg-[#1c1c1e]"
         />
         <button
