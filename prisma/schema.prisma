@@ -122,7 +122,9 @@ model Transaction {
   amountLabel         String
   variant             String
   status              String?
-  circleTransactionId String?  @unique
+  /// One Circle tx creates ONE activity row PER user (debit on sender, credit
+  /// on recipient). Uniqueness is (userId, circleTransactionId), not the id alone.
+  circleTransactionId String?
   txHash              String?
   explorerUrl         String?
   chain               String?
@@ -131,6 +133,8 @@ model Transaction {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
+  @@unique([userId, circleTransactionId])
   @@index([userId, createdAt(sort: Desc)])
   @@index([txHash])
+  @@index([circleTransactionId])
 }

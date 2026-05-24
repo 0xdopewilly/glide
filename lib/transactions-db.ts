@@ -18,9 +18,17 @@ export type RecordTransactionInput = {
 };
 
 export async function recordTransaction(input: RecordTransactionInput) {
+  // Look up an existing row for THIS user only. A single Circle transaction
+  // creates two activity rows (one per side of the transfer), so the unique
+  // identity of a row is (userId, circleTransactionId) — NOT circleTransactionId
+  // alone. Looking up globally would let one user's sync overwrite the other
+  // user's row (the bug that flipped credits and debits across accounts).
   if (input.circleTransactionId) {
-    const existing = await prisma.transaction.findUnique({
-      where: { circleTransactionId: input.circleTransactionId },
+    const existing = await prisma.transaction.findFirst({
+      where: {
+        userId: input.userId,
+        circleTransactionId: input.circleTransactionId,
+      },
     });
     if (existing) {
       const row = await prisma.transaction.update({
@@ -47,8 +55,11 @@ export async function recordTransaction(input: RecordTransactionInput) {
         data: {
           status: input.status ?? existing.status,
           explorerUrl: input.explorerUrl ?? existing.explorerUrl,
+          // Only stamp circleTransactionId if this row doesn't already have one
+          // AND no OTHER row anywhere holds it (the column is currently @unique
+          // globally; safe to drop once schema migration ships).
           circleTransactionId:
-            input.circleTransactionId ?? existing.circleTransactionId,
+            existing.circleTransactionId ?? input.circleTransactionId,
         },
       });
       return { row, isNew: false };
