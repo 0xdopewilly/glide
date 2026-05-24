@@ -38,10 +38,10 @@ export function ActivityToolbar({
 }) {
   return (
     <div
-      className="sticky top-0 z-10 -mx-6 border-b px-6 pb-3 pt-1 backdrop-blur-xl dark:border-white/10"
+      className="sticky top-0 z-10 -mx-6 border-b px-6 pb-3 pt-1 dark:border-white/10"
       style={{
         borderColor: "var(--glide-border)",
-        background: "color-mix(in srgb, var(--glide-bg) 88%, transparent)",
+        background: "var(--glide-bg)",
       }}
     >
       <div className="flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

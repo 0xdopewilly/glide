@@ -563,7 +563,6 @@ body {
     background: var(--glide-input);
     border-color: var(--glide-border);
     color: var(--glide-text);
-    backdrop-filter: blur(12px);
   }
 
   .glide-input::placeholder {
@@ -788,8 +787,6 @@ body {
     background: var(--glide-surface-elevated);
     border: 1px solid var(--glide-border);
     border-radius: var(--glide-radius-md);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
   }
 
   .glide-tonal-card {
