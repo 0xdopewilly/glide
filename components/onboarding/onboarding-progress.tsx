@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 export function OnboardingProgress({
   total,
   current,
@@ -18,22 +16,26 @@ export function OnboardingProgress({
       aria-valuemax={total}
       aria-label={`Step ${current + 1} of ${total}`}
     >
-      {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          className="h-1 flex-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--glide-text)_12%,transparent)]"
-        >
-          <motion.div
-            className="h-full rounded-full bg-[var(--glide-text)]"
-            initial={false}
-            animate={{
-              width: i <= current ? "100%" : "0%",
-              opacity: i <= current ? 1 : 0.35,
-            }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          />
-        </div>
-      ))}
+      {Array.from({ length: total }).map((_, i) => {
+        const filled = i <= current;
+        return (
+          <div
+            key={i}
+            className="h-1 flex-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--glide-text)_12%,transparent)]"
+          >
+            <div
+              className="h-full w-full rounded-full bg-[var(--glide-text)]"
+              style={{
+                transformOrigin: "left",
+                transform: `scaleX(${filled ? 1 : 0})`,
+                opacity: filled ? 1 : 0.35,
+                transition:
+                  "transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
