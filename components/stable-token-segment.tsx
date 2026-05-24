@@ -27,11 +27,15 @@ export function StableTokenSegment({
           role="tab"
           aria-selected={value === token}
           onClick={() => onChange(token)}
-          className={`glide-tap flex-1 rounded-full py-2 text-xs font-semibold tracking-tight transition-colors ${
+          className="glide-tap flex-1 rounded-full py-2 text-xs font-bold tracking-tight transition-colors"
+          style={
             value === token
-              ? "bg-[var(--glide-surface)] text-[var(--glide-text)] shadow-sm"
-              : "text-[var(--glide-muted)]"
-          }`}
+              ? {
+                  background: "var(--glide-accent)",
+                  color: "var(--glide-bg)",
+                }
+              : { color: "var(--glide-muted)" }
+          }
         >
           {token}
         </button>

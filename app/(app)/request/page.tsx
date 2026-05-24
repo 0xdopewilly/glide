@@ -136,22 +136,30 @@ export default function RequestPage() {
               <button
                 type="button"
                 onClick={() => setMode("person")}
-                className={`glide-tap flex-1 rounded-full py-2 text-xs font-semibold ${
+                className="glide-tap flex-1 rounded-full py-2 text-xs font-bold transition-colors"
+                style={
                   mode === "person"
-                    ? "bg-[var(--glide-surface)] text-[var(--glide-text)] shadow-sm"
-                    : "text-[var(--glide-muted)]"
-                }`}
+                    ? {
+                        background: "var(--glide-accent)",
+                        color: "var(--glide-bg)",
+                      }
+                    : { color: "var(--glide-muted)" }
+                }
               >
                 Pay tag or email
               </button>
               <button
                 type="button"
                 onClick={() => setMode("link")}
-                className={`glide-tap flex-1 rounded-full py-2 text-xs font-semibold ${
+                className="glide-tap flex-1 rounded-full py-2 text-xs font-bold transition-colors"
+                style={
                   mode === "link"
-                    ? "bg-[var(--glide-surface)] text-[var(--glide-text)] shadow-sm"
-                    : "text-[var(--glide-muted)]"
-                }`}
+                    ? {
+                        background: "var(--glide-accent)",
+                        color: "var(--glide-bg)",
+                      }
+                    : { color: "var(--glide-muted)" }
+                }
               >
                 Link & QR
               </button>
