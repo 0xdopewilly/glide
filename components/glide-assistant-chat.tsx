@@ -496,6 +496,16 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     [busy, dismissPendingContactPrompts, messages, pushMessage, runIntent],
   );
 
+  const skipContact = (messageId: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId && m.kind === "add_contact"
+          ? { ...m, contactSkipped: true }
+          : m,
+      ),
+    );
+  };
+
   const saveContact = async (messageId: string) => {
     const msg = messages.find((m) => m.id === messageId);
     if (!msg || msg.kind !== "add_contact" || !msg.contactName || !msg.walletAddress) {
@@ -605,6 +615,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             message={m}
             savingContact={savingContactId === m.id}
             onSaveContact={saveContact}
+            onSkipContact={skipContact}
           />
         ))}
         {processingAction ? (

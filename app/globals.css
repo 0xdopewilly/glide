@@ -333,6 +333,22 @@ body {
 .glide-stagger > *:nth-child(6) { animation-delay: 350ms; }
 .glide-stagger > *:nth-child(n+7) { animation-delay: 410ms; }
 
+/* Chat bubble entrance — quick fade-up, springy. */
+@keyframes glide-chat-enter {
+  from {
+    transform: translateY(14px) scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.glide-chat-enter {
+  animation: glide-chat-enter 280ms var(--glide-ease-spring) both;
+}
+
 /* Scale-in — for hero elements landing into view. */
 @keyframes glide-scale-in {
   0% {
