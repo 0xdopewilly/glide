@@ -16,12 +16,20 @@ export function AuthFlowHeader({ backHref = "/onboarding" }: { backHref?: string
 
       <div className="pointer-events-none absolute inset-x-0 flex justify-center">
         <Image
-          src="/glidepay-wordmark.png"
+          src="/glidepay-wordmark-dark.png"
           alt="glidepay"
           width={1205}
           height={397}
           priority
-          className="h-7 w-auto"
+          className="h-7 w-auto dark:hidden"
+        />
+        <Image
+          src="/glidepay-wordmark.png"
+          alt=""
+          width={1205}
+          height={397}
+          priority
+          className="hidden h-7 w-auto dark:block"
         />
       </div>
     </header>

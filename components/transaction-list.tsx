@@ -8,6 +8,7 @@ import {
   ArrowLeftRight,
   ArrowUpRight,
   ChevronDown,
+  Copy,
   ExternalLink,
   Link2,
   Share2,
@@ -28,7 +29,8 @@ function TransactionSkeleton() {
       {[0, 1, 2].map((i) => (
         <li
           key={i}
-          className="h-[3.75rem] animate-pulse rounded-2xl bg-neutral-100/80 dark:bg-[#1c1c1e]"
+          className="h-[3.75rem] animate-pulse rounded-2xl"
+          style={{ background: "var(--glide-surface-container)" }}
         />
       ))}
     </ul>
@@ -56,7 +58,13 @@ export function TransactionList({
 
   if (transactions.length === 0 && !grouped) {
     return (
-      <p className="rounded-2xl px-4 py-10 text-center text-sm font-medium glide-muted glide-surface-card">
+      <p
+        className="rounded-2xl border px-4 py-10 text-center text-sm font-medium text-[var(--glide-muted)]"
+        style={{
+          background: "var(--glide-surface-elevated)",
+          borderColor: "var(--glide-border)",
+        }}
+      >
         {emptyMessage}
       </p>
     );
@@ -95,10 +103,18 @@ function TransactionRow({
   const isCredit = variant === "credit";
   const { blurAmounts } = usePrivacy();
   const [shareLabel, setShareLabel] = useState("Share");
+  const [hashCopied, setHashCopied] = useState(false);
   const Icon = kind ? KIND_ICON[kind] : ArrowUpRight;
-  const subtitle = showTime ? activityRowMeta(tx) : [tx.meta, status].filter(Boolean).join(" · ");
+  const subtitle = showTime
+    ? activityRowMeta(tx)
+    : [tx.meta, status].filter(Boolean).join(" · ");
 
-  const shareText = [title, amount, txHash ? `Tx: ${txHash}` : null, explorerUrl ?? null]
+  const shareText = [
+    title,
+    amount,
+    txHash ? `Tx: ${txHash}` : null,
+    explorerUrl ?? null,
+  ]
     .filter(Boolean)
     .join("\n");
 
@@ -124,39 +140,67 @@ function TransactionRow({
     }
   };
 
+  const copyHash = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!txHash) return;
+    try {
+      await navigator.clipboard.writeText(txHash);
+      setHashCopied(true);
+      window.setTimeout(() => setHashCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
   const canShare = Boolean(explorerUrl || txHash);
 
   return (
     <article
-      className={`overflow-hidden rounded-2xl transition-shadow duration-200 glide-surface-card ${
-        expanded ? "shadow-md ring-1 ring-black/5 dark:ring-white/10" : ""
-      }`}
+      className="overflow-hidden rounded-2xl border transition-all"
+      style={{
+        background: "var(--glide-surface-elevated)",
+        borderColor: expanded
+          ? "color-mix(in srgb, var(--glide-text) 18%, transparent)"
+          : "var(--glide-border)",
+      }}
     >
       <button
         type="button"
         onClick={onToggle}
-        className="glide-tap flex w-full items-center gap-3 px-3.5 py-3 text-left"
+        className="glide-tap flex w-full items-center gap-3 px-3.5 py-3.5 text-left"
         aria-expanded={expanded}
       >
         <span
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-            isCredit
-              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-              : "bg-neutral-100 text-neutral-700 dark:bg-white/10 dark:text-white/80"
+            isCredit ? "" : ""
           }`}
+          style={
+            isCredit
+              ? {
+                  background: "var(--glide-success-container)",
+                  color: "var(--glide-success)",
+                }
+              : {
+                  background: "var(--glide-surface-container-high)",
+                  color: "var(--glide-text)",
+                }
+          }
         >
           <Icon className="h-[18px] w-[18px]" strokeWidth={2.25} />
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold tracking-tight text-neutral-950 dark:text-white">
+          <p
+            className="truncate text-[15px] font-semibold tracking-tight"
+            style={{ color: "var(--glide-text)" }}
+          >
             {title}
           </p>
-          <p className="mt-0.5 truncate text-xs font-medium capitalize glide-muted">
+          <p className="mt-0.5 truncate text-xs font-medium capitalize text-[var(--glide-muted)]">
             {subtitle}
           </p>
           {note && !expanded ? (
-            <p className="mt-0.5 truncate text-xs text-neutral-400 dark:text-white/35">
+            <p className="mt-0.5 truncate text-xs text-[var(--glide-muted)] opacity-70">
               {note}
             </p>
           ) : null}
@@ -164,16 +208,19 @@ function TransactionRow({
 
         <div className="flex shrink-0 items-center gap-1.5">
           <p
-            className={`text-[15px] font-semibold tabular-nums tracking-tight ${
+            className={`text-[15px] font-bold tabular-nums tracking-tight ${
+              blurAmounts ? "glide-amount-blur" : ""
+            }`}
+            style={
               isCredit
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-neutral-950 dark:text-white"
-            } ${blurAmounts ? "glide-amount-blur" : ""}`}
+                ? { color: "var(--glide-success)" }
+                : { color: "var(--glide-text)" }
+            }
           >
             {blurAmounts ? "•••" : amount}
           </p>
           <span
-            className={`inline-flex text-neutral-400 transition-transform duration-200 dark:text-white/35 ${
+            className={`inline-flex text-[var(--glide-muted)] transition-transform duration-200 ${
               expanded ? "rotate-180" : ""
             }`}
           >
@@ -183,52 +230,92 @@ function TransactionRow({
       </button>
 
       {expanded ? (
-            <div className="overflow-hidden border-t border-[var(--glide-border)]">
-            <div className="px-4 pb-4 pt-3">
-              {note ? (
-                <p className="rounded-xl bg-neutral-100/80 px-3 py-2.5 text-sm dark:bg-black/30">
-                  &ldquo;{note}&rdquo;
-                </p>
-              ) : null}
+        <div
+          className="overflow-hidden border-t"
+          style={{ borderColor: "var(--glide-border)" }}
+        >
+          <div className="glide-chat-enter px-4 pb-4 pt-3.5">
+            {note ? (
+              <p
+                className="rounded-xl border px-3 py-2.5 text-sm italic"
+                style={{
+                  background: "var(--glide-surface-container)",
+                  borderColor: "var(--glide-border)",
+                  color: "var(--glide-text)",
+                }}
+              >
+                &ldquo;{note}&rdquo;
+              </p>
+            ) : null}
 
-              {txHash ? (
-                <div className="mt-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.08em] glide-muted">
+            {txHash ? (
+              <div className="mt-3">
+                <div className="flex items-center justify-between">
+                  <p className="glide-label-mono text-[10px] font-bold text-[var(--glide-muted)]">
                     Transaction hash
                   </p>
-                  <p className="mt-1 break-all font-mono text-[11px] leading-relaxed">
-                    {txHash}
-                  </p>
-                </div>
-              ) : null}
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {explorerUrl ? (
-                  <a
-                    href={explorerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-neutral-950 px-3.5 py-2 text-[11px] font-semibold text-white dark:bg-white dark:text-neutral-950"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Explorer
-                  </a>
-                ) : null}
-                {canShare ? (
                   <button
                     type="button"
-                    onClick={handleShare}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3.5 py-2 text-[11px] font-semibold tracking-tight text-neutral-700 dark:bg-white/10 dark:text-white/80"
+                    onClick={copyHash}
+                    className="glide-tap glide-label-mono inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                    style={{
+                      background: "var(--glide-surface-container)",
+                      color: "var(--glide-text)",
+                    }}
                   >
-                    <Share2 className="h-3 w-3" />
-                    {shareLabel}
+                    <Copy className="h-3 w-3" strokeWidth={2.25} />
+                    {hashCopied ? "Copied" : "Copy"}
                   </button>
-                ) : null}
+                </div>
+                <p
+                  className="mt-1.5 break-all rounded-xl border px-3 py-2 font-mono text-[11px] leading-relaxed"
+                  style={{
+                    background: "var(--glide-surface-container)",
+                    borderColor: "var(--glide-border)",
+                    color: "var(--glide-muted)",
+                  }}
+                >
+                  {txHash}
+                </p>
               </div>
+            ) : null}
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {explorerUrl ? (
+                <a
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="glide-tap glide-label-mono inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[11px] font-bold"
+                  style={{
+                    background: "var(--glide-accent)",
+                    color: "var(--glide-bg)",
+                  }}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  Explorer
+                </a>
+              ) : null}
+              {canShare ? (
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="glide-tap glide-label-mono inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-bold"
+                  style={{
+                    background: "var(--glide-surface-container)",
+                    borderColor: "var(--glide-border)",
+                    color: "var(--glide-text)",
+                  }}
+                >
+                  <Share2 className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  {shareLabel}
+                </button>
+              ) : null}
             </div>
           </div>
-        ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }

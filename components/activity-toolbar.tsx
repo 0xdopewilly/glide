@@ -38,7 +38,7 @@ export function ActivityToolbar({
 }) {
   return (
     <div
-      className="sticky top-0 z-10 -mx-6 border-b px-6 pb-3 pt-1 dark:border-white/10"
+      className="sticky top-0 z-10 -mx-6 border-b px-6 pb-3 pt-1"
       style={{
         borderColor: "var(--glide-border)",
         background: "var(--glide-bg)",
@@ -72,16 +72,21 @@ export function ActivityToolbar({
           onClick={onRefresh}
           disabled={refreshing}
           aria-label="Refresh activity"
-          className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-700 dark:bg-[#1c1c1e] dark:text-white/75"
+          className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
+          style={{
+            background: "var(--glide-surface-container)",
+            borderColor: "var(--glide-border)",
+            color: "var(--glide-text)",
+          }}
         >
           <RefreshCw
             className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-            strokeWidth={2}
+            strokeWidth={2.25}
           />
         </button>
       </div>
 
-      <p className="mt-2 text-[11px] font-medium tabular-nums glide-muted">
+      <p className="glide-label-mono mt-2 text-[10px] font-bold tabular-nums text-[var(--glide-muted)]">
         {count === 0
           ? "No transactions"
           : count === 1
@@ -107,13 +112,22 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`glide-tap shrink-0 rounded-full font-semibold tracking-tight transition-colors ${
-        compact ? "px-2.5 py-1 text-[10px]" : "px-3.5 py-1.5 text-xs"
-      } ${
-        active
-          ? "bg-neutral-950 text-white dark:bg-white dark:text-neutral-950"
-          : "bg-neutral-100/90 text-neutral-600 dark:bg-[#1c1c1e] dark:text-white/60"
+      className={`glide-tap shrink-0 rounded-full border font-semibold tracking-tight transition-colors ${
+        compact ? "px-3 py-1 text-[10px]" : "px-4 py-1.5 text-[12px]"
       }`}
+      style={
+        active
+          ? {
+              background: "var(--glide-accent)",
+              borderColor: "var(--glide-accent)",
+              color: "var(--glide-bg)",
+            }
+          : {
+              background: "var(--glide-surface-container)",
+              borderColor: "var(--glide-border)",
+              color: "var(--glide-muted)",
+            }
+      }
     >
       {label}
     </button>

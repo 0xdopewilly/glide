@@ -333,6 +333,20 @@ body {
 .glide-stagger > *:nth-child(6) { animation-delay: 350ms; }
 .glide-stagger > *:nth-child(n+7) { animation-delay: 410ms; }
 
+/* Processing arrow — gentle nudge right-then-back, communicates direction. */
+@keyframes glide-arrow-pulse {
+  0%, 100% {
+    transform: translateX(0) scale(1);
+  }
+  50% {
+    transform: translateX(4px) scale(1.06);
+  }
+}
+
+.glide-arrow-pulse {
+  animation: glide-arrow-pulse 1.4s var(--glide-ease-out) infinite;
+}
+
 /* Chat bubble entrance — quick fade-up, springy. */
 @keyframes glide-chat-enter {
   from {

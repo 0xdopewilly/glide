@@ -18,7 +18,13 @@ const LABELS = {
 
 function FlowIcon({ children }: { children: React.ReactNode }) {
   return (
-    <span className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-md ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/10">
+    <span
+      className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border"
+      style={{
+        background: "var(--glide-surface-container-high)",
+        borderColor: "var(--glide-border)",
+      }}
+    >
       {children}
     </span>
   );
@@ -42,44 +48,67 @@ export function FlowProcessingOverlay({
 
   return (
     <div
-      className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 px-6"
+      className="absolute inset-0 z-20 flex items-center justify-center px-6"
+      style={{
+        background: "color-mix(in srgb, var(--glide-bg) 88%, transparent)",
+      }}
       role="status"
       aria-live="polite"
       aria-busy="true"
     >
-      <div className="w-full max-w-[280px] rounded-3xl px-6 py-7 text-center shadow-xl glide-surface-card">
-        <div className="flex items-center justify-center gap-2.5">
+      <div
+        className="slide-up-bouncy w-full max-w-[300px] rounded-[28px] border px-6 py-7 text-center"
+        style={{
+          background: "var(--glide-surface-elevated)",
+          borderColor: "var(--glide-border)",
+          boxShadow: "0 30px 60px -20px rgba(0, 0, 0, 0.45)",
+        }}
+      >
+        <div className="flex items-center justify-center gap-3">
           {mode === "swap" ? (
             <>
               <FlowIcon>
-                <TokenIcon symbol="USDC" size={40} />
+                <TokenIcon symbol="USDC" size={44} />
               </FlowIcon>
               <span
-                className="glide-processing-arrow flex h-8 w-8 items-center justify-center text-violet-500 dark:text-violet-300"
+                className="glide-arrow-pulse flex h-9 w-9 items-center justify-center rounded-full"
+                style={{
+                  background: "var(--glide-accent)",
+                  color: "var(--glide-bg)",
+                }}
                 aria-hidden
               >
                 <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
               </span>
               <FlowIcon>
-                <TokenIcon symbol="EURC" size={40} />
+                <TokenIcon symbol="EURC" size={44} />
               </FlowIcon>
             </>
           ) : (
             <>
               <FlowIcon>
-                <TokenIcon symbol="USDC" size={40} />
+                <TokenIcon symbol="USDC" size={44} />
               </FlowIcon>
               <span
-                className="glide-processing-arrow flex h-8 w-8 items-center justify-center text-violet-500 dark:text-violet-300"
+                className="glide-arrow-pulse flex h-9 w-9 items-center justify-center rounded-full"
+                style={{
+                  background: "var(--glide-accent)",
+                  color: "var(--glide-bg)",
+                }}
                 aria-hidden
               >
                 <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
               </span>
               <FlowIcon>
                 {bridgeChainId ? (
-                  <ChainIcon chainId={bridgeChainId} size="sm" />
+                  <ChainIcon chainId={bridgeChainId} />
                 ) : (
-                  <span className="text-xs font-semibold text-violet-600">→</span>
+                  <span
+                    className="text-base font-bold"
+                    style={{ color: "var(--glide-text)" }}
+                  >
+                    →
+                  </span>
                 )}
               </FlowIcon>
             </>
@@ -87,14 +116,28 @@ export function FlowProcessingOverlay({
         </div>
 
         <div
-          className="relative mx-auto mt-6 h-0.5 w-full max-w-[200px] overflow-hidden rounded-full bg-neutral-200 dark:bg-white/10"
+          className="relative mx-auto mt-7 h-1 w-full max-w-[220px] overflow-hidden rounded-full"
+          style={{ background: "var(--glide-surface-container)" }}
           aria-hidden
         >
-          <span className="glide-processing-bar-indeterminate absolute inset-y-0 left-0 w-2/5 rounded-full bg-violet-500 dark:bg-violet-400" />
+          <span
+            className="glide-processing-bar-indeterminate absolute inset-y-0 left-0 w-2/5 rounded-full"
+            style={{ background: "var(--glide-accent)" }}
+          />
         </div>
 
-        <p className="mt-5 text-base font-semibold tracking-tight">{title}…</p>
-        <p className="mt-0.5 text-sm glide-muted">{detail}</p>
+        <p
+          className="mt-6 text-[18px] font-bold tracking-tight"
+          style={{ color: "var(--glide-text)" }}
+        >
+          {title}…
+        </p>
+        <p
+          className="glide-label-mono mt-1 text-[11px] font-semibold"
+          style={{ color: "var(--glide-muted)" }}
+        >
+          {detail}
+        </p>
       </div>
     </div>
   );
