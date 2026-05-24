@@ -3,28 +3,7 @@ import { safeApiError } from "@/lib/circle";
 import { syncCircleTransactionsToDb } from "@/lib/circle-transactions";
 import { listUserTransactions } from "@/lib/transactions-db";
 import { userOwnsWallet } from "@/lib/users";
-import type { GlideTransaction } from "@/lib/types";
 import { NextRequest, NextResponse } from "next/server";
-
-function mergeTransactions(lists: GlideTransaction[][]): GlideTransaction[] {
-  const seen = new Set<string>();
-  const merged: GlideTransaction[] = [];
-
-  for (const list of lists) {
-    for (const tx of list) {
-      const key = tx.txHash ?? tx.id;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      merged.push(tx);
-    }
-  }
-
-  return merged.sort((a, b) => {
-    const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return tb - ta;
-  });
-}
 
 /** GET ?walletId= - on-chain activity from Circle, cached in Supabase */
 export async function GET(request: NextRequest) {
@@ -44,14 +23,17 @@ export async function GET(request: NextRequest) {
   const quick = request.nextUrl.searchParams.get("quick") === "1";
 
   try {
-    const fromDb = await listUserTransactions(session.userId);
-
     if (quick) {
+      const fromDb = await listUserTransactions(session.userId);
       return NextResponse.json({ transactions: fromDb });
     }
 
-    const fromCircle = await syncCircleTransactionsToDb(session.userId, walletId);
-    const transactions = mergeTransactions([fromCircle, fromDb]);
+    // Sync persists fresh data (and heals broken rows), then read back from DB
+    // so the response includes the latest healed labels and metadata-derived
+    // counterparty fields. Reading from DB beats merging with Circle's mapped
+    // values, which lack counterparty info.
+    await syncCircleTransactionsToDb(session.userId, walletId);
+    const transactions = await listUserTransactions(session.userId);
 
     return NextResponse.json({ transactions });
   } catch (err) {

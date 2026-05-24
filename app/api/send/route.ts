@@ -6,6 +6,8 @@ import {
   normalizeTokenSymbol,
 } from "@/lib/tokens";
 import { formatStableAmount } from "@/lib/currency-format";
+import { shortenAddress } from "@/lib/format";
+import { prisma } from "@/lib/db";
 import { findUserByWalletAddress } from "@/lib/usernames";
 import { userOwnsWallet } from "@/lib/users";
 import {
@@ -20,6 +22,10 @@ import {
   fetchWalletById,
 } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
+
+function precisionForToken(token: string): number {
+  return token === "cirBTC" ? 8 : 2;
+}
 
 /** POST { walletId, destinationAddress, amount } */
 export async function POST(request: NextRequest) {
@@ -92,12 +98,13 @@ export async function POST(request: NextRequest) {
 
     await assertSufficientBalance(walletId, parsed, token);
 
+    const decimals = precisionForToken(token);
     const res = await initialized.client.createTransaction({
       walletAddress: wallet.address,
       blockchain: GLIDE_BLOCKCHAIN,
       tokenAddress: arcTokenAddressForSymbol(token),
       destinationAddress,
-      amount: [parsed.toFixed(2)],
+      amount: [parsed.toFixed(decimals)],
       fee: {
         type: "level",
         config: { feeLevel: "MEDIUM" },
@@ -108,10 +115,18 @@ export async function POST(request: NextRequest) {
     const state = res.data?.state;
     const txHash = (res.data as { txHash?: string } | undefined)?.txHash;
 
+    const recipientLabel = formatResolvedRecipientLabel(resolved);
+    const recipientReceiptLabel =
+      resolved.source === "username"
+        ? `@${recipientLabel}`
+        : resolved.source === "wallet"
+          ? shortenAddress(destinationAddress, 6)
+          : recipientLabel;
+
     await recordTransaction({
       userId: session.userId,
       kind: "send",
-      title: `Sent to ${formatResolvedRecipientLabel(resolved)}`,
+      title: `Sent to ${recipientLabel}`,
       amountLabel: `−${formatStableAmount(parsed, token)}`,
       variant: "debit",
       status: state,
@@ -122,6 +137,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         ...(note ? { note } : {}),
         token,
+        recipient: recipientReceiptLabel,
+        recipientAddress: destinationAddress,
       },
     });
 
@@ -129,17 +146,32 @@ export async function POST(request: NextRequest) {
     if (recipientUser?.id && recipientUser.id !== session.userId) {
       const creditLabel = `+${formatStableAmount(parsed, token)}`;
       const { notifyIncomingPayment } = await import("@/lib/push");
+      // Resolve sender's label for the recipient's activity row.
+      const sender = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { username: true, displayName: true },
+      });
+      const senderReceiptLabel = sender?.username
+        ? `@${sender.username}`
+        : sender?.displayName?.trim() ||
+          session.displayName?.trim() ||
+          shortenAddress(wallet.address, 6);
       const receiveRow = await recordTransaction({
         userId: recipientUser.id,
         kind: "receive",
-        title: `Received ${token}`,
+        title: `Received from ${senderReceiptLabel}`,
         amountLabel: creditLabel,
         variant: "credit",
         status: state,
         txHash,
         explorerUrl: txHash ? arcExplorerUrl(txHash) : undefined,
         chain: GLIDE_BLOCKCHAIN,
-        metadata: { token, fromUserId: session.userId },
+        metadata: {
+          token,
+          fromUserId: session.userId,
+          sender: senderReceiptLabel,
+          fromAddress: wallet.address,
+        },
       });
       if (receiveRow.isNew) {
         void notifyIncomingPayment(
@@ -171,7 +203,7 @@ export async function POST(request: NextRequest) {
           payer?.username ?? payer?.displayName ?? session.displayName ?? "Someone";
         void notifyRequestPaid(
           req.userId,
-          parsed.toFixed(2),
+          parsed.toFixed(decimals),
           payerLabel,
         ).catch((err) => console.error("[Glide] request paid notify:", err));
       }

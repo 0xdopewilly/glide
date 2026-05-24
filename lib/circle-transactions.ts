@@ -9,7 +9,8 @@ import {
   isEurcToken,
 } from "@/lib/tokens";
 import { arcExplorerUrl, recordTransaction } from "@/lib/transactions-db";
-import { formatRelativeDate } from "@/lib/format";
+import { findUserByWalletAddress } from "@/lib/usernames";
+import { formatRelativeDate, shortenAddress } from "@/lib/format";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
 
 type CircleTx = {
@@ -94,10 +95,33 @@ export async function syncCircleTransactionsToDb(
   for (const tx of circleTxs) {
     const token = inferToken(tx);
     const mapped = mapCircleTransaction(tx);
+
+    // Resolve the counterparty's display label so the activity row reads
+    // "Received from @khadee" / "Sent to 0xab…cd" instead of just "Received USDC".
+    // Only used when no row exists yet — recordTransaction preserves the
+    // existing title if /api/send already wrote one.
+    let title = mapped.title;
+    let counterpartyLabel: string | undefined;
+    if (mapped.kind === "receive" && tx.sourceAddress) {
+      const sender = await findUserByWalletAddress(tx.sourceAddress);
+      counterpartyLabel = sender?.username
+        ? `@${sender.username}`
+        : sender?.displayName?.trim() ||
+          shortenAddress(tx.sourceAddress, 6);
+      title = `Received from ${counterpartyLabel}`;
+    } else if (mapped.kind === "send" && tx.destinationAddress) {
+      const recipient = await findUserByWalletAddress(tx.destinationAddress);
+      counterpartyLabel = recipient?.username
+        ? `@${recipient.username}`
+        : recipient?.displayName?.trim() ||
+          shortenAddress(tx.destinationAddress, 6);
+      title = `Sent to ${counterpartyLabel}`;
+    }
+
     const { row, isNew } = await recordTransaction({
       userId,
       kind: mapped.kind ?? "send",
-      title: mapped.title,
+      title,
       amountLabel: mapped.amount,
       variant: mapped.variant,
       status: mapped.status,
@@ -106,9 +130,21 @@ export async function syncCircleTransactionsToDb(
       explorerUrl: mapped.explorerUrl,
       chain: tx.blockchain,
       metadata:
-        mapped.kind === "receive" && tx.sourceAddress
-          ? { fromAddress: tx.sourceAddress, token }
-          : { token },
+        mapped.kind === "receive"
+          ? {
+              token,
+              ...(tx.sourceAddress ? { fromAddress: tx.sourceAddress } : {}),
+              ...(counterpartyLabel ? { sender: counterpartyLabel } : {}),
+            }
+          : {
+              token,
+              ...(tx.destinationAddress
+                ? { recipientAddress: tx.destinationAddress }
+                : {}),
+              ...(counterpartyLabel
+                ? { recipient: counterpartyLabel }
+                : {}),
+            },
     });
 
     if (

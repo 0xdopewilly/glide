@@ -38,6 +38,8 @@ export type GlideTransaction = {
   explorerUrl?: string;
   /** ISO timestamp for sorting and date filters */
   createdAt?: string;
+  /** "@khadee", display name, or 0xab…cd — shown as "To"/"From" on the receipt. */
+  counterparty?: string;
 };
 
 export type WalletResponse = {

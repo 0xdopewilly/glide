@@ -17,6 +17,53 @@ export type RecordTransactionInput = {
   metadata?: Prisma.InputJsonValue;
 };
 
+/** Extract the numeric magnitude from a label like "−$0.00" / "+₿0.0003". */
+function labelToNumber(label: string | null | undefined): number {
+  if (!label) return 0;
+  const cleaned = label.replace(/[^0-9.]/g, "");
+  const n = parseFloat(cleaned);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** A title is "broken" if it lacks a counterparty (no " to " / " from "). */
+function titleHasCounterparty(title: string | null | undefined): boolean {
+  if (!title) return false;
+  return /\b(to|from)\s+\S/i.test(title);
+}
+
+/**
+ * Decide whether sync's value should overwrite the stored one.
+ * Rule: keep the stored value unless it's clearly broken (zero amount when
+ * Circle reports a real amount, or a generic title when sync produced a
+ * counterparty-aware one). This heals rows written by the pre-fix code.
+ */
+function pickAmountLabel(existing: string | null, incoming: string): string {
+  const existingValue = labelToNumber(existing);
+  const incomingValue = labelToNumber(incoming);
+  if (!existing) return incoming;
+  if (existingValue === 0 && incomingValue > 0) return incoming;
+  return existing;
+}
+
+function pickTitle(existing: string | null, incoming: string): string {
+  if (!existing) return incoming;
+  if (!titleHasCounterparty(existing) && titleHasCounterparty(incoming)) {
+    return incoming;
+  }
+  return existing;
+}
+
+function mergeMetadata(
+  existing: unknown,
+  incoming: Prisma.InputJsonValue | undefined,
+): Prisma.InputJsonValue | undefined {
+  if (incoming === undefined) return undefined;
+  if (existing && typeof existing === "object") {
+    return { ...(existing as Record<string, unknown>), ...(incoming as Record<string, unknown>) } as Prisma.InputJsonValue;
+  }
+  return incoming;
+}
+
 export async function recordTransaction(input: RecordTransactionInput) {
   // Look up an existing row for THIS user only. A single Circle transaction
   // creates two activity rows (one per side of the transfer), so the unique
@@ -31,18 +78,18 @@ export async function recordTransaction(input: RecordTransactionInput) {
       },
     });
     if (existing) {
-      // PRESERVE the existing amountLabel/title. /api/send writes them with the
-      // correct token (USDC / EURC / cirBTC); Circle sync infers and can default
-      // to the wrong token when Circle omits the symbol. Never let sync clobber
-      // a manually-recorded label.
+      // Prefer the existing user-visible labels except when they are clearly
+      // broken: zero amount when Circle reports a real one, or a generic
+      // "Sent USDC" title when we now have "Sent to @khadee".
       const row = await prisma.transaction.update({
         where: { id: existing.id },
         data: {
           status: input.status ?? existing.status,
           txHash: input.txHash ?? existing.txHash,
           explorerUrl: input.explorerUrl ?? existing.explorerUrl,
-          amountLabel: existing.amountLabel || input.amountLabel,
-          title: existing.title || input.title,
+          amountLabel: pickAmountLabel(existing.amountLabel, input.amountLabel),
+          title: pickTitle(existing.title, input.title),
+          metadata: mergeMetadata(existing.metadata, input.metadata),
         },
       });
       return { row, isNew: false };
@@ -54,7 +101,6 @@ export async function recordTransaction(input: RecordTransactionInput) {
       where: { userId: input.userId, txHash: input.txHash },
     });
     if (existing) {
-      // Same rule for the txHash-matched path: keep the user-visible labels.
       const row = await prisma.transaction.update({
         where: { id: existing.id },
         data: {
@@ -62,8 +108,9 @@ export async function recordTransaction(input: RecordTransactionInput) {
           explorerUrl: input.explorerUrl ?? existing.explorerUrl,
           circleTransactionId:
             existing.circleTransactionId ?? input.circleTransactionId,
-          amountLabel: existing.amountLabel || input.amountLabel,
-          title: existing.title || input.title,
+          amountLabel: pickAmountLabel(existing.amountLabel, input.amountLabel),
+          title: pickTitle(existing.title, input.title),
+          metadata: mergeMetadata(existing.metadata, input.metadata),
         },
       });
       return { row, isNew: false };
@@ -94,6 +141,16 @@ function metadataNote(metadata: unknown): string | undefined {
   return typeof note === "string" && note.trim() ? note.trim() : undefined;
 }
 
+function metadataCounterparty(
+  metadata: unknown,
+  kind: string,
+): string | undefined {
+  if (!metadata || typeof metadata !== "object") return undefined;
+  const m = metadata as { recipient?: unknown; sender?: unknown };
+  const value = kind === "receive" ? m.sender : m.recipient;
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
 function rowToGlide(row: {
   id: string;
   kind: string;
@@ -118,6 +175,7 @@ function rowToGlide(row: {
     note: metadataNote(row.metadata),
     txHash: row.txHash ?? undefined,
     explorerUrl: row.explorerUrl ?? undefined,
+    counterparty: metadataCounterparty(row.metadata, row.kind),
   };
 }
 

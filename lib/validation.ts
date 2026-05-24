@@ -34,5 +34,6 @@ export function isValidUsername(raw: string): boolean {
 export function parseMoneyAmount(value: string): number | null {
   const parsed = parseFloat(value);
   if (Number.isNaN(parsed) || parsed <= 0) return null;
-  return Math.round(parsed * 100) / 100;
+  // Don't round here — cirBTC needs up to 8 decimals; callers format per token.
+  return parsed;
 }

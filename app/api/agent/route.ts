@@ -17,6 +17,10 @@ import { formatSplitProcessingReply } from "@/lib/split-bill";
 import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
+function decimalsForToken(token?: string): number {
+  return token === "cirBTC" ? 8 : 2;
+}
+
 function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent } {
   if (intent.action === "reply") {
     return { reply: intent.message };
@@ -35,7 +39,7 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
     const token = intent.token ?? "USDC";
     return {
       reply: `Sending ${formatStableAmount(amount, token)}…`,
-      intent: { ...intent, amount: amount.toFixed(2), token },
+      intent: { ...intent, amount: amount.toFixed(decimalsForToken(token)), token },
     };
   }
   if (intent.action === "send_batch") {
@@ -45,7 +49,7 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
     const normalized = intent.transfers.map((t) => {
       const amount = parseMoneyAmount(t.amount);
       if (amount === null || amount <= 0) return null;
-      return { amount: amount.toFixed(2), token: t.token };
+      return { amount: amount.toFixed(decimalsForToken(t.token)), token: t.token };
     });
     if (normalized.some((t) => t === null)) {
       return { reply: "How much of each token should I send?" };
@@ -91,7 +95,7 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
       reply: `Requesting ${formatStableAmount(amount, token)} from @${intent.glideTag}…`,
       intent: {
         ...intent,
-        amount: amount.toFixed(2),
+        amount: amount.toFixed(decimalsForToken(token)),
         token,
       },
     };

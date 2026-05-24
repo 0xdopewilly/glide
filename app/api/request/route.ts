@@ -1,6 +1,7 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { createPaymentRequest, paymentRequestUrl } from "@/lib/payment-requests";
 import { notifyPaymentRequest } from "@/lib/push";
+import { normalizeTokenSymbol } from "@/lib/tokens";
 import { findUserByEmail, findUserByUsername } from "@/lib/usernames";
 import { isValidUsername, normalizeUsername, parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
@@ -73,9 +74,11 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const requestToken = normalizeTokenSymbol(body.token);
+  const decimals = requestToken === "cirBTC" ? 8 : 2;
   const row = await createPaymentRequest({
     userId: session.userId,
-    amount: parsed.toFixed(2),
+    amount: parsed.toFixed(decimals),
     token: body.token,
     note: body.note,
     targetUserId,

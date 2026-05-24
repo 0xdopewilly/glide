@@ -35,7 +35,8 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 async function renderReceiptCanvas(opts: {
   title: string;
   amount: string;
-  recipient: string;
+  counterparty: string;
+  counterpartyLabel: string;
   date: string;
   txHash?: string;
 }): Promise<HTMLCanvasElement> {
@@ -110,32 +111,39 @@ async function renderReceiptCanvas(opts: {
   ctx.font = "900 156px Inter, ui-sans-serif, system-ui, sans-serif";
   ctx.fillText(opts.amount, cx, cardY + 510);
 
-  // Recipient
-  ctx.fillStyle = "rgba(255,255,255,0.85)";
-  ctx.font = "600 38px Inter, ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText(opts.recipient, cx, cardY + 580);
+  // To / From label
+  if (opts.counterparty) {
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.font = "700 22px ui-monospace, Menlo, monospace";
+    const tag = opts.counterpartyLabel.toUpperCase();
+    ctx.fillText(tag.split("").join("  "), cx, cardY + 588);
+
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.font = "700 44px Inter, ui-sans-serif, system-ui, sans-serif";
+    ctx.fillText(opts.counterparty, cx, cardY + 644);
+  }
 
   // Date
   ctx.fillStyle = "rgba(255,255,255,0.45)";
   ctx.font = "500 26px Inter, ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText(opts.date, cx, cardY + 670);
+  ctx.fillText(opts.date, cx, cardY + 700);
 
   // Divider
   ctx.strokeStyle = "rgba(255,255,255,0.12)";
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(cardX + 80, cardY + 760);
-  ctx.lineTo(cardX + cardW - 80, cardY + 760);
+  ctx.moveTo(cardX + 80, cardY + 790);
+  ctx.lineTo(cardX + cardW - 80, cardY + 790);
   ctx.stroke();
 
   // Hash
   if (opts.txHash) {
     ctx.fillStyle = "rgba(255,255,255,0.45)";
     ctx.font = "700 18px ui-monospace, Menlo, monospace";
-    ctx.fillText("TRANSACTION HASH", cx, cardY + 820);
+    ctx.fillText("TRANSACTION HASH", cx, cardY + 850);
     ctx.fillStyle = "rgba(255,255,255,0.85)";
     ctx.font = "500 26px ui-monospace, Menlo, monospace";
-    ctx.fillText(shortHash(opts.txHash), cx, cardY + 870);
+    ctx.fillText(shortHash(opts.txHash), cx, cardY + 900);
   }
 
   // Footer
@@ -179,7 +187,13 @@ export function TransactionReceiptSheet({
                 ? "Bridge started"
                 : "Payment sent",
         amount: (tx.amount || "").replace(/^[−-]/, ""),
-        recipient: tx.meta || tx.title || "",
+        counterparty: tx.counterparty ?? "",
+        counterpartyLabel:
+          tx.kind === "swap" || tx.kind === "bridge"
+            ? ""
+            : tx.variant === "credit"
+              ? "From"
+              : "To",
         date: formatDate(tx.createdAt),
         txHash: tx.txHash ?? undefined,
       }
