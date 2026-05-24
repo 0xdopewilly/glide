@@ -1112,32 +1112,26 @@ body {
     border-radius: 999px;
     padding: 1rem 1.5rem;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.01em;
-    color: #ffffff;
-    transition: transform 0.12s ease, filter 0.15s ease;
+    background: var(--glide-accent);
+    color: var(--glide-bg);
+    box-shadow: 0 12px 36px color-mix(in srgb, var(--glide-accent) 28%, transparent);
+    transition:
+      transform 0.22s var(--glide-ease-spring),
+      box-shadow 0.22s var(--glide-ease-out);
   }
 
-  .onboarding-continue:active {
-    transform: scale(0.98);
+  .onboarding-continue:active:not(:disabled) {
+    transform: scale(0.94);
+    transition-duration: 0ms;
   }
 
-  .onboarding-continue--0 {
-    background: linear-gradient(
-      135deg,
-      var(--glide-gradient-from) 0%,
-      #6366f1 100%
-    );
-    box-shadow: 0 12px 36px color-mix(in srgb, var(--glide-gradient-from) 40%, transparent);
-  }
-
-  .onboarding-continue--1 {
-    background: linear-gradient(135deg, #7c3aed 0%, var(--glide-gradient-to) 100%);
-    box-shadow: 0 12px 36px color-mix(in srgb, var(--glide-gradient-to) 38%, transparent);
-  }
-
+  /* Stay on-brand across the 3 onboarding steps. No gradient swap; the page
+     ribbon + glow color already differentiates them. */
+  .onboarding-continue--0,
+  .onboarding-continue--1,
   .onboarding-continue--2 {
-    background: linear-gradient(135deg, #0d9488 0%, var(--glide-gradient-from) 100%);
-    box-shadow: 0 12px 36px color-mix(in srgb, #0d9488 35%, transparent);
+    background: var(--glide-accent);
   }
 }

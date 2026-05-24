@@ -21,7 +21,7 @@ export function AuthFlowHeader({ backHref = "/onboarding" }: { backHref?: string
           width={1205}
           height={397}
           priority
-          className="h-7 w-auto dark:hidden"
+          className="h-9 w-auto dark:hidden"
         />
         <Image
           src="/glidepay-wordmark.png"
@@ -29,7 +29,7 @@ export function AuthFlowHeader({ backHref = "/onboarding" }: { backHref?: string
           width={1205}
           height={397}
           priority
-          className="hidden h-7 w-auto dark:block"
+          className="hidden h-9 w-auto dark:block"
         />
       </div>
     </header>

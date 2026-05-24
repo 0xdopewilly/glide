@@ -80,15 +80,17 @@ export default function OnboardingPage() {
             direction === "forward" ? "slide-from-right" : "slide-from-left"
           }`}
         >
-          <OnboardingHeroVisual step={step} />
-          <div className="px-6 pt-2">
-            <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
-              {slide.tag}
-            </span>
-            <h1 className="mt-4 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-[var(--glide-text)]">
+          <div className="glide-stagger flex flex-col">
+            <OnboardingHeroVisual step={step} />
+            <div className="px-6 pt-2">
+              <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
+                {slide.tag}
+              </span>
+            </div>
+            <h1 className="mt-4 px-6 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-[var(--glide-text)]">
               {slide.title}
             </h1>
-            <p className="mt-3.5 max-w-[19.5rem] text-[15px] leading-[1.6] text-[var(--glide-muted)]">
+            <p className="mt-3.5 max-w-[19.5rem] px-6 text-[15px] leading-[1.6] text-[var(--glide-muted)]">
               {slide.body}
             </p>
           </div>
