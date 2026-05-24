@@ -23,8 +23,11 @@ export function GlidePillButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`glide-tap inline-flex items-center justify-center gap-2 rounded-full bg-neutral-950 px-5 py-2.5 text-sm font-semibold tracking-tight text-white shadow-[0_6px_20px_rgba(0,0,0,0.15)] transition-shadow duration-200 hover:shadow-[0_8px_28px_rgba(0,0,0,0.2)] disabled:opacity-45 dark:bg-white dark:text-[#0a0a0a] dark:shadow-[0_6px_24px_rgba(255,255,255,0.1)] dark:hover:shadow-[0_8px_32px_rgba(255,255,255,0.14)] ${className}`}
-      style={{ fontFamily: "var(--font-jakarta), var(--font-geist-sans), sans-serif" }}
+      className={`glide-tap glide-label-mono inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[12px] font-bold disabled:opacity-45 ${className}`}
+      style={{
+        background: "var(--glide-accent)",
+        color: "var(--glide-bg)",
+      }}
     >
       {children}
       {icon}

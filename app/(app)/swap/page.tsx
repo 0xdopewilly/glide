@@ -49,27 +49,38 @@ export default function SwapPage() {
         <FlowProcessingOverlay open={submitting} mode="swap" />
       <FlowStepMotion stepKey={step}>
         {step === "success" ? (
-          <div className="flex flex-1 flex-col items-center px-6 pt-10 text-center">
+          <div className="slide-up-bouncy flex flex-1 flex-col items-center px-6 pt-10 text-center">
             <div
-              className="flex h-24 w-24 items-center justify-center rounded-full"
+              className="glide-pop flex h-24 w-24 items-center justify-center rounded-full"
               style={{ background: "var(--glide-accent)" }}
             >
-              <Check className="h-12 w-12 text-white" strokeWidth={2.5} />
+              <Check
+                className="h-12 w-12"
+                strokeWidth={2.5}
+                style={{ color: "var(--glide-bg)" }}
+              />
             </div>
-            <h1 className="mt-8 text-2xl font-bold tracking-tight">Swap complete</h1>
-            <p className="mt-2 text-lg glide-muted">
-              ${parsed.toFixed(2)} USDC to {toAmount} EURC
+            <h1 className="glide-label-mono mt-8 text-[13px] font-bold text-[var(--glide-muted)]">
+              Swap complete
+            </h1>
+            <p className="mt-4 text-[32px] font-bold tracking-[-0.02em] text-[var(--glide-text)]">
+              ${parsed.toFixed(2)} <span className="text-[var(--glide-muted)]">→</span> {toAmount}
+            </p>
+            <p className="glide-label-mono mt-2 text-[11px] font-semibold text-[var(--glide-muted)]">
+              USDC to EURC
             </p>
             <GlideButton
               onClick={() => router.push("/activity")}
               className="mt-auto mb-8 max-w-sm"
-              uppercase={false}
             >
               View activity
             </GlideButton>
           </div>
         ) : (
-          <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col pb-8">
+          <form
+            onSubmit={(e) => void handleSubmit(e)}
+            className="slide-up-bouncy flex flex-col pb-8"
+          >
             <KitSetupBanner mode="swap" />
             <div className="flex flex-col px-5">
               <FormField id="swap-from" label="From USDC" className="mt-2">
@@ -87,10 +98,16 @@ export default function SwapPage() {
               </FormField>
               <div className="my-4 flex justify-center">
                 <span
-                  className="flex h-10 w-10 items-center justify-center rounded-full"
-                  style={{ background: "var(--glide-surface-elevated)" }}
+                  className="flex h-12 w-12 items-center justify-center rounded-full border"
+                  style={{
+                    background: "var(--glide-surface-elevated)",
+                    borderColor: "var(--glide-border)",
+                  }}
                 >
-                  <ArrowDownUp className="h-5 w-5 glide-muted" />
+                  <ArrowDownUp
+                    className="h-5 w-5"
+                    style={{ color: "var(--glide-text)" }}
+                  />
                 </span>
               </div>
               <FormField id="swap-to" label="To EURC">
@@ -102,9 +119,25 @@ export default function SwapPage() {
                   className={`${inputClassName} opacity-90`}
                 />
               </FormField>
-              <div className="mt-4 flex justify-between rounded-xl border px-4 py-3 text-sm glide-surface-card">
-                <span className="glide-muted">Rate</span>
-                <span className="font-semibold tracking-tight">1 USDC = {RATE} EURC</span>
+              <div
+                className="mt-4 flex justify-between rounded-xl border px-4 py-3 text-sm"
+                style={{
+                  background: "var(--glide-surface-container)",
+                  borderColor: "var(--glide-border)",
+                }}
+              >
+                <span className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+                  Rate
+                </span>
+                <span
+                  className="font-semibold tracking-tight tabular-nums text-[var(--glide-text)]"
+                  style={{
+                    fontFamily:
+                      "var(--font-geist-mono), ui-monospace, monospace",
+                  }}
+                >
+                  1 USDC = {RATE} EURC
+                </span>
               </div>
               {overBalance ? (
                 <p className="mt-3 text-sm text-red-400">Amount exceeds your balance</p>
@@ -113,7 +146,7 @@ export default function SwapPage() {
               <GlidePillButton
                 type="submit"
                 disabled={!canSubmit}
-                className="mt-8 w-full justify-center py-3.5"
+                className="mt-8 w-full"
               >
                 {submitting ? "Processing" : "Confirm swap"}
               </GlidePillButton>
