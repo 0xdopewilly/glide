@@ -1,5 +1,6 @@
 import { headerIconButtonClassName } from "@/components/header-icon-button";
 import { ChevronLeft } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export function AuthFlowHeader({ backHref = "/onboarding" }: { backHref?: string }) {
@@ -14,9 +15,14 @@ export function AuthFlowHeader({ backHref = "/onboarding" }: { backHref?: string
       </Link>
 
       <div className="pointer-events-none absolute inset-x-0 flex justify-center">
-        <span className="text-[20px] font-black tracking-[-0.04em] text-[var(--glide-text)]">
-          glidepay<span className="text-[var(--glide-accent)]">.</span>
-        </span>
+        <Image
+          src="/glidepay-logo.png"
+          alt="glidepay"
+          width={40}
+          height={40}
+          priority
+          className="h-10 w-10 rounded-xl"
+        />
       </div>
     </header>
   );

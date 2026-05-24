@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { useGoBack } from "@/lib/use-go-back";
 import { ChevronLeft } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export function AppHeader({
@@ -50,12 +51,17 @@ export function AppHeader({
   ) : showLogo ? (
     <Link
       href="/"
-      className="glide-tap inline-flex min-w-0 items-center rounded-full py-1 transition-opacity hover:opacity-90"
+      className="glide-tap inline-flex min-w-0 items-center transition-opacity hover:opacity-90"
       aria-label="glidepay home"
     >
-      <span className="text-[22px] font-black tracking-[-0.04em] text-[var(--glide-text)]">
-        glidepay<span className="text-[var(--glide-accent)]">.</span>
-      </span>
+      <Image
+        src="/glidepay-logo.png"
+        alt="glidepay"
+        width={40}
+        height={40}
+        priority
+        className="h-10 w-10 rounded-xl"
+      />
     </Link>
   ) : (
     <span className="h-10 w-10 shrink-0" aria-hidden />

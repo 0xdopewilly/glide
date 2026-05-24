@@ -35,12 +35,10 @@ export const metadata: Metadata = {
   description: "Move money instantly. Simple, fast, and familiar.",
   icons: {
     icon: [
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo-mark.png", sizes: "512x512", type: "image/png" },
+      { url: "/glidepay-logo.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: "/logo-mark.png",
-    shortcut: "/favicon-32x32.png",
+    apple: "/glidepay-logo.png",
+    shortcut: "/glidepay-logo.png",
   },
   appleWebApp: {
     title: "glidepay",
