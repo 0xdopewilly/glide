@@ -76,3 +76,40 @@ export function writeChatHistory(
   if (typeof window === "undefined" || !userId) return;
   localStorage.setItem(key(userId), JSON.stringify(messages.slice(-80)));
 }
+
+/** Fetch server-side history. Server is the source of truth across devices. */
+export async function fetchServerChatHistory(): Promise<
+  StoredChatMessage[] | null
+> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/api/chat-history", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { messages?: StoredChatMessage[] };
+    if (!Array.isArray(data.messages) || data.messages.length === 0) return null;
+    return normalizeHistory(data.messages);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Snapshot the conversation to the server. Caller debounces.
+ * AbortSignal lets the caller cancel in-flight writes when a newer one arrives.
+ */
+export async function pushServerChatHistory(
+  messages: StoredChatMessage[],
+  signal?: AbortSignal,
+): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    await fetch("/api/chat-history", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: messages.slice(-80) }),
+      signal,
+    });
+  } catch {
+    /* network blip — localStorage still has it, next change will retry */
+  }
+}

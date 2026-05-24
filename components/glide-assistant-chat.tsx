@@ -14,6 +14,8 @@ import {
 } from "@/lib/split-bill";
 import type { ActionSuccessType } from "@/lib/chat-cache";
 import {
+  fetchServerChatHistory,
+  pushServerChatHistory,
   readChatHistory,
   writeChatHistory,
   type StoredChatMessage,
@@ -67,8 +69,20 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
 
   useEffect(() => {
     if (!userId) return;
+    // Paint instantly from localStorage so the screen isn't blank, then ask
+    // the server for the canonical cross-device history and reconcile.
     setMessages(readChatHistory(userId));
     setHydrated(true);
+
+    let cancelled = false;
+    void fetchServerChatHistory().then((serverHistory) => {
+      if (cancelled || !serverHistory) return;
+      setMessages(serverHistory);
+      writeChatHistory(serverHistory, userId);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   useEffect(() => {
@@ -78,9 +92,31 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     inputRef.current?.focus();
   }, [searchParams, hydrated]);
 
+  const pendingSyncRef = useRef<AbortController | null>(null);
+  const pendingTimerRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (!hydrated || !userId) return;
     writeChatHistory(messages, userId);
+
+    // Debounce server sync so a burst of rapid setMessages calls only sends
+    // one PUT. Cancel any in-flight write whose payload is now stale.
+    if (pendingTimerRef.current !== null) {
+      window.clearTimeout(pendingTimerRef.current);
+    }
+    pendingTimerRef.current = window.setTimeout(() => {
+      pendingSyncRef.current?.abort();
+      const controller = new AbortController();
+      pendingSyncRef.current = controller;
+      void pushServerChatHistory(messages, controller.signal);
+    }, 600);
+
+    return () => {
+      if (pendingTimerRef.current !== null) {
+        window.clearTimeout(pendingTimerRef.current);
+        pendingTimerRef.current = null;
+      }
+    };
   }, [messages, hydrated, userId]);
 
   const scrollToEnd = useCallback(() => {

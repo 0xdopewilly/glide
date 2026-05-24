@@ -20,6 +20,8 @@ model User {
   avatarUrl            String?
   circleWalletId       String?       @unique
   circleWalletAddress  String?
+  /// Billy's chat history, last ~80 messages. Synced across devices.
+  chatHistory          Json?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   transactions         Transaction[]
