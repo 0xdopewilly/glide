@@ -46,12 +46,12 @@ export default function HomePage() {
 
         <section className="mt-10 flex-1 pb-4">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500 dark:text-white/50">
+            <h2 className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
               Recent
             </h2>
             <Link
               href="/activity"
-              className="text-sm font-semibold text-neutral-950 transition-colors hover:opacity-70 dark:text-white"
+              className="glide-label-mono text-[11px] font-semibold text-[var(--glide-text)] transition-opacity hover:opacity-70"
             >
               See all
             </Link>

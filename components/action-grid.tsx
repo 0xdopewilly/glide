@@ -1,47 +1,36 @@
 "use client";
 
-import { ArrowUpRight, Download } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, Workflow } from "lucide-react";
 import Link from "next/link";
 
 const ACTIONS = [
-  {
-    href: "/receive",
-    label: "Receive",
-    description: "Get USDC on Arc",
-    icon: Download,
-  },
-  {
-    href: "/send",
-    label: "Send",
-    description: "Pay a tag or wallet",
-    icon: ArrowUpRight,
-  },
+  { href: "/receive", label: "Receive", icon: ArrowDown },
+  { href: "/send", label: "Send", icon: ArrowUp },
+  { href: "/swap", label: "Swap", icon: ArrowLeftRight },
+  { href: "/bridge", label: "Bridge", icon: Workflow },
 ] as const;
 
 export function ActionGrid() {
   return (
     <nav
       aria-label="Quick actions"
-      className="mt-6 grid grid-cols-2 gap-3"
+      className="mt-6 flex items-start justify-between gap-2"
     >
-      {ACTIONS.map(({ href, label, description, icon: Icon }) => (
+      {ACTIONS.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}
           prefetch
-          className="glide-tonal-card glide-tap group flex min-h-[4.5rem] flex-col justify-between px-3.5 py-3 active:scale-[0.98]"
+          className="glide-tap group flex flex-1 flex-col items-center gap-2 active:scale-[0.96]"
         >
-          <div className="flex w-full items-start justify-between gap-1">
-            <span className="text-[15px] font-semibold tracking-tight text-[var(--glide-text)]">
-              {label}
-            </span>
-            <Icon
-              className="h-4 w-4 shrink-0 text-[var(--glide-muted)] transition-colors group-hover:text-[var(--glide-text)]"
-              strokeWidth={2.25}
-            />
-          </div>
-          <span className="glide-muted text-left text-[11px] font-medium">
-            {description}
+          <span
+            className="flex h-14 w-14 items-center justify-center rounded-full border bg-[var(--glide-surface-elevated)] text-[var(--glide-text)] transition-colors group-hover:bg-[var(--glide-surface-container-high)]"
+            style={{ borderColor: "var(--glide-border)" }}
+          >
+            <Icon className="h-5 w-5" strokeWidth={2} />
+          </span>
+          <span className="glide-label-mono text-[10px] font-semibold text-[var(--glide-muted)]">
+            {label}
           </span>
         </Link>
       ))}
