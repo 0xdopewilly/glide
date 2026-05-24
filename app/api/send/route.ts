@@ -23,6 +23,10 @@ import {
 } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
+// Circle createTransaction is fast but the request+sync cycle plus push
+// notifications can occasionally cross 10s. Be safe.
+export const maxDuration = 60;
+
 function precisionForToken(token: string): number {
   return token === "cirBTC" ? 8 : 2;
 }

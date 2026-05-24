@@ -13,7 +13,6 @@ import {
   formatStableAmountWithCode,
 } from "@/lib/currency-format";
 import { tokenAmountFromBalances } from "@/lib/tokens";
-import { playSuccessChime } from "@/lib/sound";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowDownUp, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -60,7 +59,6 @@ export default function SwapPage() {
     if (result.ok) {
       setReceivedAmount(result.receivedAmount ?? null);
       setStep("success");
-      playSuccessChime();
     }
   };
 

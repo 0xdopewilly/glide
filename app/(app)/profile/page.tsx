@@ -5,7 +5,6 @@ import { CopyButton } from "@/components/copy-button";
 import { FormField, inputClassName } from "@/components/form-field";
 import { GlideButton } from "@/components/glide-button";
 import { PageHeader } from "@/components/page-header";
-import { PrivacySettings } from "@/components/privacy-settings";
 import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
 import { PushNotificationsToggle } from "@/components/push-notifications";
 import { shortenAddress } from "@/lib/format";
@@ -165,12 +164,6 @@ export default function ProfilePage() {
         {/* Preferences */}
         <section className="mt-4 rounded-2xl p-4 glide-surface-card">
           <h2 className="text-sm font-semibold tracking-tight">Preferences</h2>
-          <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--glide-border)" }}>
-            <p className="text-xs font-semibold uppercase tracking-[0.06em] glide-muted">
-              Privacy
-            </p>
-            <PrivacySettings embedded />
-          </div>
           <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--glide-border)" }}>
             <PushNotificationsToggle className="!rounded-xl" />
           </div>

@@ -25,6 +25,31 @@ import {
 } from "@/lib/wallet-balance-cache";
 import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import { playSuccessChime } from "@/lib/success-chime";
+
+/**
+ * Parse a fetch response that we expect to be JSON, but tolerate the case
+ * where the platform returns HTML (Vercel timeout page, gateway error, etc.).
+ * Without this guard, `res.json()` throws "Unexpected token '<'", which is
+ * cryptic for the user. We translate it into a clear "Network error" instead.
+ */
+async function safeJson<T>(res: Response): Promise<T> {
+  const ct = res.headers.get("content-type") ?? "";
+  if (ct.includes("application/json")) {
+    return (await res.json()) as T;
+  }
+  // Read body to drain it; surface a clean error.
+  await res.text().catch(() => "");
+  if (res.status === 504 || res.status === 408) {
+    throw new Error(
+      "Request timed out. The transaction may still be processing — check Activity in a minute.",
+    );
+  }
+  throw new Error(
+    res.status >= 500
+      ? "Server hit an error. Try again in a moment."
+      : "Network error. Check your connection and try again.",
+  );
+}
 import {
   createContext,
   useCallback,
@@ -398,10 +423,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             requestCode: options?.requestCode,
           }),
         });
-        const data = (await res.json()) as {
-          balance?: number;
-          error?: string;
-        };
+        const data = await safeJson<{ balance?: number; error?: string }>(res);
         if (!res.ok) {
           throw new Error(data.error ?? "Transfer failed");
         }
@@ -435,10 +457,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             tokenOut: options?.tokenOut,
           }),
         });
-        const data = (await res.json()) as {
+        const data = await safeJson<{
           receivedAmount?: string;
           error?: string;
-        };
+        }>(res);
         if (!res.ok) throw new Error(data.error ?? "Swap failed");
         playSuccessChime();
         void refresh();
@@ -464,10 +486,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ walletId: wallet.id, amount, network }),
         });
-        const data = (await res.json()) as {
+        const data = await safeJson<{
           balance?: number;
           error?: string;
-        };
+        }>(res);
         if (!res.ok) throw new Error(data.error ?? "Bridge failed");
         if (typeof data.balance === "number") setBalance(data.balance);
         playSuccessChime();

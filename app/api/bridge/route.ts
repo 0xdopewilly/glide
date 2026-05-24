@@ -12,6 +12,10 @@ import { parseMoneyAmount } from "@/lib/validation";
 import { assertSufficientBalance } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
+// CCTP bridges do burn + attestation + mint and routinely take 20-40s.
+// Default Vercel timeout (10s) was returning the HTML timeout page.
+export const maxDuration = 60;
+
 /** POST { walletId, amount, network } - bridge USDC from Arc via CCTP */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();

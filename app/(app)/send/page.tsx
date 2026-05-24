@@ -16,7 +16,6 @@ import {
 } from "@/lib/currency-format";
 import { tokenAmountFromBalances } from "@/lib/tokens";
 import { PLACEHOLDER_GLIDE_TAG_OR_WALLET } from "@/lib/placeholders";
-import { playSuccessChime } from "@/lib/sound";
 import {
   isValidUsername,
   isValidWalletAddress,
@@ -199,12 +198,8 @@ export default function SendPage() {
       token,
     });
     setSubmitting(false);
-    if (ok) {
-      setStep("success");
-      playSuccessChime();
-    } else {
-      setLocalError("Payment could not be completed. Try again.");
-    }
+    if (ok) setStep("success");
+    else setLocalError("Payment could not be completed. Try again.");
   };
 
   const recipientLabel = resolvedMeta?.label ?? recipient.trim();
