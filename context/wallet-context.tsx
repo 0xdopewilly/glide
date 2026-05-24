@@ -78,7 +78,45 @@ type WalletContextValue = {
   clearNotice: () => void;
 };
 
-const WalletContext = createContext<WalletContextValue | null>(null);
+type ProfileContextValue = Pick<
+  WalletContextValue,
+  "profile" | "profileHydrated" | "updateProfile" | "saveProfile"
+>;
+
+type BalanceContextValue = Pick<
+  WalletContextValue,
+  "balance" | "totalUsd" | "tokens"
+>;
+
+type TransactionsContextValue = Pick<
+  WalletContextValue,
+  "transactions" | "transactionsLoading"
+>;
+
+type WalletActionsContextValue = Pick<
+  WalletContextValue,
+  | "wallet"
+  | "loading"
+  | "refreshing"
+  | "error"
+  | "notice"
+  | "refresh"
+  | "ensureWallet"
+  | "createNewWallet"
+  | "fundWallet"
+  | "sendMoney"
+  | "swapMoney"
+  | "bridgeMoney"
+  | "clearError"
+  | "clearNotice"
+>;
+
+const ProfileContext = createContext<ProfileContextValue | null>(null);
+const BalanceContext = createContext<BalanceContextValue | null>(null);
+const TransactionsContext = createContext<TransactionsContextValue | null>(null);
+const WalletActionsContext = createContext<WalletActionsContextValue | null>(
+  null,
+);
 
 type WalletApiPayload = {
   wallet?: GlideWallet;
@@ -534,19 +572,28 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     return estimateNetUsdFromTransactions(transactions);
   }, [tokens, balance, transactions]);
 
-  const value = useMemo(
+  const clearError = useCallback(() => setError(null), []);
+  const clearNotice = useCallback(() => setNotice(null), []);
+
+  const profileValue = useMemo<ProfileContextValue>(
+    () => ({ profile, profileHydrated, updateProfile, saveProfile }),
+    [profile, profileHydrated, updateProfile, saveProfile],
+  );
+
+  const balanceValue = useMemo<BalanceContextValue>(
+    () => ({ balance, totalUsd, tokens }),
+    [balance, totalUsd, tokens],
+  );
+
+  const transactionsValue = useMemo<TransactionsContextValue>(
+    () => ({ transactions, transactionsLoading }),
+    [transactions, transactionsLoading],
+  );
+
+  const actionsValue = useMemo<WalletActionsContextValue>(
     () => ({
-      profile,
-      updateProfile,
-      saveProfile,
       wallet,
-      balance,
-      totalUsd,
-      tokens,
-      transactions,
-      transactionsLoading,
       loading,
-      profileHydrated,
       refreshing,
       error,
       notice,
@@ -557,21 +604,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       sendMoney,
       swapMoney,
       bridgeMoney,
-      clearError: () => setError(null),
-      clearNotice: () => setNotice(null),
+      clearError,
+      clearNotice,
     }),
     [
-      profile,
-      updateProfile,
-      saveProfile,
       wallet,
-      balance,
-      totalUsd,
-      tokens,
-      transactions,
-      transactionsLoading,
       loading,
-      profileHydrated,
       refreshing,
       error,
       notice,
@@ -582,16 +620,54 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       sendMoney,
       swapMoney,
       bridgeMoney,
+      clearError,
+      clearNotice,
     ],
   );
 
   return (
-    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+    <ProfileContext.Provider value={profileValue}>
+      <BalanceContext.Provider value={balanceValue}>
+        <TransactionsContext.Provider value={transactionsValue}>
+          <WalletActionsContext.Provider value={actionsValue}>
+            {children}
+          </WalletActionsContext.Provider>
+        </TransactionsContext.Provider>
+      </BalanceContext.Provider>
+    </ProfileContext.Provider>
   );
 }
 
-export function useWallet() {
-  const ctx = useContext(WalletContext);
-  if (!ctx) throw new Error("useWallet must be used within WalletProvider");
+export function useProfile(): ProfileContextValue {
+  const ctx = useContext(ProfileContext);
+  if (!ctx) throw new Error("useProfile must be used within WalletProvider");
   return ctx;
+}
+
+export function useBalance(): BalanceContextValue {
+  const ctx = useContext(BalanceContext);
+  if (!ctx) throw new Error("useBalance must be used within WalletProvider");
+  return ctx;
+}
+
+export function useTransactions(): TransactionsContextValue {
+  const ctx = useContext(TransactionsContext);
+  if (!ctx)
+    throw new Error("useTransactions must be used within WalletProvider");
+  return ctx;
+}
+
+export function useWalletActions(): WalletActionsContextValue {
+  const ctx = useContext(WalletActionsContext);
+  if (!ctx)
+    throw new Error("useWalletActions must be used within WalletProvider");
+  return ctx;
+}
+
+export function useWallet(): WalletContextValue {
+  const profile = useProfile();
+  const balance = useBalance();
+  const transactions = useTransactions();
+  const actions = useWalletActions();
+  return { ...profile, ...balance, ...transactions, ...actions };
 }

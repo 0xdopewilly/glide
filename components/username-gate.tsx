@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
-import { useWallet } from "@/context/wallet-context";
+import { useProfile } from "@/context/wallet-context";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -9,7 +9,7 @@ const BYPASS = ["/setup-username"];
 
 export function UsernameGate({ children }: { children: React.ReactNode }) {
   const { user, ready } = useAuth();
-  const { profile, profileHydrated } = useWallet();
+  const { profile, profileHydrated } = useProfile();
   const router = useRouter();
   const pathname = usePathname();
 

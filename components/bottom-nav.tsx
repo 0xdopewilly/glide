@@ -1,7 +1,7 @@
 "use client";
 
 import { usePrivacy } from "@/context/privacy-context";
-import { useWallet } from "@/context/wallet-context";
+import { useBalance } from "@/context/wallet-context";
 import { ArrowLeftRight, Clock, Sparkles, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,7 +26,7 @@ function formatNavBalance(amount: number) {
 
 function BottomNavInner() {
   const pathname = usePathname();
-  const { totalUsd } = useWallet();
+  const { totalUsd } = useBalance();
   const { hideBalance } = usePrivacy();
   const balanceLabel = hideBalance ? "•••" : formatNavBalance(totalUsd);
   const homeActive = pathname === "/";

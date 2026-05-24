@@ -1,6 +1,6 @@
 "use client";
 
-import { useWallet } from "@/context/wallet-context";
+import { useProfile } from "@/context/wallet-context";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -11,7 +11,7 @@ export function UserAvatar({
   size?: "sm" | "md" | "lg";
   linked?: boolean;
 }) {
-  const { profile } = useWallet();
+  const { profile } = useProfile();
   const initial =
     profile.displayName.trim().charAt(0).toUpperCase() || "G";
 
