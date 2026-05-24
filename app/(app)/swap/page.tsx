@@ -16,20 +16,22 @@ import { tokenAmountFromBalances } from "@/lib/tokens";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowDownUp, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const TOKENS: readonly StableToken[] = ["USDC", "EURC", "cirBTC"];
 type Step = "form" | "success";
 
 export default function SwapPage() {
   const router = useRouter();
-  const { swapMoney, balance, tokens, error, clearError } = useWallet();
+  const { swapMoney, wallet, balance, tokens, error, clearError } = useWallet();
   const [fromToken, setFromToken] = useState<StableToken>("USDC");
   const [toToken, setToToken] = useState<StableToken>("EURC");
   const [fromAmount, setFromAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>("form");
   const [receivedAmount, setReceivedAmount] = useState<string | null>(null);
+  const [quoteAmount, setQuoteAmount] = useState<string | null>(null);
+  const [quoting, setQuoting] = useState(false);
 
   const fromBalance =
     fromToken === "USDC"
@@ -69,6 +71,47 @@ export default function SwapPage() {
       setFromAmount(str);
     }
   };
+
+  // Fetch a quote whenever the inputs change. Debounced ~400ms so we don't
+  // hammer Circle as the user types. Aborts in-flight requests when stale.
+  useEffect(() => {
+    if (!wallet || !(parsed > 0) || fromToken === toToken || overBalance) {
+      setQuoteAmount(null);
+      setQuoting(false);
+      return;
+    }
+    const controller = new AbortController();
+    setQuoting(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch("/api/swap/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            walletId: wallet.id,
+            amount: fromAmount,
+            tokenIn: fromToken,
+            tokenOut: toToken,
+          }),
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          setQuoteAmount(null);
+          return;
+        }
+        const data = (await res.json()) as { amountOut?: string };
+        setQuoteAmount(data.amountOut ?? null);
+      } catch {
+        /* aborted or network */
+      } finally {
+        setQuoting(false);
+      }
+    }, 400);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [wallet, fromAmount, fromToken, toToken, parsed, overBalance]);
 
   const flipTokens = () => {
     setFromToken(toToken);
@@ -172,7 +215,16 @@ export default function SwapPage() {
                   amount=""
                   onAmountChange={() => undefined}
                   balance={undefined}
-                  receivedAmount={parsed > 0 ? "Estimated" : undefined}
+                  estimatedDisplay={quoteAmount}
+                  estimatedLabel={
+                    parsed > 0
+                      ? quoting
+                        ? "Fetching quote…"
+                        : quoteAmount
+                          ? "Estimated"
+                          : "Quote unavailable"
+                      : undefined
+                  }
                   readOnly
                 />
 
@@ -210,7 +262,8 @@ function TokenCard({
   onAmountChange,
   balance,
   useMax,
-  receivedAmount,
+  estimatedDisplay,
+  estimatedLabel,
   readOnly,
 }: {
   side: "from" | "to";
@@ -221,7 +274,8 @@ function TokenCard({
   onAmountChange: (v: string) => void;
   balance?: number;
   useMax?: () => void;
-  receivedAmount?: string;
+  estimatedDisplay?: string | null;
+  estimatedLabel?: string;
   readOnly?: boolean;
 }) {
   const prefix = currencyPrefixForToken(token);
@@ -284,9 +338,15 @@ function TokenCard({
         {readOnly ? (
           <p
             className="min-w-0 flex-1 text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums"
-            style={{ color: "var(--glide-muted)" }}
+            style={{
+              color: estimatedDisplay
+                ? "var(--glide-text)"
+                : "var(--glide-muted)",
+            }}
           >
-            0.00
+            {estimatedDisplay
+              ? formatEstimated(estimatedDisplay, token)
+              : "0.00"}
           </p>
         ) : (
           <input
@@ -306,8 +366,18 @@ function TokenCard({
       <p className="glide-label-mono mt-3 text-[11px] font-semibold text-[var(--glide-muted)]">
         {balance !== undefined
           ? `Balance ${formatStableAmountWithCode(balance, token)}`
-          : (receivedAmount ?? "Estimated")}
+          : (estimatedLabel ?? "Estimated")}
       </p>
     </div>
   );
+}
+
+/** Format a raw on-chain output amount with token-appropriate precision. */
+function formatEstimated(raw: string, token: StableToken): string {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return raw;
+  if (token === "cirBTC") {
+    return n.toFixed(8).replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, "");
+  }
+  return n.toFixed(2);
 }

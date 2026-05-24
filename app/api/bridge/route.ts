@@ -16,45 +16,46 @@ import { NextRequest, NextResponse } from "next/server";
 // Default Vercel timeout (10s) was returning the HTML timeout page.
 export const maxDuration = 60;
 
-/** POST { walletId, amount, network } - bridge USDC from Arc via CCTP */
+/** POST { walletId, amount, network } - bridge USDC from Arc via CCTP.
+ *  Entire body is wrapped in a try/catch so any error returns JSON. */
 export async function POST(request: NextRequest) {
-  const session = await requireSessionUser();
-  if (isAuthError(session)) return session;
-
-  const body = (await request.json()) as {
-    walletId?: string;
-    amount?: string;
-    network?: string;
-  };
-
-  const walletId = body.walletId?.trim();
-  const amount = body.amount?.trim();
-  const network = body.network?.trim().toLowerCase() as BridgeNetworkKey;
-
-  if (!walletId || !amount || !network) {
-    return NextResponse.json(
-      { error: "walletId, amount, and network are required" },
-      { status: 400 },
-    );
-  }
-
-  if (!(network in BRIDGE_NETWORKS)) {
-    return NextResponse.json({ error: "Unsupported network" }, { status: 400 });
-  }
-
-  const parsed = parseMoneyAmount(amount);
-  if (parsed === null) {
-    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
-  }
-
-  const owns = await userOwnsWallet(session.userId, walletId);
-  if (!owns) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const label = BRIDGE_NETWORKS[network].label;
-
   try {
+    const session = await requireSessionUser();
+    if (isAuthError(session)) return session;
+
+    const body = (await request.json()) as {
+      walletId?: string;
+      amount?: string;
+      network?: string;
+    };
+
+    const walletId = body.walletId?.trim();
+    const amount = body.amount?.trim();
+    const network = body.network?.trim().toLowerCase() as BridgeNetworkKey;
+
+    if (!walletId || !amount || !network) {
+      return NextResponse.json(
+        { error: "walletId, amount, and network are required" },
+        { status: 400 },
+      );
+    }
+
+    if (!(network in BRIDGE_NETWORKS)) {
+      return NextResponse.json({ error: "Unsupported network" }, { status: 400 });
+    }
+
+    const parsed = parseMoneyAmount(amount);
+    if (parsed === null) {
+      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    }
+
+    const owns = await userOwnsWallet(session.userId, walletId);
+    if (!owns) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const label = BRIDGE_NETWORKS[network].label;
+
     const { wallet } = await getOrCreateWalletForUser({
       userId: session.userId,
       email: session.email,

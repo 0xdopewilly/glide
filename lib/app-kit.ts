@@ -56,6 +56,59 @@ export function extractBridgeTx(result: BridgeResult) {
   };
 }
 
+export async function estimateArcSwap(input: {
+  walletAddress: string;
+  amountIn: string;
+  tokenIn?: "USDC" | "EURC" | "cirBTC";
+  tokenOut?: "USDC" | "EURC" | "cirBTC";
+}) {
+  const { kit, adapter, kitKey } = getGlideAppKit();
+  const tokenIn = input.tokenIn ?? "USDC";
+  const tokenOut = input.tokenOut ?? "EURC";
+
+  const estimate = await kit.estimateSwap({
+    from: { adapter, chain: ArcTestnet, address: input.walletAddress },
+    tokenIn,
+    tokenOut,
+    amountIn: input.amountIn,
+    config: { kitKey, slippageBps: 300 },
+  });
+
+  return {
+    amountOut: estimate.estimatedOutput?.amount,
+    tokenOut: estimate.estimatedOutput?.token,
+  };
+}
+
+export async function estimateArcBridge(input: {
+  walletAddress: string;
+  amount: string;
+  network: BridgeNetworkKey;
+}) {
+  const dest = BRIDGE_NETWORKS[input.network];
+  if (!dest) throw new Error("Unsupported destination network");
+
+  const apiKey = process.env.CIRCLE_API_KEY?.trim();
+  const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();
+  if (!apiKey || !entitySecret) {
+    throw new Error("Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET");
+  }
+
+  const { kit } = getGlideAppKit();
+  const bridgeAdapter = createGlideBridgeAdapter({ apiKey, entitySecret });
+  const estimate = await kit.estimateBridge({
+    from: { adapter: bridgeAdapter, chain: ArcTestnet, address: input.walletAddress },
+    to: { adapter: bridgeAdapter, chain: dest.chain, address: input.walletAddress },
+    amount: input.amount,
+    token: "USDC",
+  });
+
+  return {
+    fees: estimate.fees,
+    destination: dest.label,
+  };
+}
+
 export async function executeArcSwap(input: {
   walletAddress: string;
   amountIn: string;

@@ -26,52 +26,56 @@ function prefixFor(token: SwapToken): string {
 }
 
 /** POST { walletId, amount, tokenIn?, tokenOut? } - token swap on Arc testnet via Circle App Kit.
- *  Arc supports USDC, EURC, cirBTC. Defaults to USDC → EURC. */
+ *  Arc supports USDC, EURC, cirBTC. Defaults to USDC → EURC.
+ *  Entire body is wrapped in a try/catch so any error returns JSON
+ *  (otherwise Next.js returns its HTML error page and the client blows
+ *  up parsing it).
+ */
 export async function POST(request: NextRequest) {
-  const session = await requireSessionUser();
-  if (isAuthError(session)) return session;
-
-  const body = (await request.json()) as {
-    walletId?: string;
-    amount?: string;
-    tokenIn?: string;
-    tokenOut?: string;
-  };
-  const walletId = body.walletId?.trim();
-  const amount = body.amount?.trim();
-  const tokenIn = (body.tokenIn ?? "USDC") as SwapToken;
-  const tokenOut = (body.tokenOut ?? "EURC") as SwapToken;
-
-  if (!walletId || !amount) {
-    return NextResponse.json(
-      { error: "walletId and amount are required" },
-      { status: 400 },
-    );
-  }
-  if (!SUPPORTED_TOKENS.has(tokenIn) || !SUPPORTED_TOKENS.has(tokenOut)) {
-    return NextResponse.json(
-      { error: "Unsupported token pair" },
-      { status: 400 },
-    );
-  }
-  if (tokenIn === tokenOut) {
-    return NextResponse.json(
-      { error: "Pick two different tokens to swap" },
-      { status: 400 },
-    );
-  }
-
-  const parsed = parseMoneyAmount(amount);
-  if (parsed === null) {
-    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
-  }
-
-  const owns = await userOwnsWallet(session.userId, walletId);
-  if (!owns) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   try {
+    const session = await requireSessionUser();
+    if (isAuthError(session)) return session;
+
+    const body = (await request.json()) as {
+      walletId?: string;
+      amount?: string;
+      tokenIn?: string;
+      tokenOut?: string;
+    };
+    const walletId = body.walletId?.trim();
+    const amount = body.amount?.trim();
+    const tokenIn = (body.tokenIn ?? "USDC") as SwapToken;
+    const tokenOut = (body.tokenOut ?? "EURC") as SwapToken;
+
+    if (!walletId || !amount) {
+      return NextResponse.json(
+        { error: "walletId and amount are required" },
+        { status: 400 },
+      );
+    }
+    if (!SUPPORTED_TOKENS.has(tokenIn) || !SUPPORTED_TOKENS.has(tokenOut)) {
+      return NextResponse.json(
+        { error: "Unsupported token pair" },
+        { status: 400 },
+      );
+    }
+    if (tokenIn === tokenOut) {
+      return NextResponse.json(
+        { error: "Pick two different tokens to swap" },
+        { status: 400 },
+      );
+    }
+
+    const parsed = parseMoneyAmount(amount);
+    if (parsed === null) {
+      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+    }
+
+    const owns = await userOwnsWallet(session.userId, walletId);
+    if (!owns) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { wallet } = await getOrCreateWalletForUser({
       userId: session.userId,
       email: session.email,
