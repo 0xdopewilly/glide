@@ -1,5 +1,6 @@
 "use client";
 
+import { copyText } from "@/lib/clipboard";
 import type { GlideTransaction } from "@/lib/types";
 import { Copy, Download, ExternalLink, Share2, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -276,12 +277,8 @@ export function TransactionReceiptSheet({
 
   const handleCopyHash = async () => {
     if (!tx?.txHash) return;
-    try {
-      await navigator.clipboard.writeText(tx.txHash);
-      flash("Hash copied");
-    } catch {
-      flash("Could not copy");
-    }
+    const ok = await copyText(tx.txHash);
+    flash(ok ? "Hash copied" : "Could not copy");
   };
 
   if (!open || !tx) return null;

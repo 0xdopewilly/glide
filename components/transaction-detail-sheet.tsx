@@ -1,5 +1,6 @@
 "use client";
 
+import { copyText } from "@/lib/clipboard";
 import type { GlideTransaction } from "@/lib/types";
 import { ExternalLink, Share2, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -33,23 +34,22 @@ export function TransactionDetailSheet({
     .join("\n");
 
   const handleShare = async () => {
-    try {
-      if (navigator.share) {
+    if (navigator.share) {
+      try {
         await navigator.share({
           title: "glidepay transaction",
           text: shareText,
           url: explorerUrl,
         });
         return;
-      }
-      await navigator.clipboard.writeText(explorerUrl ?? txHash ?? shareText);
-      setShareLabel("Copied");
-      window.setTimeout(() => setShareLabel("Share"), 2000);
-    } catch {
-      if (explorerUrl) {
-        window.open(explorerUrl, "_blank", "noopener,noreferrer");
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
       }
     }
+    const ok = await copyText(explorerUrl ?? txHash ?? shareText);
+    if (!ok) return;
+    setShareLabel("Copied");
+    window.setTimeout(() => setShareLabel("Share"), 2000);
   };
 
   return (

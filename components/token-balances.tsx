@@ -44,7 +44,7 @@ export function TokenBalances({ tokens }: { tokens: GlideTokenBalance[] }) {
     (t) =>
       t.amount > 0 ||
       (t.chainId === "arc-testnet" &&
-        (t.symbol === "USDC" || t.symbol === "EURC")),
+        (t.symbol === "USDC" || t.symbol === "EURC" || t.symbol === "cirBTC")),
   );
 
   const groups = useMemo(() => groupByChain(visible), [visible]);

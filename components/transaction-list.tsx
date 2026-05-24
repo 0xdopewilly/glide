@@ -2,6 +2,7 @@
 
 import { TransactionReceiptSheet } from "@/components/transaction-receipt-sheet";
 import { activityRowMeta } from "@/lib/activity";
+import { copyText } from "@/lib/clipboard";
 import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
 import {
@@ -118,13 +119,10 @@ function TransactionRow({
   const copyHash = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!txHash) return;
-    try {
-      await navigator.clipboard.writeText(txHash);
-      setHashCopied(true);
-      window.setTimeout(() => setHashCopied(false), 2000);
-    } catch {
-      /* ignore */
-    }
+    const ok = await copyText(txHash);
+    if (!ok) return;
+    setHashCopied(true);
+    window.setTimeout(() => setHashCopied(false), 2000);
   };
 
   const canShare = Boolean(explorerUrl || txHash);

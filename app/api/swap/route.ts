@@ -8,18 +8,51 @@ import { parseMoneyAmount } from "@/lib/validation";
 import { assertSufficientBalance } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
-/** POST { walletId, amount } — USDC → EURC on Arc testnet via Circle App Kit */
+const SUPPORTED_TOKENS = new Set(["USDC", "EURC", "cirBTC"] as const);
+type SwapToken = "USDC" | "EURC" | "cirBTC";
+
+function symbolFor(token: SwapToken): string {
+  return token; // display label matches alias
+}
+
+function prefixFor(token: SwapToken): string {
+  if (token === "EURC") return "€";
+  if (token === "cirBTC") return "₿";
+  return "$";
+}
+
+/** POST { walletId, amount, tokenIn?, tokenOut? } — token swap on Arc testnet via Circle App Kit.
+ *  Arc supports USDC, EURC, cirBTC. Defaults to USDC → EURC. */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
 
-  const body = (await request.json()) as { walletId?: string; amount?: string };
+  const body = (await request.json()) as {
+    walletId?: string;
+    amount?: string;
+    tokenIn?: string;
+    tokenOut?: string;
+  };
   const walletId = body.walletId?.trim();
   const amount = body.amount?.trim();
+  const tokenIn = (body.tokenIn ?? "USDC") as SwapToken;
+  const tokenOut = (body.tokenOut ?? "EURC") as SwapToken;
 
   if (!walletId || !amount) {
     return NextResponse.json(
       { error: "walletId and amount are required" },
+      { status: 400 },
+    );
+  }
+  if (!SUPPORTED_TOKENS.has(tokenIn) || !SUPPORTED_TOKENS.has(tokenOut)) {
+    return NextResponse.json(
+      { error: "Unsupported token pair" },
+      { status: 400 },
+    );
+  }
+  if (tokenIn === tokenOut) {
+    return NextResponse.json(
+      { error: "Pick two different tokens to swap" },
       { status: 400 },
     );
   }
@@ -45,29 +78,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await assertSufficientBalance(walletId, parsed);
+    // assertSufficientBalance is USDC-only today; gate on USDC swaps only.
+    if (tokenIn === "USDC") {
+      await assertSufficientBalance(walletId, parsed);
+    }
+
+    const amountInStr = tokenIn === "cirBTC" ? String(parsed) : parsed.toFixed(2);
 
     const swap = await executeArcSwap({
       walletAddress: wallet.address,
-      amountIn: parsed.toFixed(2),
+      amountIn: amountInStr,
+      tokenIn,
+      tokenOut,
     });
 
-    const received = swap.amountOut ?? (parsed * 0.92).toFixed(2);
+    const received = swap.amountOut ?? "";
+    const inLabel = `${prefixFor(tokenIn)}${amountInStr}`;
+    const title = `Swapped ${symbolFor(tokenIn)} to ${symbolFor(tokenOut)}`;
 
     void recordTransaction({
       userId: session.userId,
       kind: "swap",
-      title: "Swapped USDC to EURC",
-      amountLabel: `−$${parsed.toFixed(2)}`,
+      title,
+      amountLabel: `−${inLabel}`,
       variant: "neutral",
       status: "completed",
       txHash: swap.txHash,
       explorerUrl: swap.explorerUrl,
       chain: "ARC-TESTNET",
-      metadata: { amountOut: received, tokenOut: "EURC" },
+      metadata: { amountOut: received, tokenIn, tokenOut },
     }).catch((err) => console.error("[Glide] swap record:", err));
 
-    void notifySwapComplete(session.userId, parsed.toFixed(2)).catch((err) =>
+    void notifySwapComplete(session.userId, amountInStr).catch((err) =>
       console.error("[Glide] swap push:", err),
     );
 
@@ -78,8 +120,8 @@ export async function POST(request: NextRequest) {
       receivedAmount: received,
       transaction: {
         id: swap.txHash,
-        title: "Swapped USDC to EURC",
-        amount: `−$${parsed.toFixed(2)}`,
+        title,
+        amount: `−${inLabel}`,
         variant: "neutral",
         meta: "Just now",
         kind: "swap",

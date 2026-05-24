@@ -5,6 +5,9 @@ export const TOKEN_LOGOS: Record<string, string> = {
   "USDC.E": "/tokens/usdc.png",
   EURC: "/tokens/eurc.png",
   "EURC.E": "/tokens/eurc.png",
+  CIRBTC: "/tokens/cirbtc.png",
+  "CIRBTC.E": "/tokens/cirbtc.png",
+  "CIR-BTC": "/tokens/cirbtc.png",
 };
 
 export function getTokenLogo(symbol: string): string | undefined {
@@ -15,5 +18,6 @@ export function getTokenDisplayName(symbol: string): string {
   const s = symbol.trim().toUpperCase();
   if (s === "USDC" || s === "USDCE" || s === "USDC.E") return "USD Coin";
   if (s === "EURC" || s === "EURC.E") return "Euro Coin";
+  if (s === "CIRBTC" || s === "CIRBTC.E" || s === "CIR-BTC") return "Circle Bitcoin";
   return symbol;
 }

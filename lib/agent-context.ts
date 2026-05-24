@@ -12,7 +12,7 @@ export type AgentHistoryMessage = {
 
 export type BridgeNetwork = "ethereum" | "base" | "polygon" | "arbitrum";
 
-export type StableSendToken = "USDC" | "EURC";
+export type StableSendToken = "USDC" | "EURC" | "cirBTC";
 
 export type SendTransfer = {
   amount: string;
@@ -144,12 +144,14 @@ export function parseMultiSendFromMessage(text: string): {
 
   const transfers: SendTransfer[] = [];
   for (const part of parts) {
-    const m = part.match(/(\d+(?:\.\d{1,2})?)\s*(usdc|eurc)\b/i);
+    const m = part.match(/(\d+(?:\.\d{1,8})?)\s*(usdc|eurc|cirbtc|cir-btc)\b/i);
     if (!m) return null;
     const n = parseMoneyAmount(m[1]);
     if (n === null || n <= 0) return null;
-    const token = m[2].toUpperCase() as StableSendToken;
-    transfers.push({ amount: n.toFixed(2), token });
+    const raw = m[2].toUpperCase();
+    const token: StableSendToken =
+      raw === "USDC" ? "USDC" : raw === "EURC" ? "EURC" : "cirBTC";
+    transfers.push({ amount: n.toString(), token });
   }
 
   if (transfers.length < 2) return null;
@@ -162,6 +164,9 @@ export function parseMultiSendFromMessage(text: string): {
 
 export function extractTokenFromText(text: string): StableSendToken | null {
   if (/\b(swap|convert)\b/i.test(text)) return null;
+  if (/\bcirbtc\b|\bcir-btc\b/i.test(text) || /\d(?:\.\d+)?cirbtc/i.test(text)) {
+    return "cirBTC";
+  }
   if (/\beurc\b/i.test(text) || /\d(?:\.\d+)?eurc/i.test(text)) return "EURC";
   if (/\busdc\b/i.test(text) || /\d(?:\.\d+)?usdc/i.test(text)) return "USDC";
   return null;
@@ -188,21 +193,24 @@ export function parseSendFromMessage(text: string): {
     .trim();
 
   const m =
-    body.match(/(\d+(?:\.\d{1,2})?)\s*(usdc|eurc)\b/i) ??
-    body.match(/(\d+(?:\.\d{1,2})?)(usdc|eurc)\b/i);
+    body.match(/(\d+(?:\.\d{1,8})?)\s*(usdc|eurc|cirbtc|cir-btc)\b/i) ??
+    body.match(/(\d+(?:\.\d{1,8})?)(usdc|eurc|cirbtc|cir-btc)\b/i);
   if (!m) return null;
 
   const n = parseMoneyAmount(m[1]);
   if (n === null || n <= 0) return null;
 
-  const token = m[2].toUpperCase() as StableSendToken;
+  const rawSym = m[2].toUpperCase();
+  const token: StableSendToken =
+    rawSym === "USDC" ? "USDC" : rawSym === "EURC" ? "EURC" : "cirBTC";
   const to = toMatch[1].trim().replace(/^@/, "");
+  const amountStr = token === "cirBTC" ? n.toString() : n.toFixed(2);
 
   if (isValidWalletAddress(to)) {
-    return { amount: n.toFixed(2), token, to };
+    return { amount: amountStr, token, to };
   }
   if (isValidUsername(normalizeUsername(to))) {
-    return { amount: n.toFixed(2), token, to };
+    return { amount: amountStr, token, to };
   }
   return null;
 }

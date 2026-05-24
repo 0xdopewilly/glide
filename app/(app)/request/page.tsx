@@ -6,6 +6,7 @@ import { StableTokenSegment } from "@/components/stable-token-segment";
 import { PLACEHOLDER_GLIDE_TAG } from "@/lib/placeholders";
 import { GlideButton } from "@/components/glide-button";
 import { NumericKeypad } from "@/components/numeric-keypad";
+import { copyText } from "@/lib/clipboard";
 import {
   currencyPrefixForToken,
   formatStableAmountWithCode,
@@ -105,7 +106,8 @@ export default function RequestPage() {
 
   const copyLink = async () => {
     if (!result?.url) return;
-    await navigator.clipboard.writeText(result.url);
+    const ok = await copyText(result.url);
+    if (!ok) return;
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);
   };

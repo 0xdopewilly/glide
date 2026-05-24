@@ -1,5 +1,6 @@
 "use client";
 
+import { copyText } from "@/lib/clipboard";
 import { ArrowDownUp, Check, Copy } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
@@ -66,13 +67,10 @@ export function ReceiveModalContent({
 
   const handleCopy = useCallback(async () => {
     if (!walletAddress) return;
-    try {
-      await navigator.clipboard.writeText(walletAddress);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
+    const ok = await copyText(walletAddress);
+    if (!ok) return;
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
   }, [walletAddress]);
 
   return (

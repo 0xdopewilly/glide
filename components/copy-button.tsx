@@ -1,6 +1,7 @@
 "use client";
 
 import { GlideButton } from "@/components/glide-button";
+import { copyText } from "@/lib/clipboard";
 import { Check, Copy } from "lucide-react";
 import { useCallback, useState } from "react";
 
@@ -16,14 +17,10 @@ export function CopyButton({
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
-    if (!value) return;
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
+    const ok = await copyText(value);
+    if (!ok) return;
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
   }, [value]);
 
   return (

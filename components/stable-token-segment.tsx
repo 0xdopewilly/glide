@@ -5,19 +5,22 @@ import type { StableToken } from "@/lib/currency-format";
 export function StableTokenSegment({
   value,
   onChange,
+  tokens = ["USDC", "EURC", "cirBTC"],
   className = "",
 }: {
   value: StableToken;
   onChange: (token: StableToken) => void;
+  /** Subset of tokens to display. Defaults to all three. */
+  tokens?: readonly StableToken[];
   className?: string;
 }) {
   return (
     <div
       className={`glide-m3-segment flex rounded-full p-1 ${className}`}
       role="tablist"
-      aria-label="Stablecoin"
+      aria-label="Token"
     >
-      {(["USDC", "EURC"] as const).map((token) => (
+      {tokens.map((token) => (
         <button
           key={token}
           type="button"

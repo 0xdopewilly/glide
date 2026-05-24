@@ -59,14 +59,18 @@ export function extractBridgeTx(result: BridgeResult) {
 export async function executeArcSwap(input: {
   walletAddress: string;
   amountIn: string;
+  tokenIn?: "USDC" | "EURC" | "cirBTC";
+  tokenOut?: "USDC" | "EURC" | "cirBTC";
 }) {
   const { kit, adapter, kitKey } = getGlideAppKit();
+  const tokenIn = input.tokenIn ?? "USDC";
+  const tokenOut = input.tokenOut ?? "EURC";
 
   try {
     const result = await kit.swap({
       from: { adapter, chain: ArcTestnet, address: input.walletAddress },
-      tokenIn: "USDC",
-      tokenOut: "EURC",
+      tokenIn,
+      tokenOut,
       amountIn: input.amountIn,
       config: {
         slippageBps: 300,

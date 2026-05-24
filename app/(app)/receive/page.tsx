@@ -1,6 +1,7 @@
 "use client";
 
 import { CopyButton } from "@/components/copy-button";
+import { copyText } from "@/lib/clipboard";
 import { FlowPage } from "@/components/flow-page";
 import { ReceiveQr } from "@/components/receive-qr";
 import { UserAvatar } from "@/components/user-avatar";
@@ -15,10 +16,14 @@ export default function ReceivePage() {
     if (!address) return;
     const text = `Pay me on glidepay: ${address}`;
     if (navigator.share) {
-      await navigator.share({ title: "glidepay", text });
-      return;
+      try {
+        await navigator.share({ title: "glidepay", text });
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
+      }
     }
-    await navigator.clipboard.writeText(address);
+    await copyText(address);
   };
 
   return (
