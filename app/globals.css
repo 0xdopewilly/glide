@@ -4,24 +4,24 @@
 
 :root {
   color-scheme: light;
-  /* glidepay light: pure white base, deep blue text + CTAs + glow. */
+  /* glidepay light: white base, prominent dark blue accents + glow. */
   --glide-bg: #ffffff;
   --glide-shell: #ffffff;
   --glide-surface: #ffffff;
   --glide-surface-elevated: #ffffff;
-  --glide-surface-container: #f5f7fb;
-  --glide-surface-container-high: #e8edf5;
+  --glide-surface-container: #eef2fb;
+  --glide-surface-container-high: #dde5f3;
   --glide-nav-surface: #ffffff;
-  --glide-primary-container: rgba(5, 36, 71, 0.10);
+  --glide-primary-container: rgba(5, 36, 71, 0.14);
   --glide-success-container: rgba(45, 153, 86, 0.14);
   --glide-text: #052447;
-  --glide-muted: #5c647c;
-  --glide-border: rgba(5, 36, 71, 0.10);
+  --glide-muted: #4a5878;
+  --glide-border: rgba(5, 36, 71, 0.18);
   --glide-input: #ffffff;
   --glide-accent: #052447;
   --glide-accent-hover: #073166;
   --glide-success: #2d9956;
-  --glide-on-nav-inactive: #6b7188;
+  --glide-on-nav-inactive: #4a5878;
   --glide-radius-sm: 12px;
   --glide-radius-md: 16px;
   --glide-radius-lg: 20px;
@@ -35,10 +35,10 @@
   --glide-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --glide-gradient-from: #052447;
   --glide-gradient-to: #1a4d8a;
-  --glide-glow-primary: rgba(5, 36, 71, 0.22);
-  --glide-glow-secondary: rgba(5, 36, 71, 0.12);
-  --glide-glow-accent: rgba(5, 36, 71, 0.16);
-  --glide-glow-warm: rgba(5, 36, 71, 0.08);
+  --glide-glow-primary: rgba(5, 36, 71, 0.42);
+  --glide-glow-secondary: rgba(5, 36, 71, 0.26);
+  --glide-glow-accent: rgba(5, 36, 71, 0.32);
+  --glide-glow-warm: rgba(5, 36, 71, 0.18);
 }
 
 .dark {
