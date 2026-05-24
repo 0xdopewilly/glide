@@ -55,7 +55,7 @@ export function SendScanSheet({
           </button>
         </div>
         <div className="overflow-y-auto px-5 pb-8 pt-4">
-          <QrScanner />
+          <QrScanner onScanned={onClose} />
         </div>
       </div>
     </div>

@@ -2,11 +2,12 @@
 
 import { parseQrPayload } from "@/lib/qr";
 import { isValidWalletAddress } from "@/lib/validation";
-import { Camera, CameraOff } from "lucide-react";
+import { Camera, CameraOff, ImagePlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const REGION_ID = "glide-qr-reader";
+const UPLOAD_REGION_ID = "glide-qr-upload-target";
 
 type ScannerStatus = "idle" | "starting" | "ready" | "error" | "unsupported";
 
@@ -47,7 +48,7 @@ function isCameraSupported(): boolean {
   return Boolean(navigator.mediaDevices?.getUserMedia);
 }
 
-export function QrScannerView() {
+export function QrScannerView({ onScanned }: { onScanned?: () => void }) {
   const router = useRouter();
   const scannerRef = useRef<{
     stop: () => Promise<void>;
@@ -55,9 +56,11 @@ export function QrScannerView() {
   } | null>(null);
   const startedRef = useRef(false);
   const cancelledRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<ScannerStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [manual, setManual] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const navigateFromQr = useCallback(
     (raw: string) => {
@@ -67,7 +70,14 @@ export function QrScannerView() {
         return;
       }
 
+      const dismissSheet = () => {
+        // Fire onScanned BEFORE navigation so the parent sheet closes first;
+        // the new URL then renders into the already-open send page cleanly.
+        onScanned?.();
+      };
+
       if (payload.type === "request") {
+        dismissSheet();
         router.push(`/pay/${payload.code}`);
         return;
       }
@@ -77,6 +87,7 @@ export function QrScannerView() {
           setErrorMessage("Invalid pay link");
           return;
         }
+        dismissSheet();
         router.push(
           buildSendUrl({
             to: payload.to,
@@ -91,9 +102,50 @@ export function QrScannerView() {
         setErrorMessage("Enter a valid wallet address");
         return;
       }
+      dismissSheet();
       router.push(buildSendUrl({ to: payload.address }));
     },
-    [router],
+    [router, onScanned],
+  );
+
+  // Decode a QR from an uploaded image file. Uses html5-qrcode's scanFile.
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      setErrorMessage(null);
+      setUploading(true);
+      try {
+        const mod = await import("html5-qrcode");
+        const Html5Qrcode = mod.Html5Qrcode;
+        if (!Html5Qrcode) {
+          setErrorMessage("Scanner library failed to load.");
+          return;
+        }
+        // scanFile needs a real DOM node to mount into; ensure one exists.
+        const target = document.getElementById(UPLOAD_REGION_ID);
+        if (!target) {
+          setErrorMessage("Couldn't initialize image scanner.");
+          return;
+        }
+        const fileScanner = new Html5Qrcode(UPLOAD_REGION_ID);
+        try {
+          const decoded = await fileScanner.scanFile(file, false);
+          navigateFromQr(decoded);
+        } catch {
+          setErrorMessage(
+            "Couldn't find a QR in that image. Try another, or paste the address.",
+          );
+        } finally {
+          try {
+            fileScanner.clear();
+          } catch {
+            /* ignore */
+          }
+        }
+      } finally {
+        setUploading(false);
+      }
+    },
+    [navigateFromQr],
   );
 
   useEffect(() => {
@@ -149,7 +201,6 @@ export function QrScannerView() {
         );
 
         if (cancelledRef.current) {
-          // Cleanup ran while we were awaiting start - stop immediately.
           await silentStop(scanner);
           scannerRef.current = null;
           return;
@@ -210,7 +261,7 @@ export function QrScannerView() {
             </span>
             <p className="px-6 text-center text-[13px] font-medium text-[var(--glide-muted)]">
               {status === "unsupported"
-                ? "Camera needs HTTPS or localhost. Paste an address below."
+                ? "Camera needs HTTPS or localhost. Paste or upload below."
                 : (errorMessage ?? "Camera unavailable.")}
             </p>
           </div>
@@ -244,11 +295,40 @@ export function QrScannerView() {
         ) : status === "starting" ? (
           "Starting camera…"
         ) : (
-          "Or paste an address below"
+          "Or paste / upload below"
         )}
       </p>
 
-      <div className="mt-6">
+      {/* Upload-image fallback. Hidden file input; the visible button triggers it. */}
+      <div id={UPLOAD_REGION_ID} className="hidden" aria-hidden />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          // Reset so picking the same file twice still triggers onChange.
+          e.target.value = "";
+          if (file) void handleFileUpload(file);
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-full border py-3 text-[11px] font-bold disabled:opacity-50"
+        style={{
+          background: "var(--glide-surface-container)",
+          borderColor: "var(--glide-border)",
+          color: "var(--glide-text)",
+        }}
+      >
+        <ImagePlus className="h-4 w-4" strokeWidth={2.5} />
+        {uploading ? "Reading image…" : "Upload QR image"}
+      </button>
+
+      <div className="mt-5">
         <label
           htmlFor="manual-address"
           className="glide-label-mono text-[11px] font-bold text-[var(--glide-muted)]"
