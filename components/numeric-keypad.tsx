@@ -15,18 +15,18 @@ export function NumericKeypad({ onKey }: { onKey: (key: string) => void }) {
   };
 
   return (
-    <div className="glide-keypad grid grid-cols-3 gap-1 px-1 pb-1">
+    <div className="grid grid-cols-3 gap-1 px-1 pb-1">
       {KEYS.flat().map((key) => (
         <button
           key={key}
           type="button"
           onClick={() => press(key)}
-          className="glide-key glide-tap flex h-[3.35rem] items-center justify-center rounded-2xl text-[1.65rem] font-medium tracking-tight"
+          className="glide-key-tap flex h-[3.6rem] items-center justify-center rounded-2xl text-[1.75rem] font-semibold tracking-tight"
           style={{ color: "var(--glide-text)" }}
           aria-label={key === "back" ? "Delete" : key}
         >
           {key === "back" ? (
-            <Delete className="h-6 w-6 opacity-80" strokeWidth={2} />
+            <Delete className="h-6 w-6 opacity-70" strokeWidth={2} />
           ) : (
             key
           )}

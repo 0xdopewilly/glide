@@ -216,47 +216,58 @@ export default function SendPage() {
   const recipientBorderClass = useMemo(() => {
     if (!recipient.trim()) {
       return recipientFocused
-        ? "border-violet-500/60 ring-2 ring-violet-500/25"
-        : "border-neutral-200/90 dark:border-white/10";
+        ? "ring-2 ring-[var(--glide-accent)]/35"
+        : "";
     }
     if (resolveState === "checking") {
-      return "border-violet-500/50 ring-2 ring-violet-500/20";
+      return "ring-2 ring-[var(--glide-accent)]/25";
     }
     if (recipientOk) {
-      return "border-emerald-500/50 ring-2 ring-emerald-500/20";
+      return "ring-2 ring-[var(--glide-success)]/40";
     }
     if (resolveState === "fail") {
-      return "border-red-400/60 ring-2 ring-red-500/20";
+      return "ring-2 ring-red-500/35";
     }
-    return "border-neutral-200/90 dark:border-white/10";
+    return "";
   }, [recipient, recipientFocused, recipientOk, resolveState]);
 
   if (step === "success") {
     return (
       <FlowPage>
-        <div className="flex flex-1 flex-col items-center px-6 pt-8 text-center font-[family-name:var(--font-jakarta)]">
-          <h1 className="text-3xl font-bold tracking-tight">Sent</h1>
+        <div className="slide-up-bouncy flex flex-1 flex-col items-center px-6 pt-8 text-center">
+          <h1 className="glide-label-mono text-[14px] font-bold text-[var(--glide-muted)]">
+            Sent
+          </h1>
           <div
-            className="mt-10 flex h-28 w-28 items-center justify-center rounded-full"
+            className="glide-pop mt-10 flex h-28 w-28 items-center justify-center rounded-full"
             style={{ background: "var(--glide-accent)" }}
           >
-            <Check className="h-14 w-14 text-white" strokeWidth={2.5} />
+            <Check
+              className="h-14 w-14"
+              strokeWidth={2.5}
+              style={{ color: "var(--glide-bg)" }}
+            />
           </div>
-          <p className="mt-10 text-base font-medium glide-muted">You paid</p>
+          <p className="glide-label-mono mt-10 text-[11px] font-semibold text-[var(--glide-muted)]">
+            You paid
+          </p>
           <p
-            className="mt-2 text-5xl font-bold tracking-tight"
+            className="mt-2 text-[56px] font-bold leading-none tracking-[-0.03em]"
             style={{ color: "var(--glide-success)" }}
           >
             {formatStableAmount(parsed, token)}
           </p>
-          <p className="mt-3 text-lg font-semibold">{recipientLabel}</p>
+          <p className="mt-4 text-[18px] font-semibold text-[var(--glide-text)]">
+            {recipientLabel}
+          </p>
           {note.trim() ? (
-            <p className="mt-2 text-sm glide-muted">&ldquo;{note.trim()}&rdquo;</p>
+            <p className="mt-2 text-sm text-[var(--glide-muted)]">
+              &ldquo;{note.trim()}&rdquo;
+            </p>
           ) : null}
           <GlideButton
             onClick={() => router.push("/")}
             className="mt-auto mb-8 max-w-sm"
-            uppercase={false}
           >
             Done
           </GlideButton>
@@ -268,32 +279,55 @@ export default function SendPage() {
   if (step === "review") {
     return (
       <FlowPage title="Review" onBack={() => setStep("amount")}>
-        <div className="flex flex-col px-5 pb-6 font-[family-name:var(--font-jakarta)]">
-          <div className="mt-6 rounded-2xl border border-neutral-200/90 bg-white/90 p-5 text-center shadow-sm dark:border-white/10 dark:bg-white/[0.06] dark:shadow-none">
+        <div className="slide-up-bouncy flex flex-col px-5 pb-6">
+          <div
+            className="mt-6 rounded-2xl border p-5 text-center"
+            style={{
+              background: "var(--glide-surface-elevated)",
+              borderColor: "var(--glide-border)",
+            }}
+          >
             <UserAvatar size="lg" />
-            <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-violet-500 dark:text-violet-300">
+            <p className="glide-label-mono mt-3 text-[11px] font-semibold text-[var(--glide-muted)]">
               Sending to
             </p>
-            <p className="mt-2 text-xl font-bold tracking-tight">{recipientLabel}</p>
-            <p className="mt-4 text-5xl font-bold tracking-tight tabular-nums">
+            <p className="mt-2 text-[20px] font-bold tracking-tight text-[var(--glide-text)]">
+              {recipientLabel}
+            </p>
+            <p className="mt-4 text-[48px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[var(--glide-text)]">
               {amountPrefix}
               {formatAmountDisplay(amount)}
             </p>
           </div>
 
-          <label className="mt-6 block text-xs font-semibold uppercase tracking-[0.1em] glide-muted">
+          <label className="glide-label-mono mt-6 block text-[11px] font-semibold text-[var(--glide-muted)]">
             Note (optional)
           </label>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Dinner, rent, thanks"
-            className="mt-2 w-full rounded-xl border border-neutral-200/90 bg-neutral-50 px-4 py-3.5 text-[16px] font-medium text-neutral-900 placeholder:text-neutral-400 focus:border-violet-500/40 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-white/10 dark:bg-white/[0.06] dark:text-white"
+            style={{
+              background: "var(--glide-input)",
+              borderColor: "var(--glide-border)",
+              color: "var(--glide-text)",
+            }}
+            className="mt-2 w-full rounded-xl border px-4 py-3.5 text-[16px] font-medium placeholder:text-[var(--glide-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--glide-accent)]/30"
           />
 
-          <div className="mt-5 flex items-center justify-between rounded-xl border border-neutral-200/90 bg-neutral-50/80 px-4 py-3.5 dark:border-white/10 dark:bg-white/[0.05]">
-            <span className="text-sm font-medium glide-muted">From</span>
-            <span className="text-sm font-bold">Glide · {token}</span>
+          <div
+            className="mt-5 flex items-center justify-between rounded-xl border px-4 py-3.5"
+            style={{
+              background: "var(--glide-surface-container)",
+              borderColor: "var(--glide-border)",
+            }}
+          >
+            <span className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+              From
+            </span>
+            <span className="text-sm font-bold text-[var(--glide-text)]">
+              Glide · {token}
+            </span>
           </div>
 
           {(localError || error) && (
@@ -307,7 +341,6 @@ export default function SendPage() {
             disabled={submitting || loading}
             variant="simple"
             className="mt-6"
-            uppercase={false}
           >
             {submitting ? "Paying…" : `Pay ${formatStableAmount(parsed, token)}`}
           </GlideButton>
@@ -322,13 +355,13 @@ export default function SendPage() {
       <div className="flex min-h-0 flex-1 flex-col px-5 pb-4 font-[family-name:var(--font-jakarta)]">
         <section className="mt-2">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] glide-muted">
+            <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
               Send money
             </p>
             <button
               type="button"
               onClick={() => setScanOpen(true)}
-              className="glide-tap inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-3 py-1.5 text-[11px] font-semibold tracking-tight text-violet-700 ring-1 ring-violet-200/80 dark:bg-white/10 dark:text-violet-300 dark:ring-white/10"
+              className="glide-tap glide-label-mono inline-flex items-center gap-1.5 rounded-full bg-[var(--glide-surface-container)] px-3 py-1.5 text-[11px] font-semibold text-[var(--glide-text)]"
             >
               <QrCode className="h-3.5 w-3.5" strokeWidth={2.5} />
               Scan QR
@@ -336,17 +369,21 @@ export default function SendPage() {
           </div>
 
           <div
-            className={`glide-input-focus mt-4 rounded-2xl border bg-white/90 p-4 shadow-sm dark:bg-white/[0.06] dark:shadow-none ${recipientBorderClass}`}
+            className={`mt-4 rounded-2xl border p-4 transition-shadow ${recipientBorderClass}`}
+            style={{
+              background: "var(--glide-surface-elevated)",
+              borderColor: "var(--glide-border)",
+            }}
           >
             <label
               htmlFor="send-recipient"
-              className="block text-[11px] font-bold uppercase tracking-[0.12em] text-violet-500 dark:text-violet-300"
+              className="glide-label-mono block text-[11px] font-bold text-[var(--glide-muted)]"
             >
               Send to
             </label>
             <div className="relative mt-2">
               {(kind === "username" || (inputLooksLikeUsername && !kind)) ? (
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-violet-600 dark:text-violet-400">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-lg font-semibold text-[var(--glide-text)]">
                   @
                 </span>
               ) : null}
@@ -361,21 +398,29 @@ export default function SendPage() {
                 autoCapitalize="off"
                 autoCorrect="off"
                 spellCheck={false}
-                className={`w-full rounded-xl border border-neutral-200/80 bg-neutral-50 py-3.5 text-center text-[16px] font-semibold tracking-tight text-neutral-900 placeholder:font-medium placeholder:text-neutral-400 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 dark:border-0 dark:bg-black/30 dark:text-white dark:placeholder:text-white/40 ${
+                style={{
+                  background: "var(--glide-input)",
+                  borderColor: "var(--glide-border)",
+                  color: "var(--glide-text)",
+                }}
+                className={`w-full rounded-xl border py-3.5 text-center text-[16px] font-semibold tracking-tight placeholder:font-medium placeholder:text-[var(--glide-muted)] focus:outline-none ${
                   kind === "username" ? "pl-8 pr-3" : "px-3"
                 } ${kind === "wallet" || isValidWalletAddress(recipient.trim()) ? "font-mono text-[14px]" : ""}`}
               />
             </div>
-            <p className="mt-2.5 text-center text-[12px] leading-snug font-medium text-neutral-600 dark:text-white/50">
+            <p className="mt-2.5 text-center text-[12px] leading-snug font-medium text-[var(--glide-muted)]">
               Or type a saved contact name
             </p>
             {resolveState === "checking" ? (
-              <p className="mt-3 text-center text-[12px] font-medium text-violet-400">
+              <p className="mt-3 text-center text-[12px] font-medium text-[var(--glide-muted)]">
                 Verifying…
               </p>
             ) : null}
             {recipientOk && kind ? (
-              <div className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-emerald-500">
+              <div
+                className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-semibold"
+                style={{ color: "var(--glide-success)" }}
+              >
                 {kind === "wallet" ? (
                   <Wallet className="h-3.5 w-3.5" />
                 ) : kind === "username" ? (
@@ -397,11 +442,14 @@ export default function SendPage() {
               hint
                 ? resolveState === "fail" || overBalance
                   ? "text-red-400"
-                  : resolveState === "checking"
-                    ? "text-violet-400"
-                    : "text-emerald-500/90"
-                : "glide-muted"
+                  : "text-[var(--glide-muted)]"
+                : "text-[var(--glide-muted)]"
             }`}
+            style={
+              hint && recipientOk && !overBalance
+                ? { color: "var(--glide-success)" }
+                : undefined
+            }
           >
             {hint ?? `Balance ${formatStableAmount(tokenBalance, token)}`}
           </p>
@@ -413,15 +461,19 @@ export default function SendPage() {
           </div>
         ) : null}
 
-        <div className="glide-amount-display mt-4 flex flex-col items-center">
-          <span className="text-sm font-semibold uppercase tracking-[0.12em] glide-muted">
+        <div className="mt-4 flex flex-col items-center">
+          <span className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
             Amount · {token}
           </span>
-          <p className="mt-2 text-[56px] font-bold leading-none tracking-tight">
+          <p
+            key={amount}
+            className="glide-pop mt-2 text-[64px] font-bold leading-none tracking-[-0.03em]"
+            style={{ color: "var(--glide-text)" }}
+          >
             <AnimatedAmount
               value={formatAmountDisplay(amount)}
               prefix={amountPrefix}
-              prefixClassName="text-[32px] font-bold text-neutral-400 dark:text-white/50"
+              prefixClassName="text-[36px] font-bold text-[var(--glide-muted)]"
             />
           </p>
         </div>
