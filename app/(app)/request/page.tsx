@@ -48,19 +48,29 @@ export default function RequestPage() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onKey = useCallback((key: string) => {
-    setAmount((prev) => {
-      if (key === "back") {
-        if (prev.length <= 1) return "0";
-        const next = prev.slice(0, -1);
-        return next === "" || next === "." ? "0" : next;
-      }
-      if (key === "." && prev.includes(".")) return prev;
-      if (prev === "0" && key !== ".") return key;
-      if (prev.includes(".") && prev.split(".")[1]?.length >= 2) return prev;
-      return prev + key;
-    });
-  }, []);
+  // cirBTC needs up to 8 decimal places; USDC/EURC are 2.
+  const maxDecimals = token === "cirBTC" ? 8 : 2;
+  const onKey = useCallback(
+    (key: string) => {
+      setAmount((prev) => {
+        if (key === "back") {
+          if (prev.length <= 1) return "0";
+          const next = prev.slice(0, -1);
+          return next === "" || next === "." ? "0" : next;
+        }
+        if (key === "." && prev.includes(".")) return prev;
+        if (prev === "0" && key !== ".") return key;
+        if (
+          prev.includes(".") &&
+          (prev.split(".")[1]?.length ?? 0) >= maxDecimals
+        ) {
+          return prev;
+        }
+        return prev + key;
+      });
+    },
+    [maxDecimals],
+  );
 
   const parsed = parseFloat(amount) || 0;
   const qrSrc = result?.url

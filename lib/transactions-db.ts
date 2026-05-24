@@ -31,14 +31,18 @@ export async function recordTransaction(input: RecordTransactionInput) {
       },
     });
     if (existing) {
+      // PRESERVE the existing amountLabel/title. /api/send writes them with the
+      // correct token (USDC / EURC / cirBTC); Circle sync infers and can default
+      // to the wrong token when Circle omits the symbol. Never let sync clobber
+      // a manually-recorded label.
       const row = await prisma.transaction.update({
         where: { id: existing.id },
         data: {
           status: input.status ?? existing.status,
           txHash: input.txHash ?? existing.txHash,
           explorerUrl: input.explorerUrl ?? existing.explorerUrl,
-          amountLabel: input.amountLabel,
-          title: input.title,
+          amountLabel: existing.amountLabel || input.amountLabel,
+          title: existing.title || input.title,
         },
       });
       return { row, isNew: false };
@@ -50,16 +54,16 @@ export async function recordTransaction(input: RecordTransactionInput) {
       where: { userId: input.userId, txHash: input.txHash },
     });
     if (existing) {
+      // Same rule for the txHash-matched path: keep the user-visible labels.
       const row = await prisma.transaction.update({
         where: { id: existing.id },
         data: {
           status: input.status ?? existing.status,
           explorerUrl: input.explorerUrl ?? existing.explorerUrl,
-          // Only stamp circleTransactionId if this row doesn't already have one
-          // AND no OTHER row anywhere holds it (the column is currently @unique
-          // globally; safe to drop once schema migration ships).
           circleTransactionId:
             existing.circleTransactionId ?? input.circleTransactionId,
+          amountLabel: existing.amountLabel || input.amountLabel,
+          title: existing.title || input.title,
         },
       });
       return { row, isNew: false };

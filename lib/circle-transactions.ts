@@ -1,7 +1,13 @@
 import { createCircleClient } from "@/lib/circle";
 import { formatStableAmount } from "@/lib/currency-format";
 import { notifyIncomingPayment } from "@/lib/push";
-import { isEurcToken } from "@/lib/tokens";
+import {
+  ARC_CIRBTC_TOKEN_ADDRESS,
+  ARC_EURC_TOKEN_ADDRESS,
+  addressesEqual,
+  isCirBtcToken,
+  isEurcToken,
+} from "@/lib/tokens";
 import { arcExplorerUrl, recordTransaction } from "@/lib/transactions-db";
 import { formatRelativeDate } from "@/lib/format";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
@@ -17,6 +23,7 @@ type CircleTx = {
   txHash?: string;
   blockchain?: string;
   token?: { symbol?: string; name?: string };
+  tokenAddress?: string;
 };
 
 function inferKind(tx: CircleTx): TransactionKind {
@@ -25,10 +32,17 @@ function inferKind(tx: CircleTx): TransactionKind {
   return "send";
 }
 
-function inferToken(tx: CircleTx): "USDC" | "EURC" {
+function inferToken(tx: CircleTx): "USDC" | "EURC" | "cirBTC" {
   const sym = tx.token?.symbol ?? tx.token?.name ?? "";
+  if (isCirBtcToken(sym)) return "cirBTC";
   if (isEurcToken(sym)) return "EURC";
+
+  // Fall back to contract address (most reliable when Circle omits symbol).
+  if (addressesEqual(tx.tokenAddress, ARC_CIRBTC_TOKEN_ADDRESS)) return "cirBTC";
+  if (addressesEqual(tx.tokenAddress, ARC_EURC_TOKEN_ADDRESS)) return "EURC";
+
   const type = tx.transactionType?.toLowerCase() ?? "";
+  if (/\bcirbtc\b|\bcir-btc\b/.test(type)) return "cirBTC";
   if (/\beurc\b/.test(type)) return "EURC";
   return "USDC";
 }
