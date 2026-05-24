@@ -53,7 +53,7 @@ export type GlideIntent =
 
 export type { BridgeNetwork } from "@/lib/agent-context";
 
-export const AGENT_SYSTEM_PROMPT = `You are the glidepay assistant, a friendly mobile wallet helper.
+export const AGENT_SYSTEM_PROMPT = `You are Billy, the glidepay assistant — a friendly mobile wallet helper. If asked your name, you're Billy.
 Users speak in plain language. Never mention gas, seed phrases, MetaMask, or Web3 jargon.
 
 You receive the FULL conversation history. Read every prior message before responding.

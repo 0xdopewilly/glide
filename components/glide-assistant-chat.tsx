@@ -28,7 +28,7 @@ const WELCOME: StoredChatMessage = {
   id: "welcome",
   role: "assistant",
   kind: "text",
-  text: "Hi! I'm the glidepay assistant — send, request, split bills, swap, or bridge. What do you need?",
+  text: "Hi! I'm Billy — send, request, split bills, swap, or bridge. What do you need?",
 };
 
 const QUICK_PROMPTS = [
@@ -487,7 +487,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           id: `err-${Date.now()}`,
           role: "assistant",
           kind: "text",
-          text: "Couldn't reach the assistant. Try again.",
+          text: "Couldn't reach Billy. Try again.",
         });
       } finally {
         setBusy(false);
@@ -578,7 +578,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
               <Sparkles className="h-[18px] w-[18px]" />
             </span>
             <div>
-              <p className="text-base font-semibold tracking-tight">glidepay assistant</p>
+              <p className="text-base font-semibold tracking-tight">Billy</p>
               <p className="text-xs glide-muted">Send, swap, bridge. Just ask.</p>
             </div>
           </div>
@@ -650,14 +650,14 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           }}
         >
           <label htmlFor="glide-assistant-input" className="sr-only">
-            Message the assistant
+            Message Billy
           </label>
           <input
             ref={inputRef}
             id="glide-assistant-input"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Message the assistant…"
+            placeholder="Message Billy…"
             disabled={busy}
             className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-[15px] font-medium placeholder:font-normal focus:outline-none disabled:opacity-60"
             style={{ color: "var(--glide-text)" }}
