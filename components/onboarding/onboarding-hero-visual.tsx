@@ -8,12 +8,12 @@ export function OnboardingHeroVisual({ step }: { step: number }) {
         aria-hidden
       />
       <Image
-        src="/glidepay-logo.png"
+        src="/glidepay-wordmark.png"
         alt="glidepay"
-        width={180}
-        height={180}
+        width={1205}
+        height={397}
         priority
-        className="glide-scale-in relative z-10 h-44 w-44 rounded-3xl shadow-2xl"
+        className="glide-scale-in relative z-10 h-24 w-auto"
       />
     </div>
   );

@@ -55,12 +55,12 @@ export function AppHeader({
       aria-label="glidepay home"
     >
       <Image
-        src="/glidepay-logo.png"
+        src="/glidepay-wordmark.png"
         alt="glidepay"
-        width={40}
-        height={40}
+        width={1205}
+        height={397}
         priority
-        className="h-10 w-10 rounded-xl"
+        className="h-7 w-auto"
       />
     </Link>
   ) : (

@@ -43,28 +43,28 @@
 
 .dark {
   color-scheme: dark;
-  /* glidepay dark: deep midnight navy, white CTAs, friendly contrast. */
-  --glide-bg: #0a1530;
-  --glide-shell: #0e1a3a;
-  --glide-surface: #142450;
-  --glide-surface-elevated: #1a2c5e;
-  --glide-surface-container: #122046;
-  --glide-surface-container-high: #1f3470;
-  --glide-nav-surface: #0e1a3a;
+  /* glidepay dark: near-black neutral. Navy is the brand color (wordmark), not the bg. */
+  --glide-bg: #08090c;
+  --glide-shell: #0b0c10;
+  --glide-surface: #13141a;
+  --glide-surface-elevated: #181a21;
+  --glide-surface-container: #14161c;
+  --glide-surface-container-high: #1d1f27;
+  --glide-nav-surface: #0b0c10;
   --glide-primary-container: rgba(255, 255, 255, 0.10);
   --glide-success-container: rgba(74, 222, 128, 0.14);
-  --glide-text: #ffffff;
-  --glide-muted: #8b95b5;
-  --glide-border: rgba(255, 255, 255, 0.10);
-  --glide-input: rgba(255, 255, 255, 0.06);
+  --glide-text: #f5f6f8;
+  --glide-muted: #8a8e96;
+  --glide-border: rgba(255, 255, 255, 0.08);
+  --glide-input: rgba(255, 255, 255, 0.04);
   --glide-accent: #ffffff;
   --glide-accent-hover: #ebebed;
   --glide-success: #4ade80;
-  --glide-on-nav-inactive: rgba(255, 255, 255, 0.50);
+  --glide-on-nav-inactive: rgba(255, 255, 255, 0.45);
   --glide-gradient-from: #1e3a8a;
   --glide-gradient-to: #3b5cca;
   --glide-glow-primary: rgba(255, 255, 255, 0.18);
-  --glide-glow-secondary: rgba(59, 92, 202, 0.20);
+  --glide-glow-secondary: rgba(255, 255, 255, 0.10);
   --glide-glow-accent: rgba(255, 255, 255, 0.10);
   --glide-glow-warm: rgba(255, 255, 255, 0.06);
 }
