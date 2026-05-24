@@ -65,7 +65,7 @@ export function TokenBalances({ tokens }: { tokens: GlideTokenBalance[] }) {
                 {meta.label}
               </p>
             </div>
-            <ul className="flex flex-col">
+            <ul className="glide-stagger flex flex-col">
               {chainTokens.map((token) => (
                 <li key={`${chainId}-${token.symbol}`}>
                   <TokenRow token={token} />

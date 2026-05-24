@@ -40,7 +40,7 @@ export function BalanceHero({
         </button>
       </div>
       <h1
-        className={`mt-2 text-[3.5rem] font-bold leading-[1.05] tracking-[-0.04em] text-[var(--glide-text)] sm:text-[3.75rem] ${
+        className={`glide-scale-in mt-2 text-[3.5rem] font-bold leading-[1.05] tracking-[-0.04em] text-[var(--glide-text)] sm:text-[3.75rem] ${
           loading ? "opacity-50" : ""
         } ${hideBalance ? "select-none blur-md" : ""}`}
         aria-hidden={hideBalance}

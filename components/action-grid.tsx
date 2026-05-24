@@ -14,14 +14,14 @@ export function ActionGrid() {
   return (
     <nav
       aria-label="Quick actions"
-      className="mt-6 flex items-start justify-between gap-2"
+      className="glide-stagger mt-6 flex items-start justify-between gap-2"
     >
       {ACTIONS.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
           href={href}
           prefetch
-          className="glide-tap group flex flex-1 flex-col items-center gap-2 active:scale-[0.96]"
+          className="glide-tap group flex flex-1 flex-col items-center gap-2"
         >
           <span
             className="flex h-14 w-14 items-center justify-center rounded-full border bg-[var(--glide-surface-elevated)] text-[var(--glide-text)] transition-colors group-hover:bg-[var(--glide-surface-container-high)]"

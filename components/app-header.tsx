@@ -1,6 +1,5 @@
 "use client";
 
-import { GlideLogo } from "@/components/glide-logo";
 import { headerIconButtonClassName } from "@/components/header-icon-button";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -51,11 +50,12 @@ export function AppHeader({
   ) : showLogo ? (
     <Link
       href="/"
-      className="glide-tap inline-flex min-w-0 items-center gap-2.5 rounded-full py-1 pr-2 transition-opacity hover:opacity-90"
+      className="glide-tap inline-flex min-w-0 items-center rounded-full py-1 transition-opacity hover:opacity-90"
       aria-label="glidepay home"
     >
-      <GlideLogo size="sm" linked={false} glow={false} />
-      <span className="text-[18px] font-extrabold tracking-[-0.02em]">glidepay</span>
+      <span className="text-[22px] font-black tracking-[-0.04em] text-[var(--glide-text)]">
+        glidepay<span className="text-[var(--glide-accent)]">.</span>
+      </span>
     </Link>
   ) : (
     <span className="h-10 w-10 shrink-0" aria-hidden />
