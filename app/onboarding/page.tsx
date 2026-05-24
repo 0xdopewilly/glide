@@ -34,6 +34,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user, ready } = useAuth();
   const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
 
   const isLast = step === SLIDES.length - 1;
   const slide = SLIDES[step];
@@ -47,10 +48,12 @@ export default function OnboardingPage() {
       router.push("/sign-up");
       return;
     }
+    setDirection("forward");
     setStep((s) => Math.min(s + 1, SLIDES.length - 1));
   }, [isLast, router]);
 
   const goBack = useCallback(() => {
+    setDirection("back");
     setStep((s) => Math.max(s - 1, 0));
   }, []);
 
@@ -71,7 +74,12 @@ export default function OnboardingPage() {
           </button>
         </header>
 
-        <div key={step} className="flex min-h-0 flex-col justify-center">
+        <div
+          key={step}
+          className={`flex min-h-0 flex-col justify-center ${
+            direction === "forward" ? "slide-from-right" : "slide-from-left"
+          }`}
+        >
           <OnboardingHeroVisual step={step} />
           <div className="px-6 pt-2">
             <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
