@@ -11,6 +11,7 @@ import { TokenIcon } from "@/components/token-icon";
 import { useWallet } from "@/context/wallet-context";
 import { BRIDGE_KEY_TO_CHAIN } from "@/lib/chain-meta";
 import type { BridgeNetworkKey } from "@/lib/app-kit";
+import { playSuccessChime } from "@/lib/sound";
 import { ArrowDown, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -48,7 +49,10 @@ export default function BridgePage() {
     clearError();
     const ok = await bridgeMoney(amount, network);
     setSubmitting(false);
-    if (ok) setStep("success");
+    if (ok) {
+      setStep("success");
+      playSuccessChime();
+    }
   };
 
   const useMax = () => {

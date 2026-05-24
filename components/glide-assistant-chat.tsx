@@ -20,6 +20,7 @@ import {
   writeChatHistory,
   type StoredChatMessage,
 } from "@/lib/chat-cache";
+import { playSuccessChime } from "@/lib/sound";
 import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowUp, Sparkles } from "lucide-react";
@@ -132,6 +133,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     (msg: StoredChatMessage) => {
       setMessages((prev) => [...prev, msg]);
       scrollToEnd();
+      if (msg.kind === "action_success") playSuccessChime();
     },
     [scrollToEnd],
   );
