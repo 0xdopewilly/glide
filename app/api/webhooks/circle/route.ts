@@ -60,9 +60,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
+  console.log("[Glide webhook] notificationType:", payload.notificationType);
+  console.log("[Glide webhook] notification:", JSON.stringify(payload.notification));
+
   const n = payload.notification;
-  if (!n || n.transactionType !== "INBOUND") {
-    return NextResponse.json({ ok: true, ignored: "not inbound" });
+  if (!n) {
+    return NextResponse.json({ ok: true, ignored: "no notification body" });
+  }
+  if (n.transactionType && n.transactionType !== "INBOUND") {
+    return NextResponse.json({
+      ok: true,
+      ignored: `transactionType=${n.transactionType}`,
+    });
   }
   if (n.state && n.state !== "CONFIRMED" && n.state !== "COMPLETE") {
     return NextResponse.json({ ok: true, ignored: `state=${n.state}` });
@@ -74,10 +83,17 @@ export async function POST(request: NextRequest) {
   const sourceTxHash = n.txHash;
 
   if (!chain || !destinationAddress || !amount || !sourceTxHash) {
-    return NextResponse.json(
-      { error: "missing required fields" },
-      { status: 400 },
-    );
+    console.log("[Glide webhook] missing fields", {
+      chain,
+      destinationAddress,
+      amount,
+      sourceTxHash,
+    });
+    return NextResponse.json({
+      ok: true,
+      ignored: "missing required fields",
+      seen: { chain, destinationAddress, amount, sourceTxHash },
+    });
   }
 
   const result = await handleIncomingUsdc({
@@ -87,5 +103,6 @@ export async function POST(request: NextRequest) {
     sourceTxHash,
   });
 
+  console.log("[Glide webhook] sweep result:", result);
   return NextResponse.json({ ok: true, ...result });
 }
