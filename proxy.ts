@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/api/health/db",
   "/api/health/kit",
+  "/api/webhooks/(.*)",
 ]);
 
 /** Dev instance on Vercel - no custom domain in Clerk; allow these origins explicitly. */
