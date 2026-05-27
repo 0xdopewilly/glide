@@ -7,7 +7,7 @@ import {
 } from "@/lib/circle";
 import { prisma } from "@/lib/db";
 import { notifyIncomingFromChain } from "@/lib/push";
-import { findUserByReceiveAddress } from "@/lib/users";
+import { findUserByReceiveAddress, getUserById } from "@/lib/users";
 
 const RECEIVE_TO_BRIDGE: Record<ReceiveChainKey, BridgeNetworkKey> = {
   base: "base",
@@ -56,10 +56,19 @@ export async function handleIncomingUsdc(event: IncomingTransfer): Promise<{
   });
   if (existing) return { status: "duplicate" };
 
+  const dbUser = await getUserById(owner.userId);
+  if (!dbUser?.circleWalletAddress) {
+    return {
+      status: "failed",
+      detail: "user has no Arc wallet to mint to",
+    };
+  }
+
   try {
     const result = await sweepIncomingToArc({
       sourceNetwork: bridgeKey,
-      walletAddress: event.destinationAddress,
+      sourceAddress: event.destinationAddress,
+      destinationAddress: dbUser.circleWalletAddress,
       amount: event.amount,
     });
 

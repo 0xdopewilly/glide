@@ -181,10 +181,13 @@ export async function executeArcSwap(input: {
  * This is the *inbound* direction (opposite of executeArcBridge). Triggered
  * when a Circle webhook fires on inbound USDC at the user's per-chain receive
  * address. Uses CCTP V2 Fast Transfer (default) so the sweep lands on Arc in
- * <60s. Same shared address on both ends (Circle SCA cross-EVM property). */
+ * <60s. The mint recipient is the user's *existing* Arc wallet address — note
+ * that Circle SCAs do NOT share addresses across EVM chains, so source and
+ * destination addresses are distinct. */
 export async function sweepIncomingToArc(input: {
   sourceNetwork: BridgeNetworkKey;
-  walletAddress: string;
+  sourceAddress: string;
+  destinationAddress: string;
   amount: string;
 }) {
   const source = BRIDGE_NETWORKS[input.sourceNetwork];
@@ -203,12 +206,12 @@ export async function sweepIncomingToArc(input: {
     from: {
       adapter: bridgeAdapter,
       chain: source.chain,
-      address: input.walletAddress,
+      address: input.sourceAddress,
     },
     to: {
       adapter: bridgeAdapter,
       chain: ArcTestnet,
-      address: input.walletAddress,
+      address: input.destinationAddress,
     },
     amount: input.amount,
     token: "USDC",
