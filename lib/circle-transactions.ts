@@ -97,16 +97,52 @@ export async function syncCircleTransactionsToDb(
     const token = inferToken(tx);
     const mapped = mapCircleTransaction(tx);
 
-    // Universal Receive: if this Arc INBOUND is the tail of a CCTP sweep we
-    // already recorded from the webhook, skip it. The webhook owns the title,
-    // badge ("via Base"), and push notification — sync would duplicate all of
-    // them and overwrite the friendly title with a CCTP forwarder address.
-    if (mapped.kind === "receive" && mapped.txHash) {
-      const sweeped = await prisma.transaction.findFirst({
-        where: { userId, txHash: mapped.txHash },
-        select: { originChain: true },
-      });
-      if (sweeped?.originChain) continue;
+    // Universal Receive: skip Arc INBOUND mints that are CCTP sweep tails.
+    // The webhook already created the activity row + fired the push - sync
+    // would otherwise duplicate both, even if our pending row hasn't yet been
+    // stamped with the Arc-side txHash (race: sync runs between claim and
+    // completeSweep). Match by amount on any originChain row for this user
+    // created in the last 15 min - cross-chain sweeps are rare enough that
+    // amount + recency is a reliable signature.
+    if (mapped.kind === "receive") {
+      // First: direct txHash match (fast path, post-sweep).
+      if (mapped.txHash) {
+        const byHash = await prisma.transaction.findFirst({
+          where: { userId, txHash: mapped.txHash },
+          select: { originChain: true },
+        });
+        if (byHash?.originChain) continue;
+      }
+
+      // Then: pending bridge claim (race window before sweep stamps txHash).
+      const amountMagnitude = mapped.amount.replace(/[^0-9.]/g, "");
+      if (amountMagnitude) {
+        const pending = await prisma.transaction.findFirst({
+          where: {
+            userId,
+            originChain: { not: null },
+            amountLabel: { contains: amountMagnitude },
+            createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) },
+          },
+          orderBy: { createdAt: "desc" },
+          select: { id: true, txHash: true },
+        });
+        if (pending) {
+          // Adopt the Arc-side mint metadata onto our existing row so future
+          // syncs match via the fast txHash path.
+          if (!pending.txHash && mapped.txHash) {
+            await prisma.transaction.update({
+              where: { id: pending.id },
+              data: {
+                txHash: mapped.txHash,
+                explorerUrl: mapped.explorerUrl ?? null,
+                circleTransactionId: tx.id,
+              },
+            });
+          }
+          continue;
+        }
+      }
     }
 
     // Resolve the counterparty's display label so the activity row reads
