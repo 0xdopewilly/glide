@@ -129,7 +129,13 @@ export async function sweepStuckBalance(input: {
   if (balance <= 0) return { status: "nothing_to_sweep" };
 
   const amount = balance.toFixed(2);
-  const syntheticTxHash = `manual-${input.userId}-${input.chain}-${Date.now()}`;
+
+  // Deterministic synthetic txHash: two clicks within the same 90s bucket
+  // collide on the DB unique constraint, so rapid double-taps can't trigger
+  // two bridges. Different from webhook txHashes (real 0x... hashes) so
+  // never collides with real events.
+  const bucket = Math.floor(Date.now() / 90_000);
+  const syntheticTxHash = `manual-${receive.walletId}-${bucket}`;
 
   const claim = await claimIncoming({
     circleBlockchain: def.circleBlockchain,
@@ -141,6 +147,20 @@ export async function sweepStuckBalance(input: {
   if (claim.status !== "claimed") {
     if (claim.status === "duplicate") return { status: "in_progress" };
     return { status: "failed", detail: claim.status };
+  }
+
+  // Final safety net: re-check the source-chain balance just before issuing
+  // the bridge. If it dropped (someone else already swept), abort cleanly.
+  const recheck = await fetchUsdcBalanceAnyChain(receive.walletId);
+  if (recheck < balance) {
+    await prisma.transaction.update({
+      where: { id: claim.transactionId },
+      data: {
+        status: "skipped",
+        metadata: { error: "balance changed before sweep" },
+      },
+    });
+    return { status: "in_progress" };
   }
 
   const result = await completeSweep({
