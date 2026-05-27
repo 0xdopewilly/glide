@@ -7,7 +7,12 @@ import {
 } from "@/lib/circle";
 import { prisma } from "@/lib/db";
 import { notifyIncomingFromChain } from "@/lib/push";
-import { findUserByReceiveAddress, getUserById } from "@/lib/users";
+import {
+  findUserByReceiveAddress,
+  getOrCreateReceiveAddress,
+  getUserById,
+} from "@/lib/users";
+import { fetchUsdcBalanceAnyChain } from "@/lib/wallet-service";
 
 const RECEIVE_TO_BRIDGE: Record<ReceiveChainKey, BridgeNetworkKey> = {
   base: "base",
@@ -85,6 +90,73 @@ export async function claimIncoming(event: IncomingTransfer): Promise<ClaimResul
     }
     throw err;
   }
+}
+
+/** Manual rescue sweep for funds already sitting on a receive chain whose
+ * webhook events were already delivered (so handleIncomingUsdc won't fire
+ * again). Triggers a single bridge of the full current balance. */
+export async function sweepStuckBalance(input: {
+  userId: string;
+  chain: ReceiveChainKey;
+}): Promise<
+  | { status: "swept"; amount: string; transactionId: string }
+  | { status: "nothing_to_sweep" }
+  | { status: "in_progress" }
+  | { status: "no_arc_wallet" }
+  | { status: "failed"; detail: string }
+> {
+  const def = RECEIVE_CHAINS[input.chain];
+  const bridgeKey = RECEIVE_TO_BRIDGE[input.chain];
+  const chainLabel = def.label;
+
+  const receive = await getOrCreateReceiveAddress(input.userId, input.chain);
+  const dbUser = await getUserById(input.userId);
+  if (!dbUser?.circleWalletAddress) return { status: "no_arc_wallet" };
+
+  // If a bridge claim is already in flight for this user+chain, bail.
+  const inFlight = await prisma.transaction.findFirst({
+    where: {
+      userId: input.userId,
+      originChain: chainLabel,
+      status: "pending",
+      createdAt: { gte: new Date(Date.now() - 5 * 60 * 1000) },
+    },
+    select: { id: true },
+  });
+  if (inFlight) return { status: "in_progress" };
+
+  const balance = await fetchUsdcBalanceAnyChain(receive.walletId);
+  if (balance <= 0) return { status: "nothing_to_sweep" };
+
+  const amount = balance.toFixed(2);
+  const syntheticTxHash = `manual-${input.userId}-${input.chain}-${Date.now()}`;
+
+  const claim = await claimIncoming({
+    circleBlockchain: def.circleBlockchain,
+    destinationAddress: receive.address,
+    amount,
+    sourceTxHash: syntheticTxHash,
+  });
+
+  if (claim.status !== "claimed") {
+    if (claim.status === "duplicate") return { status: "in_progress" };
+    return { status: "failed", detail: claim.status };
+  }
+
+  const result = await completeSweep({
+    transactionId: claim.transactionId,
+    userId: claim.userId,
+    sourceNetwork: bridgeKey,
+    sourceAddress: receive.address,
+    arcAddress: claim.arcAddress,
+    amount,
+    chainLabel,
+  });
+
+  if (result.status === "swept") {
+    return { status: "swept", amount, transactionId: claim.transactionId };
+  }
+  return { status: "failed", detail: result.detail };
 }
 
 /** Run the actual CCTP bridge, then update the claimed row + notify the user.

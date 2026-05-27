@@ -128,6 +128,22 @@ export async function fetchUsdcBalance(walletId: string): Promise<number> {
   return tokens.find((t) => isUsdcToken(t.symbol))?.amount ?? 0;
 }
 
+/** Raw USDC balance on any-chain wallet (returns 0 if no USDC token found).
+ * Unlike fetchUsdcBalance which assumes the Arc display set, this reads any
+ * supported chain — used by Universal Receive's manual sweep on receive
+ * wallets that aren't on Arc. */
+export async function fetchUsdcBalanceAnyChain(
+  walletId: string,
+): Promise<number> {
+  const rows = await fetchTokenRows(walletId);
+  let total = 0;
+  for (const row of rows) {
+    if (Number.isNaN(row.amount) || row.amount <= 0) continue;
+    if (isUsdcToken(normalizeTokenSymbol(row.symbol))) total += row.amount;
+  }
+  return total;
+}
+
 export async function fetchTokenBalance(
   walletId: string,
   symbol: string,

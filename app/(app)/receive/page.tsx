@@ -15,6 +15,7 @@ type ReceiveAddress = {
   circleBlockchain: string;
   walletId: string;
   address: string;
+  usdcBalance?: number;
 };
 
 type ChainTab = {
@@ -22,6 +23,7 @@ type ChainTab = {
   label: string;
   address: string;
   hint: string;
+  usdcBalance?: number;
 };
 
 export default function ReceivePage() {
@@ -30,19 +32,29 @@ export default function ReceivePage() {
 
   const [extras, setExtras] = useState<ReceiveAddress[]>([]);
   const [selected, setSelected] = useState<string>("arc");
+  const [sweeping, setSweeping] = useState(false);
+  const [sweepMsg, setSweepMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!arcAddress) return;
-    let active = true;
-    fetch("/api/receive-addresses")
+  const refreshAddresses = () => {
+    if (!arcAddress) return Promise.resolve();
+    return fetch("/api/receive-addresses")
       .then((r) => (r.ok ? r.json() : null))
       .then((json: { addresses?: ReceiveAddress[] } | null) => {
-        if (active && json?.addresses) setExtras(json.addresses);
+        if (json?.addresses) setExtras(json.addresses);
       })
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    let active = true;
+    if (!arcAddress) return;
+    void refreshAddresses().then(() => {
+      if (!active) return;
+    });
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arcAddress]);
 
   const tabs: ChainTab[] = [
@@ -57,11 +69,45 @@ export default function ReceivePage() {
       label: e.label,
       address: e.address,
       hint: `USDC on ${e.label} — auto-bridges to Arc`,
+      usdcBalance: e.usdcBalance,
     })),
   ];
 
   const active = tabs.find((t) => t.key === selected) ?? tabs[0];
   const address = active.address;
+  const stuckBalance = active.key !== "arc" ? (active.usdcBalance ?? 0) : 0;
+
+  const handleSweep = async () => {
+    if (sweeping) return;
+    setSweeping(true);
+    setSweepMsg(null);
+    try {
+      const res = await fetch("/api/receive/sweep", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chain: active.key }),
+      });
+      const json = (await res.json()) as {
+        status?: string;
+        amount?: string;
+        detail?: string;
+      };
+      if (json.status === "swept") {
+        setSweepMsg(`Bridged $${json.amount} to Arc.`);
+      } else if (json.status === "nothing_to_sweep") {
+        setSweepMsg("Nothing to sweep.");
+      } else if (json.status === "in_progress") {
+        setSweepMsg("Sweep already in progress.");
+      } else {
+        setSweepMsg(json.detail ?? "Sweep failed.");
+      }
+      await refreshAddresses();
+    } catch {
+      setSweepMsg("Sweep failed.");
+    } finally {
+      setSweeping(false);
+    }
+  };
 
   const share = async () => {
     if (!address) return;
@@ -150,6 +196,47 @@ export default function ReceivePage() {
             </p>
           ) : null}
         </div>
+
+        {active.key !== "arc" ? (
+          <div
+            className="mt-3 rounded-2xl border px-4 py-4"
+            style={{
+              background: "var(--glide-surface-elevated)",
+              borderColor: "var(--glide-border)",
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+                  Stuck on {active.label}
+                </p>
+                <p className="mt-1 text-[18px] font-bold tabular-nums tracking-tight text-[var(--glide-text)]">
+                  ${stuckBalance.toFixed(2)} USDC
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleSweep()}
+                disabled={sweeping || stuckBalance <= 0}
+                className="glide-tap glide-label-mono rounded-full px-4 py-2 text-[11px] font-bold transition-opacity disabled:opacity-40"
+                style={{
+                  background: "var(--glide-accent)",
+                  color: "var(--glide-bg)",
+                }}
+              >
+                {sweeping ? "Sweeping…" : "Sweep to Arc"}
+              </button>
+            </div>
+            {sweepMsg ? (
+              <p
+                className="glide-label-mono mt-3 text-[10px] font-semibold"
+                style={{ color: "var(--glide-muted)" }}
+              >
+                {sweepMsg}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <CopyButton value={address} label="Copy address" className="mt-4 w-full" />
 
