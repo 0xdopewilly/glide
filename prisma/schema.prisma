@@ -151,6 +151,10 @@ model Transaction {
   /// Source chain when funds arrived via cross-chain CCTP sweep (e.g. "Base").
   /// Null for native Arc transfers.
   originChain         String?
+  /// Source-chain txHash for Universal Receive. Unique so Circle webhook
+  /// retries can't trigger duplicate sweeps — DB rejects the second insert
+  /// atomically, no read-then-write race window.
+  bridgeSourceTxHash  String?  @unique
   metadata            Json?
   pushNotified        Boolean  @default(false)
   createdAt           DateTime @default(now())

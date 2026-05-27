@@ -24,13 +24,17 @@ export type IncomingTransfer = {
   sourceTxHash: string;
 };
 
-/** Idempotent: handles a Circle inbound-USDC notification by bridging the funds
- * Arc-ward and recording one Transaction row per user. Safe to call twice for
- * the same sourceTxHash (second call no-ops). */
-export async function handleIncomingUsdc(event: IncomingTransfer): Promise<{
-  status: "swept" | "duplicate" | "unknown_address" | "failed";
-  detail?: string;
-}> {
+type ClaimResult =
+  | { status: "claimed"; transactionId: string; userId: string; arcAddress: string; sourceNetwork: BridgeNetworkKey; chainLabel: string }
+  | { status: "duplicate" }
+  | { status: "unknown_address"; detail?: string }
+  | { status: "no_arc_wallet" };
+
+/** Atomic dedup claim: inserts a pending Transaction row with the source
+ * txHash. The DB's unique constraint on bridgeSourceTxHash blocks duplicate
+ * claims — no race window even when Circle retries the webhook in parallel.
+ * Returns "duplicate" if another instance already owns this sourceTxHash. */
+export async function claimIncoming(event: IncomingTransfer): Promise<ClaimResult> {
   const receiveKey = getReceiveChainByCircleBlockchain(event.circleBlockchain);
   if (!receiveKey) {
     return { status: "unknown_address", detail: "chain not enrolled" };
@@ -42,36 +46,12 @@ export async function handleIncomingUsdc(event: IncomingTransfer): Promise<{
     event.circleBlockchain,
     event.destinationAddress,
   );
-  if (!owner) {
-    return { status: "unknown_address" };
-  }
-
-  // Idempotency: if we already recorded this sourceTxHash for this user, skip.
-  const existing = await prisma.transaction.findFirst({
-    where: {
-      userId: owner.userId,
-      metadata: { path: ["sourceTxHash"], equals: event.sourceTxHash },
-    },
-    select: { id: true },
-  });
-  if (existing) return { status: "duplicate" };
+  if (!owner) return { status: "unknown_address" };
 
   const dbUser = await getUserById(owner.userId);
-  if (!dbUser?.circleWalletAddress) {
-    return {
-      status: "failed",
-      detail: "user has no Arc wallet to mint to",
-    };
-  }
+  if (!dbUser?.circleWalletAddress) return { status: "no_arc_wallet" };
 
   try {
-    const result = await sweepIncomingToArc({
-      sourceNetwork: bridgeKey,
-      sourceAddress: event.destinationAddress,
-      destinationAddress: dbUser.circleWalletAddress,
-      amount: event.amount,
-    });
-
     const tx = await prisma.transaction.create({
       data: {
         userId: owner.userId,
@@ -79,11 +59,10 @@ export async function handleIncomingUsdc(event: IncomingTransfer): Promise<{
         title: `Received via ${chainLabel}`,
         amountLabel: `+$${event.amount}`,
         variant: "credit",
-        status: result.state ?? "confirmed",
-        txHash: result.txHash ?? null,
-        explorerUrl: result.explorerUrl ?? null,
+        status: "pending",
         chain: "arc-testnet",
         originChain: chainLabel,
+        bridgeSourceTxHash: event.sourceTxHash,
         metadata: {
           sourceTxHash: event.sourceTxHash,
           sourceChain: event.circleBlockchain,
@@ -91,17 +70,66 @@ export async function handleIncomingUsdc(event: IncomingTransfer): Promise<{
         },
       },
     });
-
-    await notifyIncomingFromChain(owner.userId, {
-      amount: event.amount,
-      chainLabel,
+    return {
+      status: "claimed",
       transactionId: tx.id,
+      userId: owner.userId,
+      arcAddress: dbUser.circleWalletAddress,
+      sourceNetwork: bridgeKey,
+      chainLabel,
+    };
+  } catch (err) {
+    // Unique constraint violation = another invocation already owns this event.
+    if (err && typeof err === "object" && "code" in err && err.code === "P2002") {
+      return { status: "duplicate" };
+    }
+    throw err;
+  }
+}
+
+/** Run the actual CCTP bridge, then update the claimed row + notify the user.
+ * Safe to call after claimIncoming returns "claimed". Errors update the row's
+ * status field so they show up in Activity (and admin can retry later). */
+export async function completeSweep(input: {
+  transactionId: string;
+  userId: string;
+  sourceNetwork: BridgeNetworkKey;
+  sourceAddress: string;
+  arcAddress: string;
+  amount: string;
+  chainLabel: string;
+}) {
+  try {
+    const result = await sweepIncomingToArc({
+      sourceNetwork: input.sourceNetwork,
+      sourceAddress: input.sourceAddress,
+      destinationAddress: input.arcAddress,
+      amount: input.amount,
     });
 
-    return { status: "swept" };
+    await prisma.transaction.update({
+      where: { id: input.transactionId },
+      data: {
+        status: result.state ?? "confirmed",
+        txHash: result.txHash ?? null,
+        explorerUrl: result.explorerUrl ?? null,
+      },
+    });
+
+    await notifyIncomingFromChain(input.userId, {
+      amount: input.amount,
+      chainLabel: input.chainLabel,
+      transactionId: input.transactionId,
+    });
+
+    return { status: "swept" as const };
   } catch (err) {
     const detail = err instanceof Error ? err.message : "sweep failed";
-    console.error("[Glide] sweepIncomingToArc:", err);
-    return { status: "failed", detail };
+    console.error("[Glide] completeSweep:", err);
+    await prisma.transaction.update({
+      where: { id: input.transactionId },
+      data: { status: "failed", metadata: { error: detail } },
+    });
+    return { status: "failed" as const, detail };
   }
 }
