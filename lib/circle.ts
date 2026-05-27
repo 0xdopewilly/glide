@@ -3,6 +3,28 @@ import { initiateDeveloperControlledWalletsClient } from "@circle-fin/developer-
 export const WALLET_SET_NAME = "Glide User Wallets";
 export const GLIDE_BLOCKCHAIN = "ARC-TESTNET" as const;
 
+/** Chains we provision receive-wallets on for Universal Receive (CCTP V2 sweep
+ * into Arc). Arc itself stays on User.circleWalletId — these are *additional*
+ * source chains a sender can pay USDC to. */
+export const RECEIVE_CHAINS = {
+  base: { circleBlockchain: "BASE-SEPOLIA", label: "Base" },
+} as const;
+
+export type ReceiveChainKey = keyof typeof RECEIVE_CHAINS;
+export type ReceiveCircleBlockchain =
+  (typeof RECEIVE_CHAINS)[ReceiveChainKey]["circleBlockchain"];
+
+export function getReceiveChainByCircleBlockchain(
+  circleBlockchain: string,
+): ReceiveChainKey | null {
+  for (const [key, def] of Object.entries(RECEIVE_CHAINS)) {
+    if (def.circleBlockchain === circleBlockchain) {
+      return key as ReceiveChainKey;
+    }
+  }
+  return null;
+}
+
 export function createCircleClient() {
   const apiKey = process.env.CIRCLE_API_KEY?.trim();
   const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();

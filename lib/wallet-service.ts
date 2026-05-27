@@ -1,3 +1,4 @@
+import type { Blockchain } from "@circle-fin/developer-controlled-wallets";
 import {
   createCircleClient,
   getOrCreateWalletSetId,
@@ -18,6 +19,15 @@ import type { GlideTokenBalance, GlideWallet } from "@/lib/types";
 const ARC_CHAIN = CHAIN_META["arc-testnet"];
 
 export async function createGlideWallet(): Promise<GlideWallet> {
+  return createWalletOnChain(GLIDE_BLOCKCHAIN);
+}
+
+/** Create a Circle SCA on any supported blockchain. Used by Universal Receive
+ * to spin up Base/Eth/Polygon/Arbitrum wallets for the same wallet set so the
+ * user has one identity across chains. */
+export async function createWalletOnChain(
+  blockchain: string,
+): Promise<GlideWallet> {
   const initialized = createCircleClient();
   if ("error" in initialized) throw new Error(initialized.error);
 
@@ -26,14 +36,14 @@ export async function createGlideWallet(): Promise<GlideWallet> {
 
   const walletsResponse = await client.createWallets({
     walletSetId,
-    blockchains: [GLIDE_BLOCKCHAIN],
+    blockchains: [blockchain as Blockchain],
     count: 1,
     accountType: "SCA",
   });
 
   const wallet = walletsResponse.data?.wallets?.[0];
   if (!wallet?.id || !wallet?.address) {
-    throw new Error("Wallet creation incomplete");
+    throw new Error(`Wallet creation incomplete on ${blockchain}`);
   }
 
   return { id: wallet.id, address: wallet.address };

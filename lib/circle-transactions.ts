@@ -1,5 +1,6 @@
 import { createCircleClient } from "@/lib/circle";
 import { formatStableAmount } from "@/lib/currency-format";
+import { prisma } from "@/lib/db";
 import { notifyIncomingPayment } from "@/lib/push";
 import {
   ARC_CIRBTC_TOKEN_ADDRESS,
@@ -95,6 +96,18 @@ export async function syncCircleTransactionsToDb(
   for (const tx of circleTxs) {
     const token = inferToken(tx);
     const mapped = mapCircleTransaction(tx);
+
+    // Universal Receive: if this Arc INBOUND is the tail of a CCTP sweep we
+    // already recorded from the webhook, skip it. The webhook owns the title,
+    // badge ("via Base"), and push notification — sync would duplicate all of
+    // them and overwrite the friendly title with a CCTP forwarder address.
+    if (mapped.kind === "receive" && mapped.txHash) {
+      const sweeped = await prisma.transaction.findFirst({
+        where: { userId, txHash: mapped.txHash },
+        select: { originChain: true },
+      });
+      if (sweeped?.originChain) continue;
+    }
 
     // Resolve the counterparty's display label so the activity row reads
     // "Received from @khadee" / "Sent to 0xab…cd" instead of just "Received USDC".

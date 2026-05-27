@@ -176,6 +176,51 @@ export async function executeArcSwap(input: {
   }
 }
 
+/** Universal Receive: bridge USDC from an external chain back to Arc.
+ *
+ * This is the *inbound* direction (opposite of executeArcBridge). Triggered
+ * when a Circle webhook fires on inbound USDC at the user's per-chain receive
+ * address. Uses CCTP V2 Fast Transfer (default) so the sweep lands on Arc in
+ * <60s. Same shared address on both ends (Circle SCA cross-EVM property). */
+export async function sweepIncomingToArc(input: {
+  sourceNetwork: BridgeNetworkKey;
+  walletAddress: string;
+  amount: string;
+}) {
+  const source = BRIDGE_NETWORKS[input.sourceNetwork];
+  if (!source) throw new Error("Unsupported source network");
+
+  const { kit } = getGlideAppKit();
+  const apiKey = process.env.CIRCLE_API_KEY?.trim();
+  const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();
+  if (!apiKey || !entitySecret) {
+    throw new Error("Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET");
+  }
+
+  const bridgeAdapter = createGlideBridgeAdapter({ apiKey, entitySecret });
+
+  const result = await kit.bridge({
+    from: {
+      adapter: bridgeAdapter,
+      chain: source.chain,
+      address: input.walletAddress,
+    },
+    to: {
+      adapter: bridgeAdapter,
+      chain: ArcTestnet,
+      address: input.walletAddress,
+    },
+    amount: input.amount,
+    token: "USDC",
+    config: { batchTransactions: false },
+  });
+
+  return {
+    ...extractBridgeTx(result),
+    sourceLabel: source.label,
+  };
+}
+
 export async function executeArcBridge(input: {
   walletAddress: string;
   amount: string;

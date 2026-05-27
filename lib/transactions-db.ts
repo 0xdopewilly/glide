@@ -160,6 +160,7 @@ function rowToGlide(row: {
   status: string | null;
   txHash: string | null;
   explorerUrl: string | null;
+  originChain: string | null;
   metadata: unknown;
   createdAt: Date;
 }): GlideTransaction {
@@ -176,6 +177,7 @@ function rowToGlide(row: {
     txHash: row.txHash ?? undefined,
     explorerUrl: row.explorerUrl ?? undefined,
     counterparty: metadataCounterparty(row.metadata, row.kind),
+    originChain: row.originChain ?? undefined,
   };
 }
 

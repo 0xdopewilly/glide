@@ -1,7 +1,7 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { estimateArcSwap } from "@/lib/app-kit";
 import { safeApiError } from "@/lib/circle";
-import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
+import { getOwnedWalletAddress } from "@/lib/users";
 import { parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -42,24 +42,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
-    const owns = await userOwnsWallet(session.userId, walletId);
-    if (!owns) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const { wallet } = await getOrCreateWalletForUser({
-      userId: session.userId,
-      email: session.email,
-      displayName: session.displayName,
-    });
-    if (wallet.id !== walletId) {
+    const walletAddress = await getOwnedWalletAddress(session.userId, walletId);
+    if (!walletAddress) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const amountInStr = tokenIn === "cirBTC" ? String(parsed) : parsed.toFixed(2);
 
     const estimate = await estimateArcSwap({
-      walletAddress: wallet.address,
+      walletAddress,
       amountIn: amountInStr,
       tokenIn,
       tokenOut,

@@ -163,12 +163,25 @@ function TransactionRow({
         </span>
 
         <div className="min-w-0 flex-1">
-          <p
-            className="truncate text-[15px] font-bold tracking-tight"
-            style={{ color: "var(--glide-text)" }}
-          >
-            {title}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p
+              className="truncate text-[15px] font-bold tracking-tight"
+              style={{ color: "var(--glide-text)" }}
+            >
+              {title}
+            </p>
+            {tx.originChain ? (
+              <span
+                className="glide-label-mono shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                style={{
+                  background: "var(--glide-primary-container)",
+                  color: "var(--glide-text)",
+                }}
+              >
+                via {tx.originChain}
+              </span>
+            ) : null}
+          </div>
           <p className="mt-0.5 truncate text-[12px] font-medium capitalize text-[var(--glide-muted)]">
             {subtitle}
           </p>

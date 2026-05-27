@@ -147,6 +147,32 @@ export async function notifyRequestPaid(
   });
 }
 
+/** Single push for Universal Receive — fired exactly once per cross-chain
+ * inbound transfer, after the CCTP sweep lands on Arc. The Arc-side "incoming"
+ * is suppressed by webhook routing (the receive shows up only as this notify). */
+export async function notifyIncomingFromChain(
+  userId: string,
+  input: { amount: string; chainLabel: string; transactionId: string },
+) {
+  const parsed = formatAmountForPush(`$${input.amount}`, "USDC");
+
+  await notifyUser(userId, {
+    type: "payment_received",
+    title: "Money received",
+    body: `You received ${parsed} via ${input.chainLabel}.`,
+    url: "/activity",
+    metadata: {
+      transactionId: input.transactionId,
+      originChain: input.chainLabel,
+    },
+  });
+
+  await prisma.transaction.update({
+    where: { id: input.transactionId },
+    data: { pushNotified: true },
+  });
+}
+
 export async function notifyBridgeComplete(
   userId: string,
   amount: string,

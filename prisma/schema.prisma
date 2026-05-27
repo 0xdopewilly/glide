@@ -30,6 +30,24 @@ model User {
   paymentRequests      PaymentRequest[]
   scheduledTransfers   ScheduledTransfer[]
   notifications        Notification[]
+  walletAddresses      WalletAddress[]
+}
+
+/// Per-chain Circle wallet for Universal Receive (CCTP V2 sweep into Arc).
+/// One row per (userId, chain). Arc is implicit on User.circleWalletId; this
+/// table is for *additional* receive chains (Base, Ethereum, Polygon, Arbitrum).
+model WalletAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// e.g. "BASE-SEPOLIA", "ETH-SEPOLIA", "MATIC-AMOY", "ARB-SEPOLIA".
+  chain     String
+  walletId  String   @unique
+  address   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, chain])
+  @@index([address])
 }
 
 /// In-app inbox for payments, requests, and activity alerts.
@@ -130,6 +148,9 @@ model Transaction {
   txHash              String?
   explorerUrl         String?
   chain               String?
+  /// Source chain when funds arrived via cross-chain CCTP sweep (e.g. "Base").
+  /// Null for native Arc transfers.
+  originChain         String?
   metadata            Json?
   pushNotified        Boolean  @default(false)
   createdAt           DateTime @default(now())

@@ -40,6 +40,8 @@ export type GlideTransaction = {
   createdAt?: string;
   /** "@khadee", display name, or 0xab…cd — shown as "To"/"From" on the receipt. */
   counterparty?: string;
+  /** Source chain when funds arrived via Universal Receive CCTP sweep. */
+  originChain?: string | null;
 };
 
 export type WalletResponse = {
