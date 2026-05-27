@@ -52,6 +52,7 @@ export async function createWalletOnChain(
 type TokenRow = {
   amount: number;
   symbol?: string;
+  tokenAddress?: string;
 };
 
 async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
@@ -64,10 +65,30 @@ async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
     id: walletId,
   });
 
-  return (balances.data?.tokenBalances ?? []).map((entry) => ({
+  const raw = (balances.data?.tokenBalances ?? []).map((entry) => ({
     amount: parseFloat(entry.amount ?? "0"),
     symbol: entry.token?.symbol ?? entry.token?.name,
+    tokenAddress: entry.token?.tokenAddress?.toLowerCase(),
   }));
+
+  // Dedupe by token contract address. Circle's API sometimes returns the same
+  // on-chain ERC-20 as multiple entries (different tokenIds at the same
+  // address) - e.g. after a CCTP mint. Without this, our symbol-based
+  // aggregator double-counts the bridge-minted USDC, showing 2x the real
+  // balance. We keep the max amount (most up-to-date snapshot) per address.
+  const byAddress = new Map<string, TokenRow>();
+  const anonymous: TokenRow[] = [];
+  for (const row of raw) {
+    if (!row.tokenAddress) {
+      anonymous.push(row);
+      continue;
+    }
+    const existing = byAddress.get(row.tokenAddress);
+    if (!existing || row.amount > existing.amount) {
+      byAddress.set(row.tokenAddress, row);
+    }
+  }
+  return [...byAddress.values(), ...anonymous];
 }
 
 export async function fetchWalletTokenBalances(
