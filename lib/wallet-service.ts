@@ -53,6 +53,8 @@ type TokenRow = {
   amount: number;
   symbol?: string;
   tokenAddress?: string;
+  isNative?: boolean;
+  tokenId?: string;
 };
 
 async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
@@ -69,26 +71,36 @@ async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
     amount: parseFloat(entry.amount ?? "0"),
     symbol: entry.token?.symbol ?? entry.token?.name,
     tokenAddress: entry.token?.tokenAddress?.toLowerCase(),
+    isNative: entry.token?.isNative,
+    tokenId: entry.token?.id,
   }));
 
-  // Dedupe by token contract address. Circle's API sometimes returns the same
-  // on-chain ERC-20 as multiple entries (different tokenIds at the same
-  // address) - e.g. after a CCTP mint. Without this, our symbol-based
-  // aggregator double-counts the bridge-minted USDC, showing 2x the real
-  // balance. We keep the max amount (most up-to-date snapshot) per address.
-  const byAddress = new Map<string, TokenRow>();
-  const anonymous: TokenRow[] = [];
+  console.log(
+    `[Glide tokens] wallet=${walletId} raw=${JSON.stringify(raw)}`,
+  );
+
+  // Dedupe by (tokenAddress, isNative) so two entries representing the same
+  // on-chain ERC-20 collapse to one. For native tokens (no tokenAddress) we
+  // dedupe by the isNative flag - there's only one native asset per chain.
+  const byKey = new Map<string, TokenRow>();
   for (const row of raw) {
-    if (!row.tokenAddress) {
-      anonymous.push(row);
-      continue;
-    }
-    const existing = byAddress.get(row.tokenAddress);
+    const key = row.tokenAddress
+      ? `addr:${row.tokenAddress}`
+      : row.isNative
+        ? "native"
+        : `id:${row.tokenId ?? Math.random()}`;
+    const existing = byKey.get(key);
     if (!existing || row.amount > existing.amount) {
-      byAddress.set(row.tokenAddress, row);
+      byKey.set(key, row);
     }
   }
-  return [...byAddress.values(), ...anonymous];
+  const deduped = [...byKey.values()];
+
+  console.log(
+    `[Glide tokens] wallet=${walletId} deduped=${JSON.stringify(deduped)}`,
+  );
+
+  return deduped;
 }
 
 export async function fetchWalletTokenBalances(
