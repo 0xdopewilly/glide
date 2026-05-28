@@ -17,6 +17,7 @@ import { fetchUsdcBalanceAnyChain } from "@/lib/wallet-service";
 
 const RECEIVE_TO_BRIDGE: Record<ReceiveChainKey, BridgeNetworkKey> = {
   base: "base",
+  ethereum: "ethereum",
 };
 
 export type IncomingTransfer = {
@@ -198,7 +199,11 @@ export async function completeSweep(input: {
     // way to bypass bridge-kit's hard-coded gas check while still letting
     // the demo feel gasless to end users (Glide ops fund the service wallet).
     const sourceCircleBlockchain =
-      input.sourceNetwork === "base" ? "BASE-SEPOLIA" : null;
+      input.sourceNetwork === "base"
+        ? "BASE-SEPOLIA"
+        : input.sourceNetwork === "ethereum"
+          ? "ETH-SEPOLIA"
+          : null;
     if (sourceCircleBlockchain) {
       try {
         await ensureSourceGas({

@@ -29,6 +29,7 @@ type ChainTab = {
 
 const STATIC_EXTRA_TABS: { key: string; label: string }[] = [
   { key: "base", label: "Base" },
+  { key: "ethereum", label: "Ethereum" },
 ];
 
 const CACHE_KEY = "glide:receive-addresses";

@@ -6,7 +6,14 @@ export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const SUPPORTED = {
-  "BASE-SEPOLIA": "GLIDE_GAS_WALLET_BASE_SEPOLIA",
+  "BASE-SEPOLIA": {
+    envVar: "GLIDE_GAS_WALLET_BASE_SEPOLIA",
+    faucet: "https://www.alchemy.com/faucets/base-sepolia",
+  },
+  "ETH-SEPOLIA": {
+    envVar: "GLIDE_GAS_WALLET_ETH_SEPOLIA",
+    faucet: "https://www.alchemy.com/faucets/ethereum-sepolia",
+  },
 } as const;
 
 /** One-time admin tool: provisions a new Circle SCA on the given chain to
@@ -35,7 +42,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const envVar = SUPPORTED[chain as keyof typeof SUPPORTED];
+  const cfg = SUPPORTED[chain as keyof typeof SUPPORTED];
   const wallet = await createWalletOnChain(chain);
 
   return NextResponse.json({
@@ -43,9 +50,10 @@ export async function POST(request: NextRequest) {
     walletId: wallet.id,
     address: wallet.address,
     instructions: [
-      `1. Set ${envVar}=${wallet.id} on Vercel (Production env).`,
-      `2. Fund ${wallet.address} on ${chain} via the testnet faucet (https://www.alchemy.com/faucets/base-sepolia for BASE-SEPOLIA).`,
-      `3. Redeploy. Universal Receive sweeps will now auto-refill user gas.`,
+      `1. Set ${cfg.envVar}=${wallet.id} on Vercel (Production env).`,
+      `2. Also set ${cfg.envVar}_ADDRESS=${wallet.address} so the drain endpoint can find it.`,
+      `3. Fund ${wallet.address} on ${chain} via faucet: ${cfg.faucet}`,
+      `4. Redeploy. Universal Receive sweeps will now auto-refill user gas.`,
     ],
   });
 }

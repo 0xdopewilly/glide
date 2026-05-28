@@ -8,6 +8,7 @@ export const GLIDE_BLOCKCHAIN = "ARC-TESTNET" as const;
  * source chains a sender can pay USDC to. */
 export const RECEIVE_CHAINS = {
   base: { circleBlockchain: "BASE-SEPOLIA", label: "Base" },
+  ethereum: { circleBlockchain: "ETH-SEPOLIA", label: "Ethereum" },
 } as const;
 
 export type ReceiveChainKey = keyof typeof RECEIVE_CHAINS;

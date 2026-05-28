@@ -1,6 +1,6 @@
 import { createCircleClient } from "@/lib/circle";
 import { createPublicClient, http, parseEther, type Address, type Chain } from "viem";
-import { baseSepolia } from "viem/chains";
+import { baseSepolia, sepolia } from "viem/chains";
 
 /** Chain-specific gas refill config. Add new chains alongside RECEIVE_CHAINS. */
 const REFILL_CONFIG = {
@@ -14,6 +14,13 @@ const REFILL_CONFIG = {
     minEth: "0.00005",
     /** How much ETH we send per refill. Sized for several sweeps. */
     refillEth: "0.0005",
+  },
+  "ETH-SEPOLIA": {
+    chain: sepolia,
+    serviceWalletIdEnv: "GLIDE_GAS_WALLET_ETH_SEPOLIA",
+    /** Ethereum L1 is ~10-50x more expensive than L2s, so larger thresholds. */
+    minEth: "0.0008",
+    refillEth: "0.005",
   },
 } as const;
 

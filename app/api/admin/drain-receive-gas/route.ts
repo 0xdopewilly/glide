@@ -8,7 +8,7 @@ import {
   parseEther,
   type Address,
 } from "viem";
-import { baseSepolia } from "viem/chains";
+import { baseSepolia, sepolia } from "viem/chains";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -23,6 +23,14 @@ const DRAIN_CHAINS = {
      * Below the 0.00005 refill threshold so the auto-refill code path still
      * fires on the next sweep test. */
     dustEth: "0.00003",
+  },
+  ethereum: {
+    circleBlockchain: "ETH-SEPOLIA",
+    chain: sepolia,
+    serviceWalletAddressEnv: "GLIDE_GAS_WALLET_ETH_SEPOLIA_ADDRESS",
+    /** Larger dust on L1 - Ethereum gas is heavier. Sits below the 0.0008
+     * refill threshold so the next sweep triggers the auto-refill path. */
+    dustEth: "0.0004",
   },
 } as const;
 
