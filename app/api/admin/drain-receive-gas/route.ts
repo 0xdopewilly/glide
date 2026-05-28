@@ -103,12 +103,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: initialized.error }, { status: 500 });
   }
 
+  // Resolve the native token id for this wallet by listing balances and
+  // picking the entry without a tokenAddress (native chain token).
+  const balances = await initialized.client.getWalletTokenBalance({
+    id: wallet.walletId,
+  });
+  const native = balances.data?.tokenBalances?.find((b) => {
+    const addr = b.token?.tokenAddress;
+    return !addr || addr === "";
+  });
+  const nativeTokenId = native?.token?.id;
+  if (!nativeTokenId) {
+    return NextResponse.json(
+      { error: "Could not resolve native token id for this wallet" },
+      { status: 500 },
+    );
+  }
+
   try {
     const transfer = await initialized.client.createTransaction({
       walletId: wallet.walletId,
       destinationAddress: destination,
       amount: [sendEth],
-      tokenAddress: "",
+      tokenId: nativeTokenId,
       fee: {
         type: "level",
         config: { feeLevel: "HIGH" },

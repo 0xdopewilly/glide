@@ -82,12 +82,27 @@ export async function ensureSourceGas(input: {
     throw new Error(initialized.error);
   }
 
-  // Empty tokenAddress = native ETH. Chain is inferred from walletId.
+  // Circle DCW createTransaction needs an explicit tokenId, not an empty
+  // tokenAddress. Look up the service wallet's native-chain-token id.
+  const balances = await initialized.client.getWalletTokenBalance({
+    id: serviceWalletId,
+  });
+  const native = balances.data?.tokenBalances?.find((b) => {
+    const addr = b.token?.tokenAddress;
+    return !addr || addr === "";
+  });
+  const nativeTokenId = native?.token?.id;
+  if (!nativeTokenId) {
+    throw new Error(
+      `Could not resolve native token id for service wallet ${serviceWalletId}. Fund the service wallet first.`,
+    );
+  }
+
   const transfer = await initialized.client.createTransaction({
     walletId: serviceWalletId,
     destinationAddress: input.userWalletAddress,
     amount: [config.refillEth],
-    tokenAddress: "",
+    tokenId: nativeTokenId,
     fee: {
       type: "level",
       config: { feeLevel: "MEDIUM" },
