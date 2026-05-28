@@ -75,32 +75,38 @@ async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
     tokenId: entry.token?.id,
   }));
 
-  console.log(
-    `[Glide tokens] wallet=${walletId} raw=${JSON.stringify(raw)}`,
+  // Arc-specific: USDC is BOTH the chain's native gas token AND an ERC-20.
+  // Circle's API returns the same balance twice (once with isNative:true, no
+  // tokenAddress; once as the ERC-20 at 0x3600...). When both exist for the
+  // same symbol, drop the native shadow - the ERC-20 row has the correct
+  // 6-decimal precision and is the canonical representation.
+  const symbolsWithErc20 = new Set(
+    raw
+      .filter((r) => r.tokenAddress && !r.isNative && r.symbol)
+      .map((r) => r.symbol!.toUpperCase()),
   );
+  const filtered = raw.filter((r) => {
+    if (r.isNative && r.symbol && symbolsWithErc20.has(r.symbol.toUpperCase())) {
+      return false;
+    }
+    return true;
+  });
 
-  // Dedupe by (tokenAddress, isNative) so two entries representing the same
-  // on-chain ERC-20 collapse to one. For native tokens (no tokenAddress) we
-  // dedupe by the isNative flag - there's only one native asset per chain.
-  const byKey = new Map<string, TokenRow>();
-  for (const row of raw) {
-    const key = row.tokenAddress
-      ? `addr:${row.tokenAddress}`
-      : row.isNative
-        ? "native"
-        : `id:${row.tokenId ?? Math.random()}`;
-    const existing = byKey.get(key);
+  // Then dedupe by tokenAddress in case Circle ever returns the same ERC-20
+  // entry twice (different tokenIds at the same contract).
+  const byAddress = new Map<string, TokenRow>();
+  const anonymous: TokenRow[] = [];
+  for (const row of filtered) {
+    if (!row.tokenAddress) {
+      anonymous.push(row);
+      continue;
+    }
+    const existing = byAddress.get(row.tokenAddress);
     if (!existing || row.amount > existing.amount) {
-      byKey.set(key, row);
+      byAddress.set(row.tokenAddress, row);
     }
   }
-  const deduped = [...byKey.values()];
-
-  console.log(
-    `[Glide tokens] wallet=${walletId} deduped=${JSON.stringify(deduped)}`,
-  );
-
-  return deduped;
+  return [...byAddress.values(), ...anonymous];
 }
 
 export async function fetchWalletTokenBalances(
