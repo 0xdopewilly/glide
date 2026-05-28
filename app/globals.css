@@ -333,6 +333,29 @@ body {
 .glide-stagger > *:nth-child(6) { animation-delay: 230ms; }
 .glide-stagger > *:nth-child(n+7) { animation-delay: 270ms; }
 
+/* Cross-fade on remount - used for tab content swaps. Keep it subtle:
+   opacity + tiny translate only, no scale (per CLAUDE.md motion rules). */
+@keyframes glide-fade-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.glide-fade-in {
+  animation: glide-fade-in 220ms var(--glide-ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glide-fade-in {
+    animation: none;
+  }
+}
+
 /* Processing arrow - gentle nudge right-then-back, communicates direction. */
 @keyframes glide-arrow-pulse {
   0%, 100% {

@@ -7,7 +7,7 @@ import { ReceiveQr } from "@/components/receive-qr";
 import { UserAvatar } from "@/components/user-avatar";
 import { useWallet } from "@/context/wallet-context";
 import { Share2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ReceiveAddress = {
   chain: string;
@@ -24,13 +24,40 @@ type ChainTab = {
   address: string;
   hint: string;
   usdcBalance?: number;
+  pending?: boolean;
 };
 
+const STATIC_EXTRA_TABS: { key: string; label: string }[] = [
+  { key: "base", label: "Base" },
+];
+
+const CACHE_KEY = "glide:receive-addresses";
+
+function readCachedExtras(): ReceiveAddress[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CACHE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as ReceiveAddress[];
+  } catch {
+    return [];
+  }
+}
+
+function writeCachedExtras(addresses: ReceiveAddress[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(CACHE_KEY, JSON.stringify(addresses));
+  } catch {
+    // quota / privacy mode — ignore
+  }
+}
+
 export default function ReceivePage() {
-  const { wallet, loading, profile } = useWallet();
+  const { wallet, profile } = useWallet();
   const arcAddress = wallet?.address ?? "";
 
-  const [extras, setExtras] = useState<ReceiveAddress[]>([]);
+  const [extras, setExtras] = useState<ReceiveAddress[]>(() => readCachedExtras());
   const [selected, setSelected] = useState<string>("arc");
   const [sweeping, setSweeping] = useState(false);
   const [sweepMsg, setSweepMsg] = useState<string | null>(null);
@@ -40,7 +67,10 @@ export default function ReceivePage() {
     return fetch("/api/receive-addresses")
       .then((r) => (r.ok ? r.json() : null))
       .then((json: { addresses?: ReceiveAddress[] } | null) => {
-        if (json?.addresses) setExtras(json.addresses);
+        if (json?.addresses) {
+          setExtras(json.addresses);
+          writeCachedExtras(json.addresses);
+        }
       })
       .catch(() => {});
   };
@@ -57,21 +87,31 @@ export default function ReceivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arcAddress]);
 
-  const tabs: ChainTab[] = [
-    {
-      key: "arc",
-      label: "Arc",
-      address: arcAddress,
-      hint: "USDC or EURC on Arc",
-    },
-    ...extras.map((e) => ({
-      key: e.chain,
-      label: e.label,
-      address: e.address,
-      hint: `USDC on ${e.label} — auto-bridges to Arc`,
-      usdcBalance: e.usdcBalance,
-    })),
-  ];
+  // Tabs render IMMEDIATELY from static config + cache. The address is filled
+  // in once /api/receive-addresses resolves — until then the address shows a
+  // skeleton instead of blocking the whole panel.
+  const tabs: ChainTab[] = useMemo(() => {
+    const extraByKey = new Map(extras.map((e) => [e.chain, e]));
+    return [
+      {
+        key: "arc",
+        label: "Arc",
+        address: arcAddress,
+        hint: "USDC or EURC on Arc",
+      },
+      ...STATIC_EXTRA_TABS.map((s) => {
+        const hit = extraByKey.get(s.key);
+        return {
+          key: s.key,
+          label: s.label,
+          address: hit?.address ?? "",
+          hint: `USDC on ${s.label} — auto-bridges to Arc`,
+          usdcBalance: hit?.usdcBalance,
+          pending: !hit,
+        };
+      }),
+    ];
+  }, [arcAddress, extras]);
 
   const active = tabs.find((t) => t.key === selected) ?? tabs[0];
   const address = active.address;
@@ -154,7 +194,7 @@ export default function ReceivePage() {
                   key={t.key}
                   type="button"
                   onClick={() => setSelected(t.key)}
-                  className="glide-tap glide-label-mono px-4 py-1.5 text-[11px] font-bold transition-colors"
+                  className="glide-tap glide-label-mono px-4 py-1.5 text-[11px] font-bold"
                   style={{
                     borderRadius: 999,
                     background: isActive
@@ -163,6 +203,8 @@ export default function ReceivePage() {
                     color: isActive
                       ? "var(--glide-bg)"
                       : "var(--glide-muted)",
+                    transition:
+                      "background-color 180ms var(--glide-ease-out), color 180ms var(--glide-ease-out)",
                   }}
                 >
                   {t.label}
@@ -172,88 +214,110 @@ export default function ReceivePage() {
           </div>
         ) : null}
 
-        <ReceiveQr address={address} />
-
+        {/* Cross-fade the QR + address panel when switching tabs. Keyed by
+            active.key + address so the swap is visible after provisioning. */}
         <div
-          className="mt-6 rounded-2xl border px-4 py-5"
-          style={{
-            background: "var(--glide-surface-elevated)",
-            borderColor: "var(--glide-border)",
-          }}
+          key={`${active.key}-${address}`}
+          className="glide-fade-in flex flex-col"
         >
-          <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
-            Your {active.label} address
-          </p>
-          <p className="mt-3 break-all font-mono text-sm leading-relaxed text-[var(--glide-text)]">
-            {loading && !address
-              ? "Loading your account"
-              : address || "Account not ready"}
-          </p>
-          {active.key !== "arc" ? (
-            <p className="glide-label-mono mt-3 text-[10px] font-semibold leading-relaxed text-[var(--glide-muted)]">
-              USDC sent here lands on Arc automatically via CCTP — usually
-              within a minute.
-            </p>
-          ) : null}
-        </div>
+          <ReceiveQr address={address} />
 
-        {active.key !== "arc" ? (
           <div
-            className="mt-3 rounded-2xl border px-4 py-4"
+            className="mt-6 rounded-2xl border px-4 py-5"
             style={{
               background: "var(--glide-surface-elevated)",
               borderColor: "var(--glide-border)",
             }}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
-                  Stuck on {active.label}
-                </p>
-                <p className="mt-1 text-[18px] font-bold tabular-nums tracking-tight text-[var(--glide-text)]">
-                  ${stuckBalance.toFixed(2)} USDC
-                </p>
+            <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+              Your {active.label} address
+            </p>
+            {address ? (
+              <p className="mt-3 break-all font-mono text-sm leading-relaxed text-[var(--glide-text)]">
+                {address}
+              </p>
+            ) : (
+              <div className="mt-3 space-y-1.5" aria-hidden>
+                <div
+                  className="h-3 w-full animate-pulse rounded"
+                  style={{ background: "var(--glide-surface-container-high)" }}
+                />
+                <div
+                  className="h-3 w-2/3 animate-pulse rounded"
+                  style={{ background: "var(--glide-surface-container-high)" }}
+                />
               </div>
-              <button
-                type="button"
-                onClick={() => void handleSweep()}
-                disabled={sweeping || stuckBalance <= 0}
-                className="glide-tap glide-label-mono rounded-full px-4 py-2 text-[11px] font-bold transition-opacity disabled:opacity-40"
-                style={{
-                  background: "var(--glide-accent)",
-                  color: "var(--glide-bg)",
-                }}
-              >
-                {sweeping ? "Sweeping…" : "Sweep to Arc"}
-              </button>
-            </div>
-            {sweepMsg ? (
-              <p
-                className="glide-label-mono mt-3 text-[10px] font-semibold"
-                style={{ color: "var(--glide-muted)" }}
-              >
-                {sweepMsg}
+            )}
+            {active.key !== "arc" ? (
+              <p className="glide-label-mono mt-3 text-[10px] font-semibold leading-relaxed text-[var(--glide-muted)]">
+                USDC sent here lands on Arc automatically via CCTP — usually
+                within a minute.
               </p>
             ) : null}
           </div>
-        ) : null}
 
-        <CopyButton value={address} label="Copy address" className="mt-4 w-full" />
+          {active.key !== "arc" ? (
+            <div
+              className="mt-3 rounded-2xl border px-4 py-4"
+              style={{
+                background: "var(--glide-surface-elevated)",
+                borderColor: "var(--glide-border)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+                    Stuck on {active.label}
+                  </p>
+                  <p className="mt-1 text-[18px] font-bold tabular-nums tracking-tight text-[var(--glide-text)]">
+                    ${stuckBalance.toFixed(2)} USDC
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleSweep()}
+                  disabled={sweeping || stuckBalance <= 0}
+                  className="glide-tap glide-label-mono rounded-full px-4 py-2 text-[11px] font-bold transition-opacity disabled:opacity-40"
+                  style={{
+                    background: "var(--glide-accent)",
+                    color: "var(--glide-bg)",
+                  }}
+                >
+                  {sweeping ? "Sweeping…" : "Sweep to Arc"}
+                </button>
+              </div>
+              {sweepMsg ? (
+                <p
+                  className="glide-label-mono mt-3 text-[10px] font-semibold"
+                  style={{ color: "var(--glide-muted)" }}
+                >
+                  {sweepMsg}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
-        <button
-          type="button"
-          onClick={() => void share()}
-          disabled={!address}
-          className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-[11px] font-semibold transition-opacity disabled:opacity-40"
-          style={{
-            background: "var(--glide-accent)",
-            color: "var(--glide-bg)",
-            borderColor: "var(--glide-accent)",
-          }}
-        >
-          <Share2 className="h-4 w-4" />
-          Share address
-        </button>
+          <CopyButton
+            value={address}
+            label="Copy address"
+            className="mt-4 w-full"
+          />
+
+          <button
+            type="button"
+            onClick={() => void share()}
+            disabled={!address}
+            className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-[11px] font-semibold transition-opacity disabled:opacity-40"
+            style={{
+              background: "var(--glide-accent)",
+              color: "var(--glide-bg)",
+              borderColor: "var(--glide-accent)",
+            }}
+          >
+            <Share2 className="h-4 w-4" />
+            Share address
+          </button>
+        </div>
       </div>
     </FlowPage>
   );
