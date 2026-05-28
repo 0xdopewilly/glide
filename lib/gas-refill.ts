@@ -1,8 +1,11 @@
 import { createCircleClient } from "@/lib/circle";
 import { createPublicClient, http, parseEther, type Address, type Chain } from "viem";
-import { baseSepolia, sepolia } from "viem/chains";
+import { arbitrumSepolia, baseSepolia, polygonAmoy, sepolia } from "viem/chains";
 
-/** Chain-specific gas refill config. Add new chains alongside RECEIVE_CHAINS. */
+/** Chain-specific gas refill config. Add new chains alongside RECEIVE_CHAINS.
+ * `minEth` / `refillEth` are misnomers - the unit is the chain's native token
+ * (MATIC on Polygon, ETH everywhere else), all with 18 decimals so parseEther
+ * works uniformly. */
 const REFILL_CONFIG = {
   "BASE-SEPOLIA": {
     chain: baseSepolia,
@@ -21,6 +24,20 @@ const REFILL_CONFIG = {
     /** Ethereum L1 is ~10-50x more expensive than L2s, so larger thresholds. */
     minEth: "0.0008",
     refillEth: "0.005",
+  },
+  "MATIC-AMOY": {
+    chain: polygonAmoy,
+    serviceWalletIdEnv: "GLIDE_GAS_WALLET_MATIC_AMOY",
+    /** Native is MATIC on Polygon - cheaper per unit, faucet drops are bigger. */
+    minEth: "0.01",
+    refillEth: "0.05",
+  },
+  "ARB-SEPOLIA": {
+    chain: arbitrumSepolia,
+    serviceWalletIdEnv: "GLIDE_GAS_WALLET_ARB_SEPOLIA",
+    /** L2 like Base - tiny gas costs. */
+    minEth: "0.00005",
+    refillEth: "0.0005",
   },
 } as const;
 

@@ -14,6 +14,14 @@ const SUPPORTED = {
     envVar: "GLIDE_GAS_WALLET_ETH_SEPOLIA",
     faucet: "https://www.alchemy.com/faucets/ethereum-sepolia",
   },
+  "MATIC-AMOY": {
+    envVar: "GLIDE_GAS_WALLET_MATIC_AMOY",
+    faucet: "https://www.alchemy.com/faucets/polygon-amoy",
+  },
+  "ARB-SEPOLIA": {
+    envVar: "GLIDE_GAS_WALLET_ARB_SEPOLIA",
+    faucet: "https://www.alchemy.com/faucets/arbitrum-sepolia",
+  },
 } as const;
 
 /** One-time admin tool: provisions a new Circle SCA on the given chain to

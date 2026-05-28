@@ -9,6 +9,8 @@ export const GLIDE_BLOCKCHAIN = "ARC-TESTNET" as const;
 export const RECEIVE_CHAINS = {
   base: { circleBlockchain: "BASE-SEPOLIA", label: "Base" },
   ethereum: { circleBlockchain: "ETH-SEPOLIA", label: "Ethereum" },
+  polygon: { circleBlockchain: "MATIC-AMOY", label: "Polygon" },
+  arbitrum: { circleBlockchain: "ARB-SEPOLIA", label: "Arbitrum" },
 } as const;
 
 export type ReceiveChainKey = keyof typeof RECEIVE_CHAINS;
