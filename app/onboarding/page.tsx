@@ -66,7 +66,12 @@ export default function OnboardingPage() {
         className="grid h-full min-h-0 flex-1 grid-rows-[auto_1fr_auto] overflow-hidden"
         style={{ fontFamily: jakarta }}
       >
-        <header className="flex items-center justify-between px-6 pb-2 pt-[max(1.25rem,env(safe-area-inset-top))]">
+        <motion.header
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.46, ease: [0.32, 0.72, 0, 1] }}
+          className="flex items-center justify-between px-6 pb-2 pt-[max(1.25rem,env(safe-area-inset-top))]"
+        >
           <ThemeToggle />
           <button
             type="button"
@@ -75,10 +80,10 @@ export default function OnboardingPage() {
           >
             Login
           </button>
-        </header>
+        </motion.header>
 
         <div className="relative flex min-h-0 flex-col justify-center">
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence mode="wait">
             <motion.div
               key={step}
               initial={{
@@ -94,11 +99,11 @@ export default function OnboardingPage() {
               className="flex flex-col"
             >
               <motion.div
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 24, scale: 0.94 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{
-                  duration: 0.42,
-                  ease: [0.32, 0.72, 0, 1],
+                  duration: 0.5,
+                  ease: [0.34, 1.4, 0.4, 1],
                   delay: 0.04,
                 }}
               >
@@ -146,7 +151,16 @@ export default function OnboardingPage() {
           </AnimatePresence>
         </div>
 
-        <footer className="px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4">
+        <motion.footer
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.5,
+            ease: [0.32, 0.72, 0, 1],
+            delay: 0.32,
+          }}
+          className="px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4"
+        >
           <div className="space-y-3">
             <div
               className={`flex gap-3 transition-[gap] duration-150 ${
@@ -174,7 +188,7 @@ export default function OnboardingPage() {
             ) : null}
           </div>
           <OnboardingDots total={SLIDES.length} current={step} />
-        </footer>
+        </motion.footer>
       </div>
     </OnboardingShell>
     </LenisProvider>
