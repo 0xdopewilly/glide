@@ -2,6 +2,7 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 import { formatUsd } from "@/lib/format";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { RefreshCw } from "lucide-react";
 
 export function BalanceHero({
@@ -20,6 +21,13 @@ export function BalanceHero({
   const displayTotal = totalUsd ?? balance;
   const { hideBalance, setHideBalance } = usePrivacy();
   const realText = `$${formatUsd(displayTotal)}`;
+
+  // Recede effect: hero shrinks + fades a touch as the user scrolls past it.
+  // Only transform + opacity — keeps the GPU happy on mobile.
+  const { scrollY } = useScroll();
+  const scale = useTransform(scrollY, [0, 220], [1, 0.86], { clamp: true });
+  const opacity = useTransform(scrollY, [0, 220], [1, 0.55], { clamp: true });
+  const y = useTransform(scrollY, [0, 220], [0, -12], { clamp: true });
 
   return (
     <section className="flex flex-col items-start px-0 pb-2 pt-4 text-left">
@@ -40,11 +48,12 @@ export function BalanceHero({
           />
         </button>
       </div>
-      <button
+      <motion.button
         type="button"
         onClick={() => setHideBalance(!hideBalance)}
         aria-label={hideBalance ? "Show balance" : "Hide balance"}
-        className="glide-tap mt-2 inline-block text-left"
+        className="glide-tap mt-2 inline-block origin-left text-left"
+        style={{ scale, opacity, y }}
       >
         <h1
           className={`glide-scale-in font-bold leading-[1.05] text-[var(--glide-text)] tabular-nums ${
@@ -55,7 +64,7 @@ export function BalanceHero({
         >
           {hideBalance ? "······" : realText}
         </h1>
-      </button>
+      </motion.button>
     </section>
   );
 }

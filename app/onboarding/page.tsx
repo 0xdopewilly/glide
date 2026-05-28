@@ -1,5 +1,6 @@
 "use client";
 
+import { LenisProvider } from "@/components/lenis-provider";
 import { OnboardingBackButton } from "@/components/onboarding/onboarding-back-button";
 import { OnboardingContinueButton } from "@/components/onboarding/onboarding-continue-button";
 import { OnboardingDots } from "@/components/onboarding/onboarding-dots";
@@ -7,6 +8,7 @@ import { OnboardingHeroVisual } from "@/components/onboarding/onboarding-hero-vi
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/context/auth-context";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -58,6 +60,7 @@ export default function OnboardingPage() {
   }, []);
 
   return (
+    <LenisProvider>
     <OnboardingShell>
       <div
         className="grid h-full min-h-0 flex-1 grid-rows-[auto_1fr_auto] overflow-hidden"
@@ -74,26 +77,73 @@ export default function OnboardingPage() {
           </button>
         </header>
 
-        <div
-          key={step}
-          className={`flex min-h-0 flex-col justify-center ${
-            direction === "forward" ? "slide-from-right" : "slide-from-left"
-          }`}
-        >
-          <div className="glide-stagger flex flex-col">
-            <OnboardingHeroVisual step={step} />
-            <div className="px-6 pt-2">
-              <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
-                {slide.tag}
-              </span>
-            </div>
-            <h1 className="mt-4 px-6 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-[var(--glide-text)]">
-              {slide.title}
-            </h1>
-            <p className="mt-3.5 max-w-[19.5rem] px-6 text-[15px] leading-[1.6] text-[var(--glide-muted)]">
-              {slide.body}
-            </p>
-          </div>
+        <div className="relative flex min-h-0 flex-col justify-center">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={step}
+              initial={{
+                opacity: 0,
+                x: direction === "forward" ? 32 : -32,
+              }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{
+                opacity: 0,
+                x: direction === "forward" ? -24 : 24,
+              }}
+              transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+              className="flex flex-col"
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.42,
+                  ease: [0.32, 0.72, 0, 1],
+                  delay: 0.04,
+                }}
+              >
+                <OnboardingHeroVisual step={step} />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.36,
+                  ease: [0.32, 0.72, 0, 1],
+                  delay: 0.12,
+                }}
+                className="px-6 pt-2"
+              >
+                <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
+                  {slide.tag}
+                </span>
+              </motion.div>
+              <motion.h1
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.36,
+                  ease: [0.32, 0.72, 0, 1],
+                  delay: 0.18,
+                }}
+                className="mt-4 px-6 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-[var(--glide-text)]"
+              >
+                {slide.title}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.36,
+                  ease: [0.32, 0.72, 0, 1],
+                  delay: 0.24,
+                }}
+                className="mt-3.5 max-w-[19.5rem] px-6 text-[15px] leading-[1.6] text-[var(--glide-muted)]"
+              >
+                {slide.body}
+              </motion.p>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <footer className="px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4">
@@ -127,5 +177,6 @@ export default function OnboardingPage() {
         </footer>
       </div>
     </OnboardingShell>
+    </LenisProvider>
   );
 }

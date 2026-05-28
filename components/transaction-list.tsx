@@ -1,6 +1,7 @@
 "use client";
 
 import { TransactionReceiptSheet } from "@/components/transaction-receipt-sheet";
+import { useInView } from "@/hooks/use-in-view";
 import { activityRowMeta } from "@/lib/activity";
 import { copyText } from "@/lib/clipboard";
 import { usePrivacy } from "@/context/privacy-context";
@@ -74,8 +75,8 @@ export function TransactionList({
 
   return (
     <ul className="flex flex-col gap-2">
-      {transactions.map((item) => (
-        <li key={`${item.id}-${item.createdAt ?? ""}`}>
+      {transactions.map((item, i) => (
+        <FadeInLi key={`${item.id}-${item.createdAt ?? ""}`} index={i}>
           <TransactionRow
             tx={item}
             expanded={expandedId === item.id}
@@ -84,9 +85,34 @@ export function TransactionList({
               setExpandedId((id) => (id === item.id ? null : item.id))
             }
           />
-        </li>
+        </FadeInLi>
       ))}
     </ul>
+  );
+}
+
+function FadeInLi({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}) {
+  const { ref, inView } = useInView<HTMLLIElement>();
+  return (
+    <li
+      ref={ref}
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translate3d(0,0,0)" : "translate3d(0,12px,0)",
+        transition:
+          "opacity 360ms var(--glide-ease-out), transform 360ms var(--glide-ease-out)",
+        transitionDelay: inView ? `${Math.min(index, 6) * 35}ms` : "0ms",
+        willChange: "transform, opacity",
+      }}
+    >
+      {children}
+    </li>
   );
 }
 
