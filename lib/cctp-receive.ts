@@ -7,6 +7,7 @@ import {
 } from "@/lib/circle";
 import { prisma } from "@/lib/db";
 import { notifyIncomingFromChain } from "@/lib/push";
+import { ensureSourceGas } from "@/lib/gas-refill";
 import {
   findUserByReceiveAddress,
   getOrCreateReceiveAddress,
@@ -192,6 +193,26 @@ export async function completeSweep(input: {
   chainLabel: string;
 }) {
   try {
+    // Top up the user's source-chain native ETH if it's below the threshold
+    // so the bridge SDK's pre-flight balance check passes. This is the only
+    // way to bypass bridge-kit's hard-coded gas check while still letting
+    // the demo feel gasless to end users (Glide ops fund the service wallet).
+    const sourceCircleBlockchain =
+      input.sourceNetwork === "base" ? "BASE-SEPOLIA" : null;
+    if (sourceCircleBlockchain) {
+      try {
+        await ensureSourceGas({
+          circleBlockchain: sourceCircleBlockchain,
+          userWalletAddress: input.sourceAddress,
+        });
+      } catch (err) {
+        console.error("[Glide] ensureSourceGas:", err);
+        // Don't abort - if bridge can still succeed (user has gas from a
+        // prior refill), let it. The SDK will surface its own error
+        // otherwise and the row will land in `failed` status below.
+      }
+    }
+
     const result = await sweepIncomingToArc({
       sourceNetwork: input.sourceNetwork,
       sourceAddress: input.sourceAddress,

@@ -1,0 +1,51 @@
+import { requireSessionUser, isAuthError } from "@/lib/api-auth";
+import { createWalletOnChain } from "@/lib/wallet-service";
+import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
+const SUPPORTED = {
+  "BASE-SEPOLIA": "GLIDE_GAS_WALLET_BASE_SEPOLIA",
+} as const;
+
+/** One-time admin tool: provisions a new Circle SCA on the given chain to
+ * use as the Universal Receive gas service wallet. Returns the wallet id +
+ * address. The id should be set as the matching env var on Vercel; the
+ * address must be funded from a testnet ETH faucet so it can refill user
+ * wallets before each sweep. Gated by GLIDE_ADMIN_USER_ID for safety. */
+export async function POST(request: NextRequest) {
+  const session = await requireSessionUser();
+  if (isAuthError(session)) return session;
+
+  const adminId = process.env.GLIDE_ADMIN_USER_ID?.trim();
+  if (!adminId || session.userId !== adminId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = (await request.json()) as { chain?: string };
+  const chain = body.chain?.trim();
+  if (!chain || !(chain in SUPPORTED)) {
+    return NextResponse.json(
+      {
+        error: "Unsupported chain",
+        supported: Object.keys(SUPPORTED),
+      },
+      { status: 400 },
+    );
+  }
+
+  const envVar = SUPPORTED[chain as keyof typeof SUPPORTED];
+  const wallet = await createWalletOnChain(chain);
+
+  return NextResponse.json({
+    chain,
+    walletId: wallet.id,
+    address: wallet.address,
+    instructions: [
+      `1. Set ${envVar}=${wallet.id} on Vercel (Production env).`,
+      `2. Fund ${wallet.address} on ${chain} via the testnet faucet (https://www.alchemy.com/faucets/base-sepolia for BASE-SEPOLIA).`,
+      `3. Redeploy. Universal Receive sweeps will now auto-refill user gas.`,
+    ],
+  });
+}
