@@ -38,7 +38,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = (await request.json().catch(() => ({}))) as { chain?: string };
+  const body = (await request.json().catch(() => ({}))) as {
+    chain?: string;
+    destinationAddress?: string;
+  };
   const chainKey = body.chain ?? "base";
   if (!(chainKey in DRAIN_CHAINS)) {
     return NextResponse.json({ error: "Unsupported chain" }, { status: 400 });
@@ -65,10 +68,7 @@ export async function POST(request: NextRequest) {
   // so we don't have to look it up via Circle every time). Fallback: caller
   // provides destinationAddress in body.
   const destEnv = process.env[cfg.serviceWalletAddressEnv]?.trim();
-  const destination =
-    destEnv ||
-    ((await request.json().catch(() => ({}))) as { destinationAddress?: string })
-      .destinationAddress;
+  const destination = destEnv || body.destinationAddress;
   if (!destination) {
     return NextResponse.json(
       {
