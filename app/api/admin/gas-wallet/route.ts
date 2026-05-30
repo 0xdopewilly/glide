@@ -1,4 +1,5 @@
 import { requireSessionUser, isAuthError } from "@/lib/api-auth";
+import { createCircleClient } from "@/lib/circle";
 import { createWalletOnChain } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -51,6 +52,33 @@ export async function POST(request: NextRequest) {
   }
 
   const cfg = SUPPORTED[chain as keyof typeof SUPPORTED];
+
+  // Idempotency: if a gas wallet is already configured via env var, return
+  // *that* one instead of provisioning a new wallet. Without this, repeated
+  // calls (e.g. when the operator forgets they already ran it) wastefully
+  // spawn fresh Circle wallets and risk pointing env vars at unfunded ones.
+  const existingId = process.env[cfg.envVar]?.trim();
+  if (existingId) {
+    const initialized = createCircleClient();
+    if (!("error" in initialized)) {
+      try {
+        const res = await initialized.client.getWallet({ id: existingId });
+        const w = res.data?.wallet;
+        if (w?.id && w?.address) {
+          return NextResponse.json({
+            chain,
+            walletId: w.id,
+            address: w.address,
+            existing: true,
+            note: `Returning the wallet already configured via ${cfg.envVar}. No new wallet was created.`,
+          });
+        }
+      } catch {
+        // env points to a stale id; fall through to create a new wallet
+      }
+    }
+  }
+
   const wallet = await createWalletOnChain(chain);
 
   return NextResponse.json({
