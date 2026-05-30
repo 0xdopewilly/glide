@@ -597,6 +597,60 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     };
   }, [authReady, user?.id, fetchTransactions, loadTransactions]);
 
+  // Real-time balance updates. Three triggers, all cheap:
+  //  1. Service worker `glide:refresh-wallet` message - fires whenever a push
+  //     notification lands, so incoming USDC reflects in the UI within ~1s
+  //     of the push arriving (no manual refresh tap needed).
+  //  2. Tab becoming visible again - covers the case where the push fires
+  //     while the app is backgrounded.
+  //  3. Light polling while focused - 12s interval as a belt-and-braces
+  //     fallback. Pauses when the tab is hidden so battery isn't drained.
+  useEffect(() => {
+    if (!wallet) return;
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === "glide:refresh-wallet") {
+        void refresh();
+      }
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", onMessage);
+    }
+    document.addEventListener("visibilitychange", onVisible);
+
+    const pollMs = 12_000;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const startPoll = () => {
+      if (timer) return;
+      timer = setInterval(() => {
+        if (document.visibilityState === "visible") void refresh();
+      }, pollMs);
+    };
+    const stopPoll = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+    if (document.visibilityState === "visible") startPoll();
+    const onVisibilityForPoll = () =>
+      document.visibilityState === "visible" ? startPoll() : stopPoll();
+    document.addEventListener("visibilitychange", onVisibilityForPoll);
+
+    return () => {
+      if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("message", onMessage);
+      }
+      document.removeEventListener("visibilitychange", onVisible);
+      document.removeEventListener("visibilitychange", onVisibilityForPoll);
+      stopPoll();
+    };
+  }, [wallet, refresh]);
+
   const totalUsd = useMemo(() => {
     const onChain = resolveWalletTotalUsd(tokens, balance);
     if (onChain > 0) return onChain;

@@ -7,12 +7,23 @@ self.addEventListener("push", (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: "/logo-mark.png",
-      badge: "/logo-mark.png",
-      data: { url: data.url },
-    }),
+    Promise.all([
+      self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: "/logo-mark.png",
+        badge: "/logo-mark.png",
+        data: { url: data.url },
+      }),
+      // Tell every open Glide tab to refresh its wallet state immediately,
+      // so balances update without the user tapping the refresh button.
+      self.clients
+        .matchAll({ type: "window", includeUncontrolled: true })
+        .then((list) => {
+          for (const client of list) {
+            client.postMessage({ type: "glide:refresh-wallet" });
+          }
+        }),
+    ]),
   );
 });
 

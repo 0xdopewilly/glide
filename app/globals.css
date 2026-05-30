@@ -4,19 +4,20 @@
 
 :root {
   color-scheme: light;
-  /* glidepay light: white base + near-black-with-blue-undertone #031a36 brand. */
+  /* glidepay light, Arcium-style: white base, near-black #031a36 brand,
+     stepped grays for surfaces. No transparency, no gradients. */
   --glide-bg: #ffffff;
   --glide-shell: #ffffff;
   --glide-surface: #ffffff;
   --glide-surface-elevated: #ffffff;
-  --glide-surface-container: #eef1f7;
-  --glide-surface-container-high: #dfe4ee;
+  --glide-surface-container: #f3f5f9;
+  --glide-surface-container-high: #e4e8ef;
   --glide-nav-surface: #ffffff;
-  --glide-primary-container: rgba(3, 26, 54, 0.14);
-  --glide-success-container: rgba(45, 153, 86, 0.14);
+  --glide-primary-container: #e4e8ef;
+  --glide-success-container: #dcefe3;
   --glide-text: #031a36;
   --glide-muted: #4a5470;
-  --glide-border: rgba(3, 26, 54, 0.18);
+  --glide-border: #d6dbe5;
   --glide-input: #ffffff;
   --glide-accent: #031a36;
   --glide-accent-hover: #052449;
@@ -33,40 +34,42 @@
   --glide-ease: cubic-bezier(0.2, 0, 0, 1);
   --glide-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   --glide-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --glide-gradient-from: #031a36;
-  --glide-gradient-to: #0a3a7a;
-  --glide-glow-primary: rgba(3, 26, 54, 0.50);
-  --glide-glow-secondary: rgba(3, 26, 54, 0.30);
-  --glide-glow-accent: rgba(3, 26, 54, 0.40);
-  --glide-glow-warm: rgba(3, 26, 54, 0.22);
+  --glide-gradient-from: #ffffff;
+  --glide-gradient-to: #ffffff;
+  --glide-glow-primary: transparent;
+  --glide-glow-secondary: transparent;
+  --glide-glow-accent: transparent;
+  --glide-glow-warm: transparent;
 }
 
 .dark {
   color-scheme: dark;
-  /* glidepay dark: deep blue base, white text + CTAs + glow. */
-  --glide-bg: #052447;
-  --glide-shell: #07294e;
-  --glide-surface: #0a3056;
-  --glide-surface-elevated: #0e3661;
-  --glide-surface-container: #08305a;
-  --glide-surface-container-high: #144477;
-  --glide-nav-surface: #07294e;
-  --glide-primary-container: rgba(255, 255, 255, 0.10);
-  --glide-success-container: rgba(74, 222, 128, 0.14);
+  /* glidepay dark, Arcium-style: one solid brand color, no gradients, no
+     glow layers. Surfaces are stepped flat shades of the brand blue rather
+     than transparency-on-transparency. */
+  --glide-bg: #041f3d;
+  --glide-shell: #062349;
+  --glide-surface: #0a2f5c;
+  --glide-surface-elevated: #0d376b;
+  --glide-surface-container: #082c55;
+  --glide-surface-container-high: #114475;
+  --glide-nav-surface: #062349;
+  --glide-primary-container: #0d376b;
+  --glide-success-container: #0d4929;
   --glide-text: #ffffff;
   --glide-muted: #8aa5c2;
-  --glide-border: rgba(255, 255, 255, 0.12);
-  --glide-input: rgba(255, 255, 255, 0.06);
+  --glide-border: #1a4877;
+  --glide-input: #082c55;
   --glide-accent: #ffffff;
   --glide-accent-hover: #ebebed;
   --glide-success: #4ade80;
-  --glide-on-nav-inactive: rgba(255, 255, 255, 0.50);
-  --glide-gradient-from: #052447;
-  --glide-gradient-to: #1a4d8a;
-  --glide-glow-primary: rgba(255, 255, 255, 0.25);
-  --glide-glow-secondary: rgba(255, 255, 255, 0.14);
-  --glide-glow-accent: rgba(255, 255, 255, 0.18);
-  --glide-glow-warm: rgba(255, 255, 255, 0.08);
+  --glide-on-nav-inactive: #6f88a8;
+  --glide-gradient-from: #041f3d;
+  --glide-gradient-to: #041f3d;
+  --glide-glow-primary: transparent;
+  --glide-glow-secondary: transparent;
+  --glide-glow-accent: transparent;
+  --glide-glow-warm: transparent;
 }
 
 body {
@@ -102,20 +105,11 @@ body {
   }
 }
 
-/* Static shell background - no filter: blur() layers */
+/* Solid shell - no radial gradients, no glow layers. Plain brand color so
+   the app reads as clean, opinionated, monospace-adjacent (Arcium aesthetic). */
 .glide-bg-wash {
-  background:
-    radial-gradient(
-      ellipse 85% 55% at 92% 8%,
-      color-mix(in srgb, var(--glide-glow-primary) 70%, transparent) 0%,
-      transparent 58%
-    ),
-    radial-gradient(
-      ellipse 70% 50% at 8% 88%,
-      color-mix(in srgb, var(--glide-glow-secondary) 55%, transparent) 0%,
-      transparent 52%
-    );
-  opacity: 0.85;
+  background: var(--glide-bg);
+  opacity: 1;
 }
 
 .page-motion-panel {
@@ -669,8 +663,6 @@ body {
 .glide-glass-panel {
   position: relative;
   background: var(--glide-shell);
-  backdrop-filter: blur(24px) saturate(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
   border: 1px solid var(--glide-border);
 }
 
