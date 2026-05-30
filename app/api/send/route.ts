@@ -102,13 +102,44 @@ export async function POST(request: NextRequest) {
 
     await assertSufficientBalance(walletId, parsed, token);
 
-    const decimals = precisionForToken(token);
+    // Idempotency: block a duplicate send with the same (recipient, amount,
+    // token) within the last 10 seconds for this user. Catches accidental
+    // double-taps, double-submits, and rapid retries after a transient
+    // network blip. Real Transaction rows from successful sends live in the
+    // DB, so we use them as the dedup source of truth.
+    const formatted = parsed.toFixed(precisionForToken(token));
+    const tenSecondsAgo = new Date(Date.now() - 10_000);
+    const recent = await prisma.transaction.findFirst({
+      where: {
+        userId: session.userId,
+        kind: "send",
+        amountLabel: `−${formatStableAmount(parsed, token)}`,
+        createdAt: { gte: tenSecondsAgo },
+        metadata: {
+          path: ["recipientAddress"],
+          equals: destinationAddress,
+        },
+      },
+      select: { id: true, txHash: true, circleTransactionId: true, status: true },
+    });
+    if (recent) {
+      return NextResponse.json({
+        ok: true,
+        duplicate: true,
+        circleTransactionId: recent.circleTransactionId,
+        txHash: recent.txHash,
+        state: recent.status,
+        amount: formatted,
+        token,
+      });
+    }
+
     const res = await initialized.client.createTransaction({
       walletAddress: wallet.address,
       blockchain: GLIDE_BLOCKCHAIN,
       tokenAddress: arcTokenAddressForSymbol(token),
       destinationAddress,
-      amount: [parsed.toFixed(decimals)],
+      amount: [formatted],
       fee: {
         type: "level",
         config: { feeLevel: "MEDIUM" },
@@ -207,7 +238,7 @@ export async function POST(request: NextRequest) {
           payer?.username ?? payer?.displayName ?? session.displayName ?? "Someone";
         void notifyRequestPaid(
           req.userId,
-          parsed.toFixed(decimals),
+          formatted,
           payerLabel,
         ).catch((err) => console.error("[Glide] request paid notify:", err));
       }

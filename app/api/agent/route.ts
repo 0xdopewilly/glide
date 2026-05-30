@@ -127,9 +127,16 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
 async function resolveSendRecipient(
   userId: string,
   intent: GlideIntent & { action: "send" },
-): Promise<GlideIntent & { action: "send" }> {
+): Promise<GlideIntent | { action: "reply"; message: string }> {
+  // If the LLM returned a raw 0x address, trust it (validated downstream).
+  if (isValidWalletAddress(intent.to)) return intent;
   const resolved = await resolveRecipient(userId, intent.to);
-  if (!resolved) return intent;
+  if (!resolved) {
+    return {
+      action: "reply",
+      message: `I couldn't find anyone called "${intent.to}". Try a @username, a saved contact name, or paste a 0x wallet address.`,
+    };
+  }
   return {
     ...intent,
     to: resolved.address,
@@ -144,9 +151,15 @@ async function resolveSendRecipient(
 async function resolveSendBatchRecipient(
   userId: string,
   intent: GlideIntent & { action: "send_batch" },
-): Promise<GlideIntent & { action: "send_batch" }> {
+): Promise<GlideIntent | { action: "reply"; message: string }> {
+  if (isValidWalletAddress(intent.to)) return intent;
   const resolved = await resolveRecipient(userId, intent.to);
-  if (!resolved) return intent;
+  if (!resolved) {
+    return {
+      action: "reply",
+      message: `I couldn't find anyone called "${intent.to}". Try a @username, a saved contact name, or paste a 0x wallet address.`,
+    };
+  }
   return {
     ...intent,
     to: resolved.address,

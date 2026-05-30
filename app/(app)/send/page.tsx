@@ -192,14 +192,14 @@ export default function SendPage() {
     setSubmitting(true);
     setLocalError(null);
     clearError();
-    const ok = await sendMoney(recipient.trim(), amount, {
+    const result = await sendMoney(recipient.trim(), amount, {
       note: note.trim() || undefined,
       requestCode,
       token,
     });
     setSubmitting(false);
-    if (ok) setStep("success");
-    else setLocalError("Payment could not be completed. Try again.");
+    if (result.ok) setStep("success");
+    else setLocalError(result.error);
   };
 
   const recipientLabel = resolvedMeta?.label ?? recipient.trim();

@@ -46,9 +46,9 @@ export default function BridgePage() {
     if (!canSubmit) return;
     setSubmitting(true);
     clearError();
-    const ok = await bridgeMoney(amount, network);
+    const result = await bridgeMoney(amount, network);
     setSubmitting(false);
-    if (ok) setStep("success");
+    if (result.ok) setStep("success");
   };
 
   const useMax = () => {

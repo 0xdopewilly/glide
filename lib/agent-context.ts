@@ -397,14 +397,20 @@ export function extractRecipientNameFromHistory(
   return null;
 }
 
+/** Anti-misfire: only look at the very recent conversation to assemble a
+ * send. Anything older than ~3 turns is stale - a user mentioning $5 and an
+ * address in separate, days-apart conversations must NOT auto-fire a send. */
+const SEND_LOOKBACK_TURNS = 3;
+
 export function canExecuteSendFromHistory(history: AgentHistoryMessage[]): {
   to: string;
   amount: string;
   recipientName?: string;
 } | null {
-  const to = extractWalletFromHistory(history);
-  const amount = extractAmountFromHistory(history);
+  const recent = history.slice(-SEND_LOOKBACK_TURNS);
+  const to = extractWalletFromHistory(recent);
+  const amount = extractAmountFromHistory(recent);
   if (!to || !amount) return null;
-  const recipientName = extractRecipientNameFromHistory(history) ?? undefined;
+  const recipientName = extractRecipientNameFromHistory(recent) ?? undefined;
   return { to, amount, recipientName };
 }

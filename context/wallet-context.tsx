@@ -94,12 +94,18 @@ type WalletContextValue = {
       requestCode?: string;
       token?: string;
     },
-  ) => Promise<boolean>;
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   swapMoney: (
     amount: string,
     options?: { tokenIn?: string; tokenOut?: string },
-  ) => Promise<{ ok: true; receivedAmount?: string } | { ok: false }>;
-  bridgeMoney: (amount: string, network: string) => Promise<boolean>;
+  ) => Promise<
+    | { ok: true; receivedAmount?: string }
+    | { ok: false; error: string }
+  >;
+  bridgeMoney: (
+    amount: string,
+    network: string,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
   clearError: () => void;
   clearNotice: () => void;
 };
@@ -421,7 +427,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         token?: string;
       },
     ) => {
-      if (!wallet) return false;
+      if (!wallet) return { ok: false as const, error: "Wallet not ready" };
       setError(null);
       try {
         const res = await fetch("/api/send", {
@@ -443,10 +449,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (typeof data.balance === "number") setBalance(data.balance);
         void refresh();
         playSuccessChime();
-        return true;
+        return { ok: true as const };
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Transfer failed");
-        return false;
+        const message = e instanceof Error ? e.message : "Transfer failed";
+        setError(message);
+        return { ok: false as const, error: message };
       }
     },
     [wallet, refresh],
@@ -457,7 +464,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       amount: string,
       options?: { tokenIn?: string; tokenOut?: string },
     ) => {
-      if (!wallet) return { ok: false as const };
+      if (!wallet) return { ok: false as const, error: "Wallet not ready" };
       setError(null);
       try {
         const res = await fetch("/api/swap", {
@@ -482,8 +489,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           receivedAmount: data.receivedAmount,
         };
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Swap failed");
-        return { ok: false as const };
+        const message = e instanceof Error ? e.message : "Swap failed";
+        setError(message);
+        return { ok: false as const, error: message };
       }
     },
     [wallet, refresh],
@@ -491,7 +499,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const bridgeMoney = useCallback(
     async (amount: string, network: string) => {
-      if (!wallet) return false;
+      if (!wallet) return { ok: false as const, error: "Wallet not ready" };
       setError(null);
       try {
         const res = await fetch("/api/bridge", {
@@ -507,10 +515,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (typeof data.balance === "number") setBalance(data.balance);
         playSuccessChime();
         void refresh();
-        return true;
+        return { ok: true as const };
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Bridge failed");
-        return false;
+        const message = e instanceof Error ? e.message : "Bridge failed";
+        setError(message);
+        return { ok: false as const, error: message };
       }
     },
     [wallet, refresh],

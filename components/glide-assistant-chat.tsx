@@ -163,11 +163,15 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
       if (intent.action === "send_batch") {
         const label = intent.recipientName?.trim();
         let completed = 0;
+        let lastError: string | null = null;
         for (const transfer of intent.transfers) {
-          const ok = await sendMoney(intent.to, transfer.amount, {
+          const result = await sendMoney(intent.to, transfer.amount, {
             token: transfer.token,
           });
-          if (!ok) break;
+          if (!result.ok) {
+            lastError = result.error;
+            break;
+          }
           completed++;
           if (completed === intent.transfers.length) {
             setProcessingAction(null);
@@ -211,7 +215,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             id: `partial-${Date.now()}`,
             role: "assistant",
             kind: "text",
-            text: `Sent ${completed} of ${intent.transfers.length} payments. Check balance and try the rest on Send.`,
+            text: `Sent ${completed} of ${intent.transfers.length} payments. The rest failed: ${lastError ?? "unknown error"}.`,
           });
           void refresh();
         } else {
@@ -219,16 +223,18 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             id: `err-${Date.now()}`,
             role: "assistant",
             kind: "text",
-            text: "Send didn't go through. Check your balance and try again.",
+            text: lastError
+              ? `Send didn't go through: ${lastError}`
+              : "Send didn't go through. Check your balance and try again.",
           });
         }
         return;
       }
       if (intent.action === "send") {
-        const ok = await sendMoney(intent.to, intent.amount, {
+        const result = await sendMoney(intent.to, intent.amount, {
           token: intent.token ?? "USDC",
         });
-        if (ok) {
+        if (result.ok) {
           const label = intent.recipientName?.trim();
           const token = intent.token ?? "USDC";
           setProcessingAction(null);
@@ -269,7 +275,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             id: `err-${Date.now()}`,
             role: "assistant",
             kind: "text",
-            text: "Send didn't go through. Check your balance and try again.",
+            text: `Send didn't go through: ${result.error}`,
           });
         }
         return;
@@ -292,15 +298,15 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             id: `swap-err-${Date.now()}`,
             role: "assistant",
             kind: "text",
-            text: "Swap didn't complete. Check the error banner on screen.",
+            text: `Swap didn't complete: ${result.error}`,
           });
         }
         return;
       }
       if (intent.action === "bridge") {
-        const ok = await bridgeMoney(intent.amount, intent.network);
+        const result = await bridgeMoney(intent.amount, intent.network);
         setProcessingAction(null);
-        if (ok) {
+        if (result.ok) {
           pushMessage({
             id: `bridge-${Date.now()}`,
             role: "assistant",
@@ -314,7 +320,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             id: `bridge-err-${Date.now()}`,
             role: "assistant",
             kind: "text",
-            text: "Bridge didn't complete. Try again in a moment.",
+            text: `Bridge didn't complete: ${result.error}`,
           });
         }
         return;
