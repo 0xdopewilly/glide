@@ -6,6 +6,7 @@ import { FlowPage } from "@/components/flow-page";
 import { ReceiveQr } from "@/components/receive-qr";
 import { UserAvatar } from "@/components/user-avatar";
 import { useWallet } from "@/context/wallet-context";
+import { motion } from "framer-motion";
 import { Share2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -184,10 +185,11 @@ export default function ReceivePage() {
 
         {tabs.length > 1 ? (
           <div
-            className="mx-auto mt-5 inline-flex rounded-full border p-1"
+            className="mx-auto mt-5 inline-flex max-w-full overflow-x-auto rounded-full border p-1"
             style={{
               background: "var(--glide-surface-container)",
               borderColor: "var(--glide-border)",
+              scrollbarWidth: "none",
             }}
           >
             {tabs.map((t) => {
@@ -197,20 +199,28 @@ export default function ReceivePage() {
                   key={t.key}
                   type="button"
                   onClick={() => setSelected(t.key)}
-                  className="glide-tap glide-label-mono px-4 py-1.5 text-[11px] font-bold"
+                  className="glide-tap glide-label-mono relative shrink-0 px-4 py-1.5 text-[11px] font-bold"
                   style={{
-                    borderRadius: 999,
-                    background: isActive
-                      ? "var(--glide-accent)"
-                      : "transparent",
                     color: isActive
                       ? "var(--glide-bg)"
                       : "var(--glide-muted)",
-                    transition:
-                      "background-color 180ms var(--glide-ease-out), color 180ms var(--glide-ease-out)",
+                    transition: "color 220ms var(--glide-ease-out)",
                   }}
                 >
-                  {t.label}
+                  {isActive ? (
+                    <motion.span
+                      layoutId="receive-chain-pill"
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: "var(--glide-accent)" }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 420,
+                        damping: 34,
+                        mass: 0.7,
+                      }}
+                    />
+                  ) : null}
+                  <span className="relative z-10">{t.label}</span>
                 </button>
               );
             })}
@@ -218,10 +228,13 @@ export default function ReceivePage() {
         ) : null}
 
         {/* Cross-fade the QR + address panel when switching tabs. Keyed by
-            active.key + address so the swap is visible after provisioning. */}
-        <div
-          key={`${active.key}-${address}`}
-          className="glide-fade-in flex flex-col"
+            active.key so each tap re-runs the entrance animation. */}
+        <motion.div
+          key={active.key}
+          initial={{ opacity: 0, y: 12, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
+          className="flex flex-col"
         >
           <ReceiveQr address={address} />
 
@@ -320,7 +333,7 @@ export default function ReceivePage() {
             <Share2 className="h-4 w-4" />
             Share address
           </button>
-        </div>
+        </motion.div>
       </div>
     </FlowPage>
   );
