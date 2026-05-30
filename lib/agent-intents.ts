@@ -239,6 +239,22 @@ export async function reconcileIntentWithHistory(
     { role: "user", content: latestUserMessage },
   ];
 
+  // Hard stop: any explicit refusal/cancellation in the latest message
+  // disables money intents for this turn. The user might be reacting to a
+  // mistakenly-fired send and we MUST honor that.
+  const refusal = latestUserMessage.toLowerCase();
+  if (
+    /\b(don'?t|do not|stop|cancel|nevermind|never mind|wait|hold on|abort)\b/.test(
+      refusal,
+    )
+  ) {
+    return {
+      action: "reply",
+      message:
+        "Got it - not sending. Let me know what you'd like to do instead.",
+    };
+  }
+
   const explicit = parseExplicitIntentFromMessage(latestUserMessage);
   if (explicit) return explicit;
 
@@ -351,12 +367,26 @@ export async function reconcileIntentWithHistory(
   }
 
   if (isNonSendMoneyMessage(latestUserMessage)) {
-    return (
-      intent ?? {
+    // The user is asking a question or making small talk - NEVER fire a
+    // money action here, even if the LLM hallucinated one. A previous bug
+    // had Billy auto-sending $1 to a stale recipient when the user just
+    // asked "what's your name?".
+    if (intent?.action === "reply" || intent?.action === "navigate") {
+      return intent;
+    }
+    // Default friendly fallback for plain name questions.
+    const lower = latestUserMessage.toLowerCase();
+    if (/\bname\b/.test(lower) || /\bwho\s+(are|r)\s+(you|u)\b/.test(lower)) {
+      return {
         action: "reply",
-        message: "How much USDC should I swap or bridge?",
-      }
-    );
+        message: "I'm Billy, your glidepay assistant. I can help you send, request, swap, or bridge. What's up?",
+      };
+    }
+    return {
+      action: "reply",
+      message:
+        "I can help with sends, swaps, bridges, requests, and splits. What would you like to do?",
+    };
   }
 
   const ready = canExecuteSendFromHistory(fullHistory);
