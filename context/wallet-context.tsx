@@ -332,6 +332,19 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, [wallet, fetchWalletState, loadTransactions]);
 
+  /** Refresh without toggling the `refreshing` flag (so we don't re-render
+   * the swap/bridge/send forms mid-interaction). Used by the background
+   * poll and push-event triggers — silent on success, silent on failure. */
+  const silentRefresh = useCallback(async () => {
+    if (!wallet || !userIdRef.current) return;
+    try {
+      await fetchWalletState(wallet, userIdRef.current);
+      await loadTransactions(wallet.id);
+    } catch {
+      // background sync - never surface errors to the user
+    }
+  }, [wallet, fetchWalletState, loadTransactions]);
+
   const provisionWallet = useCallback(async () => {
     setError(null);
     setLoading((prev) => (wallet ? prev : true));
@@ -597,24 +610,26 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     };
   }, [authReady, user?.id, fetchTransactions, loadTransactions]);
 
-  // Real-time balance updates. Three triggers, all cheap:
+  // Real-time balance updates. All triggers use silentRefresh so they don't
+  // re-render swap/bridge/send forms mid-interaction (no `refreshing` flag
+  // flip, no UI feedback) while still keeping the home balance live.
+  //
   //  1. Service worker `glide:refresh-wallet` message - fires whenever a push
-  //     notification lands, so incoming USDC reflects in the UI within ~1s
-  //     of the push arriving (no manual refresh tap needed).
-  //  2. Tab becoming visible again - covers the case where the push fires
-  //     while the app is backgrounded.
-  //  3. Light polling while focused - 12s interval as a belt-and-braces
-  //     fallback. Pauses when the tab is hidden so battery isn't drained.
+  //     notification lands, so incoming USDC reflects within ~1s of push.
+  //  2. Tab becoming visible again - covers backgrounded receives.
+  //  3. Background poll - 30s while focused, pauses when tab is hidden.
+  //     Long enough not to disturb user interaction; short enough to catch
+  //     the rare case where push delivery drops.
   useEffect(() => {
     if (!wallet) return;
 
     const onMessage = (event: MessageEvent) => {
       if (event.data?.type === "glide:refresh-wallet") {
-        void refresh();
+        void silentRefresh();
       }
     };
     const onVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
+      if (document.visibilityState === "visible") void silentRefresh();
     };
 
     if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
@@ -622,12 +637,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
     document.addEventListener("visibilitychange", onVisible);
 
-    const pollMs = 12_000;
+    const pollMs = 30_000;
     let timer: ReturnType<typeof setInterval> | null = null;
     const startPoll = () => {
       if (timer) return;
       timer = setInterval(() => {
-        if (document.visibilityState === "visible") void refresh();
+        if (document.visibilityState === "visible") void silentRefresh();
       }, pollMs);
     };
     const stopPoll = () => {
@@ -649,7 +664,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", onVisibilityForPoll);
       stopPoll();
     };
-  }, [wallet, refresh]);
+  }, [wallet, silentRefresh]);
 
   const totalUsd = useMemo(() => {
     const onChain = resolveWalletTotalUsd(tokens, balance);
