@@ -275,6 +275,12 @@ export default function SendPage() {
               &ldquo;{note.trim()}&rdquo;
             </p>
           ) : null}
+          <SaveContactPrompt
+            recipient={recipient.trim()}
+            recipientName={
+              resolvedMeta?.source === "wallet" ? null : resolvedMeta?.label ?? null
+            }
+          />
           <GlideButton
             onClick={() => router.push("/")}
             className="mt-auto mb-8 max-w-sm"
@@ -310,13 +316,27 @@ export default function SendPage() {
             </p>
           </div>
 
-          <label className="glide-label-mono mt-6 block text-[11px] font-semibold text-[var(--glide-muted)]">
-            Note (optional)
-          </label>
+          <div className="mt-6 flex items-baseline justify-between">
+            <label
+              htmlFor="send-note"
+              className="glide-label-mono block text-[11px] font-semibold text-[var(--glide-muted)]"
+            >
+              Note (optional)
+            </label>
+            <span
+              className={`glide-label-mono text-[10px] font-semibold ${
+                note.length > 130 ? "text-red-400" : "text-[var(--glide-muted)]"
+              }`}
+            >
+              {note.length}/140
+            </span>
+          </div>
           <input
+            id="send-note"
             value={note}
-            onChange={(e) => setNote(e.target.value)}
+            onChange={(e) => setNote(e.target.value.slice(0, 140))}
             placeholder="Dinner, rent, thanks"
+            maxLength={140}
             style={{
               background: "var(--glide-input)",
               borderColor: "var(--glide-border)",
@@ -489,5 +509,114 @@ export default function SendPage() {
         </div>
       </div>
     </FlowPage>
+  );
+}
+
+/** Renders an inline "Save {name} to contacts?" card on the success screen
+ * after a real wallet-address send. Mirrors what Billy offers in chat so the
+ * /send flow doesn't feel less helpful than the assistant flow. */
+function SaveContactPrompt({
+  recipient,
+  recipientName,
+}: {
+  recipient: string;
+  recipientName: string | null;
+}) {
+  const [status, setStatus] = useState<"prompt" | "saving" | "saved" | "skip">(
+    "prompt",
+  );
+  const [exists, setExists] = useState<boolean | null>(null);
+  const isAddress = /^0x[a-fA-F0-9]{40}$/.test(recipient);
+
+  useEffect(() => {
+    if (!isAddress) {
+      setExists(true);
+      return;
+    }
+    let cancelled = false;
+    const params = new URLSearchParams({
+      wallet: recipient,
+      name: recipientName ?? "Contact",
+    });
+    fetch(`/api/contacts/exists?${params}`)
+      .then((r) => r.json())
+      .then((data: { exists?: boolean }) => {
+        if (!cancelled) setExists(!!data.exists);
+      })
+      .catch(() => {
+        if (!cancelled) setExists(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [recipient, recipientName, isAddress]);
+
+  if (!isAddress || exists === null || exists || status === "skip") return null;
+
+  if (status === "saved") {
+    return (
+      <p className="mt-6 glide-label-mono text-[11px] font-semibold text-[var(--glide-success)]">
+        Saved to contacts.
+      </p>
+    );
+  }
+
+  const handleSave = async () => {
+    const name = window.prompt("Name this contact", recipientName ?? "");
+    if (!name?.trim()) return;
+    setStatus("saving");
+    try {
+      const res = await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), walletAddress: recipient }),
+      });
+      setStatus(res.ok ? "saved" : "prompt");
+    } catch {
+      setStatus("prompt");
+    }
+  };
+
+  return (
+    <div
+      className="mt-6 w-full max-w-sm rounded-2xl border px-4 py-4 text-left"
+      style={{
+        background: "var(--glide-surface-elevated)",
+        borderColor: "var(--glide-border)",
+      }}
+    >
+      <p className="text-[14px] font-semibold text-[var(--glide-text)]">
+        Save this address to contacts?
+      </p>
+      <p className="mt-1 font-mono text-[11px] text-[var(--glide-muted)]">
+        {shortenAddress(recipient)}
+      </p>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={status === "saving"}
+          className="glide-tap glide-label-mono flex-1 rounded-full py-2.5 text-[11px] font-bold disabled:opacity-50"
+          style={{
+            background: "var(--glide-accent)",
+            color: "var(--glide-bg)",
+          }}
+        >
+          {status === "saving" ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setStatus("skip")}
+          className="glide-tap glide-label-mono flex-1 rounded-full border py-2.5 text-[11px] font-bold"
+          style={{
+            background: "var(--glide-surface-container)",
+            borderColor: "var(--glide-border)",
+            color: "var(--glide-text)",
+          }}
+        >
+          Later
+        </button>
+      </div>
+    </div>
   );
 }

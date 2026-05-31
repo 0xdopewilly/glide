@@ -61,15 +61,26 @@ export function TransactionList({
 
   if (transactions.length === 0 && !grouped) {
     return (
-      <p
-        className="rounded-2xl border px-4 py-10 text-center text-sm font-medium text-[var(--glide-muted)]"
+      <div
+        className="flex flex-col items-center rounded-2xl border px-6 py-10 text-center"
         style={{
           background: "var(--glide-surface-elevated)",
           borderColor: "var(--glide-border)",
         }}
       >
-        {emptyMessage}
-      </p>
+        <div
+          className="flex h-12 w-12 items-center justify-center rounded-full"
+          style={{ background: "var(--glide-primary-container)" }}
+        >
+          <ArrowDownLeft
+            className="h-5 w-5 text-[var(--glide-text)]"
+            strokeWidth={2.25}
+          />
+        </div>
+        <p className="mt-3 text-[14px] font-semibold text-[var(--glide-text)]">
+          {emptyMessage}
+        </p>
+      </div>
     );
   }
 

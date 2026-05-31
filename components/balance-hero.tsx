@@ -2,8 +2,10 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 import { formatUsd } from "@/lib/format";
-import { motion, useScroll, useTransform } from "framer-motion";
 import { RefreshCw } from "lucide-react";
+import { useEffect, useRef } from "react";
+
+const MAX_SCROLL = 220;
 
 export function BalanceHero({
   balance,
@@ -22,12 +24,39 @@ export function BalanceHero({
   const { hideBalance, setHideBalance } = usePrivacy();
   const realText = `$${formatUsd(displayTotal)}`;
 
-  // Recede effect: hero shrinks + fades a touch as the user scrolls past it.
-  // Only transform + opacity — keeps the GPU happy on mobile.
-  const { scrollY } = useScroll();
-  const scale = useTransform(scrollY, [0, 220], [1, 0.86], { clamp: true });
-  const opacity = useTransform(scrollY, [0, 220], [1, 0.55], { clamp: true });
-  const y = useTransform(scrollY, [0, 220], [0, -12], { clamp: true });
+  // Recede effect: hero shrinks + fades as the user scrolls past it. Hand-
+  // rolled with a passive scroll listener + rAF throttle so we don't ship
+  // 130 KB of framer-motion to the home page bundle just for this one
+  // transform. Only modifies `transform` + `opacity` — GPU-cheap on mobile.
+  const heroRef = useRef<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    let rafId = 0;
+    let lastY = -1;
+    const apply = () => {
+      rafId = 0;
+      const y = Math.min(window.scrollY, MAX_SCROLL);
+      if (y === lastY) return;
+      lastY = y;
+      const node = heroRef.current;
+      if (!node) return;
+      const t = y / MAX_SCROLL;
+      const scale = 1 - t * 0.14;
+      const opacity = 1 - t * 0.45;
+      const translate = -12 * t;
+      node.style.transform = `translate3d(0, ${translate}px, 0) scale(${scale})`;
+      node.style.opacity = String(opacity);
+    };
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(apply);
+    };
+    apply();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   return (
     <section className="flex flex-col items-start px-0 pb-2 pt-4 text-left">
@@ -48,12 +77,13 @@ export function BalanceHero({
           />
         </button>
       </div>
-      <motion.button
+      <button
+        ref={heroRef}
         type="button"
         onClick={() => setHideBalance(!hideBalance)}
         aria-label={hideBalance ? "Show balance" : "Hide balance"}
-        className="glide-tap mt-2 inline-block origin-left text-left"
-        style={{ scale, opacity, y }}
+        className="glide-tap mt-2 inline-block origin-left text-left will-change-transform"
+        style={{ transformOrigin: "left center" }}
       >
         <h1
           className={`glide-scale-in font-bold leading-[1.05] text-[var(--glide-text)] tabular-nums ${
@@ -64,7 +94,7 @@ export function BalanceHero({
         >
           {hideBalance ? "······" : realText}
         </h1>
-      </motion.button>
+      </button>
     </section>
   );
 }

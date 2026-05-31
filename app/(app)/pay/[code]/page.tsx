@@ -66,7 +66,20 @@ export default function PayRequestPage({
         {error ? (
           <p className="text-sm text-red-400">{error}</p>
         ) : !info ? (
-          <p className="text-sm glide-muted">Loading…</p>
+          <div className="w-full max-w-xs space-y-3" aria-hidden>
+            <div
+              className="mx-auto h-3 w-20 animate-pulse rounded"
+              style={{ background: "var(--glide-surface-container-high)" }}
+            />
+            <div
+              className="mx-auto h-12 w-40 animate-pulse rounded-xl"
+              style={{ background: "var(--glide-surface-container-high)" }}
+            />
+            <div
+              className="mx-auto mt-4 h-11 w-full animate-pulse rounded-2xl"
+              style={{ background: "var(--glide-surface-container)" }}
+            />
+          </div>
         ) : info.status !== "pending" ? (
           <p className="text-sm glide-muted">This request was already paid.</p>
         ) : (

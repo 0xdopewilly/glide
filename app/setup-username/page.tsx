@@ -109,8 +109,17 @@ export default function SetupUsernamePage() {
   if (!ready || !user || !profileHydrated) {
     return (
       <OnboardingShell>
-        <div className="flex flex-1 items-center justify-center px-7 pb-10 pt-14">
-          <p className="text-sm font-medium glide-muted">Loading…</p>
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-7 pb-10 pt-14">
+          <div
+            className="h-3 w-3 animate-bounce rounded-full"
+            style={{
+              background: "var(--glide-accent)",
+              animationDelay: "0ms",
+            }}
+          />
+          <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+            Setting up your account…
+          </p>
         </div>
       </OnboardingShell>
     );
