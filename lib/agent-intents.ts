@@ -12,7 +12,6 @@ import {
   extractUsernameFromHistory,
   extractWalletFromHistory,
   isNonSendMoneyMessage,
-  isSwapOrBridgeMessage,
   parseExplicitIntentFromMessage,
   parseMultiSendFromMessage,
   parseSendFromMessage,

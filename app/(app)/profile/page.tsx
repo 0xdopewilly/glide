@@ -309,7 +309,7 @@ function DeleteAccountButton() {
       <p className="mt-1 text-[12px] leading-relaxed text-[var(--glide-muted)]">
         Removes your glidepay profile, activity history, contacts, push
         subscriptions, and any saved data. On-chain balances stay on Arc
-        and aren't ours to delete — withdraw them first if you want them.
+        and aren&apos;t ours to delete — withdraw them first if you want them.
       </p>
       {error ? (
         <p className="mt-2 text-[12px] font-semibold text-red-500">{error}</p>

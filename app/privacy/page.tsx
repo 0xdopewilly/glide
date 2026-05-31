@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       <p>
         glidepay is a mobile-first stablecoin wallet built on Arc testnet. This
         page explains what data we collect, why we collect it, and what we do
-        not do with it. We've tried to keep it human.
+        not do with it. We&apos;ve tried to keep it human.
       </p>
 
       <h2>What we collect</h2>
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Push subscriptions</strong>: if you turn on notifications,
-          your device's push endpoint is stored so we can notify you of
+          your device&apos;s push endpoint is stored so we can notify you of
           incoming money.
         </li>
         <li>
@@ -43,14 +43,14 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
-      <h2>What we don't collect</h2>
+      <h2>What we don&apos;t collect</h2>
       <ul>
         <li>No private keys, no seed phrases, no signing credentials. Your
           wallet is operated server-side by Circle.</li>
         <li>No location tracking, no device fingerprinting beyond what Clerk
           and Vercel store for auth and infra.</li>
         <li>No marketing or advertising trackers.</li>
-        <li>No financial information beyond what's already public on chain.</li>
+        <li>No financial information beyond what&apos;s already public on chain.</li>
       </ul>
 
       <h2>Who we share data with</h2>
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
       </ul>
       <p>
         We do not sell your data. We do not share it with marketers. We share
-        only what's necessary with the providers above to make the product
+        only what&apos;s necessary with the providers above to make the product
         work.
       </p>
 
@@ -90,7 +90,7 @@ export default function PrivacyPage() {
           them first if you want them.</li>
         <li><strong>Export your data.</strong> Email{" "}
           <a href="mailto:support@glidepay.app">support@glidepay.app</a> and
-          we'll send you a JSON dump of everything we have within 30 days.</li>
+          we&apos;ll send you a JSON dump of everything we have within 30 days.</li>
         <li><strong>Correct your data.</strong> Display name, avatar, and pay
           tag are editable in Profile.</li>
       </ul>
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
       <h2>Testnet</h2>
       <p>
         glidepay currently operates on Arc testnet. Test tokens have no real
-        monetary value. When we ship on mainnet we'll update this policy and
+        monetary value. When we ship on mainnet we&apos;ll update this policy and
         notify you in-app.
       </p>
 

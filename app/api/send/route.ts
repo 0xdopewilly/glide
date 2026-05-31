@@ -2,7 +2,6 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
 import {
   arcTokenAddressForSymbol,
-  isEurcToken,
   normalizeTokenSymbol,
 } from "@/lib/tokens";
 import { formatStableAmount } from "@/lib/currency-format";

@@ -9,15 +9,18 @@ export function useInView<T extends Element = HTMLDivElement>(
   options?: { rootMargin?: string; threshold?: number },
 ): { ref: React.RefObject<T | null>; inView: boolean } {
   const ref = useRef<T | null>(null);
-  const [inView, setInView] = useState(false);
+  // If the browser doesn't have IntersectionObserver (very old, or SSR), we
+  // never want to hide content - initialize to true so the fade-up just acts
+  // as a fade-up-on-mount. Lazy init avoids the setState-in-effect anti-
+  // pattern lint flags us for if we set it inside the effect.
+  const [inView, setInView] = useState<boolean>(
+    () => typeof IntersectionObserver === "undefined",
+  );
 
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
-    if (typeof IntersectionObserver === "undefined") {
-      setInView(true);
-      return;
-    }
+    if (typeof IntersectionObserver === "undefined") return;
 
     const observer = new IntersectionObserver(
       (entries) => {

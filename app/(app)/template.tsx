@@ -1,31 +1,15 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect, useRef } from "react";
-
+/**
+ * Authenticated-shell template. INTENTIONALLY a passthrough — no key={pathname},
+ * no enter animation, no remount on navigation. Tab navigation must be instant
+ * (see CLAUDE.md "Motion / performance"). Each route handles its own entrance
+ * effects locally; this wrapper exists only because Next requires a template
+ * file for the route group.
+ */
 export default function AppTemplate({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isPopRef = useRef(false);
-
-  useEffect(() => {
-    const onPop = () => {
-      isPopRef.current = true;
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
-  }, []);
-
-  const animClass = isPopRef.current ? "" : "slide-up";
-
-  useEffect(() => {
-    isPopRef.current = false;
-  }, [pathname]);
-
   return (
-    <div
-      key={pathname}
-      className={`page-motion-panel flex min-h-0 flex-1 flex-col overflow-hidden ${animClass}`}
-    >
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {children}
     </div>
   );

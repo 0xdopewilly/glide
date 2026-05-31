@@ -1,7 +1,6 @@
 import { findContactByName } from "@/lib/contacts-db";
-import { shortenAddress } from "@/lib/format";
 import { formatUsernameForPush } from "@/lib/push-display";
-import { findUserByUsername, findUserByWalletAddress } from "@/lib/usernames";
+import { findUserByUsername } from "@/lib/usernames";
 import {
   isValidUsername,
   isValidWalletAddress,

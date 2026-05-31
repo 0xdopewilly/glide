@@ -40,13 +40,6 @@ async function walletPayload(
   };
 }
 
-function walletOptions(request: NextRequest) {
-  const includeOffArc =
-    request.nextUrl.searchParams.get("full") === "1" ||
-    request.nextUrl.searchParams.get("offArc") === "1";
-  return { includeOffArc };
-}
-
 /** GET - current user's wallet; optional ?walletId= with ownership check */
 export async function GET(request: NextRequest) {
   const session = await requireSessionUser();

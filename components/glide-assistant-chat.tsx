@@ -12,7 +12,6 @@ import {
   formatSplitPartialMessage,
   formatSplitSuccessMessage,
 } from "@/lib/split-bill";
-import type { ActionSuccessType } from "@/lib/chat-cache";
 import {
   fetchServerChatHistory,
   pushServerChatHistory,

@@ -9,7 +9,7 @@ export default function SupportPage() {
   return (
     <LegalShell title="Support" updated="May 31, 2026">
       <p>
-        Need help with glidepay? We're a small team and respond as fast as we
+        Need help with glidepay? We&apos;re a small team and respond as fast as we
         can. Below are the fastest ways to reach us depending on what you need.
       </p>
 
@@ -39,26 +39,26 @@ export default function SupportPage() {
 
       <h2>Common questions</h2>
 
-      <h2>What's testnet?</h2>
+      <h2>What&apos;s testnet?</h2>
       <p>
         glidepay runs on Arc testnet — a sandbox version of the blockchain
         used for development. Test tokens (USDC, EURC, cirBTC) on testnet have
         no real monetary value. You can play with all features risk-free.
       </p>
 
-      <h2>I sent money and the recipient didn't receive it</h2>
+      <h2>I sent money and the recipient didn&apos;t receive it</h2>
       <p>
-        Check Activity for the transaction status. If it shows "failed" or
-        "pending" for more than a few minutes, email support with the
+        Check Activity for the transaction status. If it shows &quot;failed&quot; or
+        &quot;pending&quot; for more than a few minutes, email support with the
         transaction hash (you can copy it from the Activity row).
       </p>
 
       <h2>I lost access to my email</h2>
       <p>
-        glidepay accounts are tied to your email via Clerk. If you've lost
+        glidepay accounts are tied to your email via Clerk. If you&apos;ve lost
         access, email{" "}
         <a href="mailto:support@glidepay.app">support@glidepay.app</a> from a
-        related address with as much detail as you can. We'll work with you to
+        related address with as much detail as you can. We&apos;ll work with you to
         verify identity.
       </p>
 
@@ -72,7 +72,7 @@ export default function SupportPage() {
 
       <h2>How can I follow updates?</h2>
       <p>
-        We post product updates and announcements in-app. We don't have a
+        We post product updates and announcements in-app. We don&apos;t have a
         social or newsletter yet — coming when we hit mainnet.
       </p>
     </LegalShell>

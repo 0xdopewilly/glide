@@ -13,7 +13,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 export default function SetupUsernamePage() {
   const router = useRouter();
   const { user, ready } = useAuth();
-  const { profile, loading, profileHydrated, updateProfile } = useWallet();
+  const { profile, profileHydrated, updateProfile } = useWallet();
   const [username, setUsername] = useState("");
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
