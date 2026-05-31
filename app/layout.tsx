@@ -28,11 +28,17 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#041f3d" },
+  ],
 };
 
 export const metadata: Metadata = {
   title: "glidepay",
   description: "Move money instantly. Simple, fast, and familiar.",
+  manifest: "/manifest.json",
+  applicationName: "glidepay",
   icons: {
     icon: [
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },

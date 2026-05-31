@@ -225,6 +225,20 @@ export default function ProfilePage() {
 
         <AccountSecurityCard />
 
+        <div className="mt-4 flex flex-col gap-3 text-center text-[11px] text-[var(--glide-muted)]">
+          <div className="flex justify-center gap-4">
+            <Link href="/privacy" className="hover:text-[var(--glide-text)]">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-[var(--glide-text)]">
+              Terms
+            </Link>
+            <Link href="/support" className="hover:text-[var(--glide-text)]">
+              Support
+            </Link>
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={() => void signOut()}
@@ -233,7 +247,93 @@ export default function ProfilePage() {
         >
           Sign out
         </button>
+
+        <DeleteAccountButton />
       </div>
     </>
+  );
+}
+
+function DeleteAccountButton() {
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST" });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Could not delete your account. Try again.");
+        setDeleting(false);
+        return;
+      }
+      // Hard reload to /onboarding so the (now-deleted) Clerk session is
+      // cleared by the middleware redirect.
+      window.location.href = "/onboarding";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Delete failed");
+      setDeleting(false);
+    }
+  };
+
+  if (!confirming) {
+    return (
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="mt-2 w-full rounded-2xl py-3 text-[12px] font-semibold transition-colors hover:text-red-500"
+        style={{ color: "var(--glide-muted)" }}
+      >
+        Delete account
+      </button>
+    );
+  }
+
+  return (
+    <div
+      className="mt-2 rounded-2xl border p-4"
+      style={{
+        background: "var(--glide-surface-elevated)",
+        borderColor: "var(--glide-border)",
+      }}
+    >
+      <p className="text-[14px] font-semibold text-[var(--glide-text)]">
+        Permanently delete your account?
+      </p>
+      <p className="mt-1 text-[12px] leading-relaxed text-[var(--glide-muted)]">
+        Removes your glidepay profile, activity history, contacts, push
+        subscriptions, and any saved data. On-chain balances stay on Arc
+        and aren't ours to delete — withdraw them first if you want them.
+      </p>
+      {error ? (
+        <p className="mt-2 text-[12px] font-semibold text-red-500">{error}</p>
+      ) : null}
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => void handleDelete()}
+          disabled={deleting}
+          className="glide-tap glide-label-mono flex-1 rounded-full bg-red-500 py-2.5 text-[11px] font-bold text-white disabled:opacity-50"
+        >
+          {deleting ? "Deleting…" : "Yes, delete"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setConfirming(false)}
+          disabled={deleting}
+          className="glide-tap glide-label-mono flex-1 rounded-full border py-2.5 text-[11px] font-bold disabled:opacity-50"
+          style={{
+            background: "var(--glide-surface-container)",
+            borderColor: "var(--glide-border)",
+            color: "var(--glide-text)",
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
