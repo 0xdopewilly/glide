@@ -86,12 +86,20 @@ export function readChatHistory(userId?: string | null): StoredChatMessage[] {
   }
 }
 
+/** Keep at most this many messages in localStorage. Older messages are
+ * dropped on write. Stops localStorage from growing unbounded over months
+ * of usage, and keeps the JSON parse + render budget bounded. */
+const MAX_CLIENT_HISTORY = 100;
+
 export function writeChatHistory(
   messages: StoredChatMessage[],
   userId?: string | null,
 ): void {
   if (typeof window === "undefined" || !userId) return;
-  localStorage.setItem(key(userId), JSON.stringify(messages.slice(-80)));
+  localStorage.setItem(
+    key(userId),
+    JSON.stringify(messages.slice(-MAX_CLIENT_HISTORY)),
+  );
 }
 
 /** Fetch server-side history. Server is the source of truth across devices. */

@@ -7,6 +7,7 @@ import {
   type GlideIntent,
 } from "@/lib/agent-intents";
 import { parseSlashCommand } from "@/lib/agent-slash";
+import { fuzzySuggestRecipients } from "@/lib/recipient-fuzzy";
 import {
   formatStableAmount,
   formatStableAmountWithCode,
@@ -125,6 +126,26 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
   return { reply: "How can I help?" };
 }
 
+async function formatNotFoundReply(
+  userId: string,
+  query: string,
+): Promise<{ action: "reply"; message: string }> {
+  const suggestions = await fuzzySuggestRecipients(userId, query, 3);
+  if (suggestions.length > 0) {
+    const formatted = suggestions
+      .map((s) => (s.kind === "username" ? `@${s.label}` : s.label))
+      .join(", ");
+    return {
+      action: "reply",
+      message: `I couldn't find "${query}". Did you mean ${formatted}?`,
+    };
+  }
+  return {
+    action: "reply",
+    message: `I couldn't find anyone called "${query}". Try a @username, a saved contact name, or paste a 0x wallet address.`,
+  };
+}
+
 async function resolveSendRecipient(
   userId: string,
   intent: GlideIntent & { action: "send" },
@@ -132,12 +153,7 @@ async function resolveSendRecipient(
   // If the LLM returned a raw 0x address, trust it (validated downstream).
   if (isValidWalletAddress(intent.to)) return intent;
   const resolved = await resolveRecipient(userId, intent.to);
-  if (!resolved) {
-    return {
-      action: "reply",
-      message: `I couldn't find anyone called "${intent.to}". Try a @username, a saved contact name, or paste a 0x wallet address.`,
-    };
-  }
+  if (!resolved) return formatNotFoundReply(userId, intent.to);
   return {
     ...intent,
     to: resolved.address,
@@ -155,12 +171,7 @@ async function resolveSendBatchRecipient(
 ): Promise<GlideIntent | { action: "reply"; message: string }> {
   if (isValidWalletAddress(intent.to)) return intent;
   const resolved = await resolveRecipient(userId, intent.to);
-  if (!resolved) {
-    return {
-      action: "reply",
-      message: `I couldn't find anyone called "${intent.to}". Try a @username, a saved contact name, or paste a 0x wallet address.`,
-    };
-  }
+  if (!resolved) return formatNotFoundReply(userId, intent.to);
   return {
     ...intent,
     to: resolved.address,

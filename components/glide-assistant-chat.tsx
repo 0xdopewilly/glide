@@ -24,7 +24,14 @@ import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowUp, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 const WELCOME: StoredChatMessage = {
   id: "welcome",
@@ -33,12 +40,30 @@ const WELCOME: StoredChatMessage = {
   text: "Hi! I'm Billy. Send, request, split bills, swap, or bridge. What do you need?",
 };
 
-const QUICK_PROMPTS = [
+type QuickPrompt = string;
+
+const BASE_PROMPTS: QuickPrompt[] = [
   "Send $5",
   "Swap $10 to EURC",
   "Split $60 with @fifi and @khadee",
   "My balance",
-] as const;
+];
+
+/** Pick quick-suggestion chips based on what the user actually has. Avoids
+ * showing "Swap $10 to EURC" to a user with $0 USDC, etc. Falls back to the
+ * static set when state isn't loaded yet. */
+function selectQuickPrompts(opts: {
+  balance: number;
+  hasEurc: boolean;
+}): QuickPrompt[] {
+  const out: QuickPrompt[] = [];
+  if (opts.balance >= 1) out.push("Send $1");
+  if (opts.balance >= 5) out.push("Swap $5 to EURC");
+  if (opts.hasEurc) out.push("Bridge $5 to Base");
+  out.push("How does Universal Receive work?");
+  if (out.length < 3) out.push(...BASE_PROMPTS);
+  return Array.from(new Set(out)).slice(0, 4);
+}
 
 function toAgentHistory(messages: StoredChatMessage[]) {
   return messages
@@ -53,7 +78,15 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { sendMoney, swapMoney, bridgeMoney, refresh, clearError } = useWallet();
+  const {
+    sendMoney,
+    swapMoney,
+    bridgeMoney,
+    refresh,
+    clearError,
+    balance,
+    tokens,
+  } = useWallet();
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [processingAction, setProcessingAction] =
@@ -66,6 +99,13 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
 
   const isPage = variant === "page";
   const userId = user?.id;
+
+  const quickPrompts = useMemo(() => {
+    const hasEurc = !!tokens.find(
+      (t) => t.symbol?.toUpperCase() === "EURC" && t.amount > 0,
+    );
+    return selectQuickPrompts({ balance: balance ?? 0, hasEurc });
+  }, [balance, tokens]);
 
   useEffect(() => {
     if (!userId) return;
@@ -730,7 +770,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             </div>
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {QUICK_PROMPTS.map((prompt) => (
+            {quickPrompts.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
