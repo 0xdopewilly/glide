@@ -24,6 +24,7 @@ export function ChatMessageBubble({
   onConfirmAction,
   onCancelAction,
   confirmBusy,
+  onRetry,
 }: {
   message: StoredChatMessage;
   onSaveContact?: (id: string) => void;
@@ -32,6 +33,7 @@ export function ChatMessageBubble({
   onConfirmAction?: (id: string) => void;
   onCancelAction?: (id: string) => void;
   confirmBusy?: boolean;
+  onRetry?: (prompt: string) => void;
 }) {
   if (message.kind === "confirm_action") {
     return (
@@ -160,6 +162,21 @@ export function ChatMessageBubble({
         title={isAddress ? rawText.trim() : undefined}
       >
         {bubbleText}
+        {!isUser && message.retryPrompt ? (
+          <button
+            type="button"
+            onClick={() =>
+              message.retryPrompt && onRetry?.(message.retryPrompt)
+            }
+            className="glide-tap glide-label-mono mt-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold"
+            style={{
+              background: "var(--glide-primary-container)",
+              color: "var(--glide-text)",
+            }}
+          >
+            Try again
+          </button>
+        ) : null}
       </div>
     </div>
   );

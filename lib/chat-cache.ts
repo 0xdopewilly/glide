@@ -36,6 +36,9 @@ export type StoredChatMessage = {
   confirmStatus?: "pending" | "confirmed" | "cancelled" | "failed";
   /** For confirm_action request: target user's glide tag. */
   glideTag?: string;
+  /** When set on a text bubble, render a 'Try again' button that re-invokes
+   * Billy with this exact message. Used for retry-with-correction UX. */
+  retryPrompt?: string;
 };
 
 const WELCOME: StoredChatMessage = {

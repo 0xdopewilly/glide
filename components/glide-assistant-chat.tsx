@@ -387,11 +387,14 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           }
           void refresh();
         } else {
+          const tokenLabel = intent.token ?? "USDC";
+          const retryPrompt = `Send $${intent.amount} ${tokenLabel} to ${intent.recipientName ?? intent.to}`;
           pushMessage({
             id: `err-${Date.now()}`,
             role: "assistant",
             kind: "text",
             text: `Send didn't go through: ${result.error}`,
+            retryPrompt,
           });
         }
         return;
@@ -415,6 +418,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             role: "assistant",
             kind: "text",
             text: `Swap didn't complete: ${result.error}`,
+            retryPrompt: `Swap $${intent.amount} to EURC`,
           });
         }
         return;
@@ -437,6 +441,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             role: "assistant",
             kind: "text",
             text: `Bridge didn't complete: ${result.error}`,
+            retryPrompt: `Bridge $${intent.amount} to ${intent.network}`,
           });
         }
         return;
@@ -806,6 +811,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             onConfirmAction={onConfirmAction}
             onCancelAction={onCancelAction}
             confirmBusy={busy}
+            onRetry={(prompt) => void sendToAgent(prompt)}
           />
         ))}
         {processingAction ? (
