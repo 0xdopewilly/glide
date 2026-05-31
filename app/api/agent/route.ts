@@ -6,6 +6,7 @@ import {
   reconcileIntentWithHistory,
   type GlideIntent,
 } from "@/lib/agent-intents";
+import { parseSlashCommand } from "@/lib/agent-slash";
 import {
   formatStableAmount,
   formatStableAmountWithCode,
@@ -190,6 +191,20 @@ export async function POST(request: NextRequest) {
       (m.role === "user" || m.role === "assistant") &&
       typeof m.content === "string",
   );
+
+  // Slash commands short-circuit the LLM entirely. /send /swap /bridge etc.
+  // are parsed deterministically — no model failure mode, no token cost.
+  const slash = parseSlashCommand(message);
+  if (slash) {
+    let intent: GlideIntent | { action: "reply"; message: string } = slash;
+    if (intent.action === "send") {
+      intent = await resolveSendRecipient(session.userId, intent);
+    }
+    if (intent.action === "send_batch") {
+      intent = await resolveSendBatchRecipient(session.userId, intent);
+    }
+    return NextResponse.json(intentReply(intent));
+  }
 
   try {
     const groqMessages: GroqMessage[] = [
