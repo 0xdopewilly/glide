@@ -51,7 +51,7 @@ export function AppHeader({
   ) : showLogo ? (
     <Link
       href="/"
-      className="glide-tap inline-flex min-w-0 items-center transition-opacity hover:opacity-90"
+      className="glide-tap inline-flex min-w-0 items-center gap-2 transition-opacity hover:opacity-90"
       aria-label="glidepay home"
     >
       <Image
@@ -70,6 +70,16 @@ export function AppHeader({
         priority
         className="hidden h-7 w-auto dark:block"
       />
+      <span
+        className="glide-label-mono rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+        style={{
+          background: "var(--glide-primary-container)",
+          color: "var(--glide-text)",
+        }}
+        aria-label="Testnet"
+      >
+        Testnet
+      </span>
     </Link>
   ) : (
     <span className="h-10 w-10 shrink-0" aria-hidden />

@@ -1,6 +1,7 @@
 "use client";
 
 import { AccountSecurityCard } from "@/components/account-security-card";
+import { AppVersion } from "@/components/app-version";
 import { CopyButton } from "@/components/copy-button";
 import { FormField, inputClassName } from "@/components/form-field";
 import { GlideButton } from "@/components/glide-button";
@@ -249,6 +250,8 @@ export default function ProfilePage() {
         </button>
 
         <DeleteAccountButton />
+
+        <AppVersion />
       </div>
     </>
   );

@@ -35,8 +35,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://glide-arc.vercel.app"),
   title: "glidepay",
-  description: "Move money instantly. Simple, fast, and familiar.",
+  description: "Send and receive stablecoins instantly. A Cash App for USDC on Arc.",
   manifest: "/manifest.json",
   applicationName: "glidepay",
   icons: {
@@ -52,6 +53,29 @@ export const metadata: Metadata = {
     title: "glidepay",
     capable: true,
     statusBarStyle: "black-translucent",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "glidepay",
+    title: "glidepay — money like a text",
+    description:
+      "Send and receive stablecoins instantly. A Cash App for USDC on Arc.",
+    url: "https://glide-arc.vercel.app",
+    images: [
+      {
+        url: "/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "glidepay",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "glidepay",
+    description:
+      "Send and receive stablecoins instantly. A Cash App for USDC on Arc.",
+    images: ["/icon-512.png"],
   },
 };
 

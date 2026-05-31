@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /onboarding
+Allow: /privacy
+Allow: /terms
+Allow: /support
+Disallow: /api/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /admin
+Disallow: /pay/
+Disallow: /setup-username
+
+Sitemap: https://glide-arc.vercel.app/sitemap.xml
