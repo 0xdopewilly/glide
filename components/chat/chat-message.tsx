@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionSuccessCard } from "@/components/chat/action-success-card";
+import { ConfirmActionCard } from "@/components/chat/confirm-action-card";
 import type { ActionSuccessType, StoredChatMessage } from "@/lib/chat-cache";
 import { formatChatBubbleText, isEthAddress, shortenAddress } from "@/lib/format";
 import { UserPlus } from "lucide-react";
@@ -20,12 +21,28 @@ export function ChatMessageBubble({
   onSaveContact,
   onSkipContact,
   savingContact,
+  onConfirmAction,
+  onCancelAction,
+  confirmBusy,
 }: {
   message: StoredChatMessage;
   onSaveContact?: (id: string) => void;
   onSkipContact?: (id: string) => void;
   savingContact?: boolean;
+  onConfirmAction?: (id: string) => void;
+  onCancelAction?: (id: string) => void;
+  confirmBusy?: boolean;
 }) {
+  if (message.kind === "confirm_action") {
+    return (
+      <ConfirmActionCard
+        message={message}
+        busy={!!confirmBusy}
+        onConfirm={(id) => onConfirmAction?.(id)}
+        onCancel={(id) => onCancelAction?.(id)}
+      />
+    );
+  }
   const successAction = resolveSuccessAction(message);
   if (successAction) {
     return (

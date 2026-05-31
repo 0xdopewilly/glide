@@ -136,12 +136,88 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     [scrollToEnd],
   );
 
+  // Build a confirm_action card for the four intents that move money OUT of
+  // the user's wallet. swap + bridge are user-to-self transfers and execute
+  // directly. Everything else goes through a [Confirm] / [Cancel] step so a
+  // hallucinated LLM intent can never auto-spend.
+  const buildConfirmCard = useCallback(
+    (intent: GlideIntent): StoredChatMessage | null => {
+      const base = {
+        id: `confirm-${Date.now()}`,
+        role: "assistant" as const,
+        kind: "confirm_action" as const,
+        confirmStatus: "pending" as const,
+      };
+      if (intent.action === "send") {
+        return {
+          ...base,
+          confirmKind: "send",
+          amount: intent.amount,
+          token: intent.token ?? "USDC",
+          to: intent.to,
+          recipientName: intent.recipientName,
+        };
+      }
+      if (intent.action === "send_batch") {
+        return {
+          ...base,
+          confirmKind: "send_batch",
+          to: intent.to,
+          recipientName: intent.recipientName,
+          transfers: intent.transfers,
+        };
+      }
+      if (intent.action === "request") {
+        return {
+          ...base,
+          confirmKind: "request",
+          amount: intent.amount,
+          token: intent.token ?? "USDC",
+          glideTag: intent.glideTag,
+        };
+      }
+      if (intent.action === "split") {
+        return {
+          ...base,
+          confirmKind: "split",
+          amount: intent.total,
+          token: intent.token ?? "USDC",
+          recipients: intent.recipients,
+        };
+      }
+      return null;
+    },
+    [],
+  );
+
+  // Latest pending intent, keyed by the confirm card's id. When the user taps
+  // Confirm we look this up and execute, then mark the card as confirmed.
+  const pendingIntentsRef = useRef<Map<string, GlideIntent>>(new Map());
+
   const runIntent = useCallback(
-    async (intent: GlideIntent) => {
+    async (intent: GlideIntent, opts?: { viaConfirm?: boolean }) => {
       clearError();
       if (intent.action === "navigate") {
         router.push(intent.path);
         return;
+      }
+
+      // Money-out actions go through a confirmation card first. The
+      // viaConfirm flag skips this gate — set when the user taps Confirm
+      // on a confirm_action card so we proceed straight to execution.
+      if (
+        !opts?.viaConfirm &&
+        (intent.action === "send" ||
+          intent.action === "send_batch" ||
+          intent.action === "request" ||
+          intent.action === "split")
+      ) {
+        const card = buildConfirmCard(intent);
+        if (card) {
+          pendingIntentsRef.current.set(card.id, intent);
+          pushMessage(card);
+          return;
+        }
       }
 
       const processing: ProcessingAction | null =
@@ -454,6 +530,35 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     );
   }, []);
 
+  const onConfirmAction = useCallback(
+    async (id: string) => {
+      const pending = pendingIntentsRef.current.get(id);
+      if (!pending) return;
+      pendingIntentsRef.current.delete(id);
+      // Mark the card so it loses its buttons and reads "Sent".
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id && m.kind === "confirm_action"
+            ? { ...m, confirmStatus: "confirmed" as const }
+            : m,
+        ),
+      );
+      await runIntent(pending, { viaConfirm: true });
+    },
+    [runIntent],
+  );
+
+  const onCancelAction = useCallback((id: string) => {
+    pendingIntentsRef.current.delete(id);
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id && m.kind === "confirm_action"
+          ? { ...m, confirmStatus: "cancelled" as const }
+          : m,
+      ),
+    );
+  }, []);
+
   const sendToAgent = useCallback(
     async (text: string) => {
       if (!text.trim() || busy) return;
@@ -658,6 +763,9 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             savingContact={savingContactId === m.id}
             onSaveContact={saveContact}
             onSkipContact={skipContact}
+            onConfirmAction={onConfirmAction}
+            onCancelAction={onCancelAction}
+            confirmBusy={busy}
           />
         ))}
         {processingAction ? (

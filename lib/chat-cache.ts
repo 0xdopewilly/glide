@@ -1,9 +1,16 @@
 export type ActionSuccessType = "send" | "swap" | "bridge";
 
+export type ConfirmActionKind = "send" | "send_batch" | "request" | "split";
+
 export type StoredChatMessage = {
   id: string;
   role: "user" | "assistant";
-  kind: "text" | "action_success" | "send_success" | "add_contact";
+  kind:
+    | "text"
+    | "action_success"
+    | "send_success"
+    | "add_contact"
+    | "confirm_action";
   text?: string;
   amount?: string;
   to?: string;
@@ -19,6 +26,16 @@ export type StoredChatMessage = {
   /** EURC received from swap (display with €) */
   receivedAmount?: string;
   network?: string;
+  /** For confirm_action: the kind of action the user is being asked to confirm. */
+  confirmKind?: ConfirmActionKind;
+  /** For confirm_action send_batch: each leg's amount + token. */
+  transfers?: { amount: string; token: string }[];
+  /** For confirm_action split: equal-share recipients (usernames). */
+  recipients?: string[];
+  /** For confirm_action: was this confirmed, cancelled, or still pending. */
+  confirmStatus?: "pending" | "confirmed" | "cancelled" | "failed";
+  /** For confirm_action request: target user's glide tag. */
+  glideTag?: string;
 };
 
 const WELCOME: StoredChatMessage = {
