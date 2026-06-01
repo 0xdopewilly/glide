@@ -54,3 +54,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Capacitor native build artifacts (commit the platform shells, ignore builds)
+/ios/App/Pods/
+/ios/App/build/
+/ios/DerivedData/
+/ios/App/App.xcworkspace/xcuserdata/
+/ios/App/App.xcodeproj/xcuserdata/
+/android/.gradle/
+/android/local.properties
+/android/.idea/
+/android/build/
+/android/app/build/
+/android/app/release/
+/android/captures/
+*.keystore
+!debug.keystore
+google-services.json
+GoogleService-Info.plist
