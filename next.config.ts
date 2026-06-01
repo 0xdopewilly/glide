@@ -39,6 +39,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  async redirects() {
+    return [
+      { source: "/privacy", destination: "https://glidepay.cash/privacy", permanent: true },
+      { source: "/terms", destination: "https://glidepay.cash/terms", permanent: true },
+      { source: "/support", destination: "https://glidepay.cash/support", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

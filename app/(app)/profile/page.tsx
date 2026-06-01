@@ -228,15 +228,30 @@ export default function ProfilePage() {
 
         <div className="mt-4 flex flex-col gap-3 text-center text-[11px] text-[var(--glide-muted)]">
           <div className="flex justify-center gap-4">
-            <Link href="/privacy" className="hover:text-[var(--glide-text)]">
+            <a
+              href="https://glidepay.cash/privacy"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-[var(--glide-text)]"
+            >
               Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-[var(--glide-text)]">
+            </a>
+            <a
+              href="https://glidepay.cash/terms"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-[var(--glide-text)]"
+            >
               Terms
-            </Link>
-            <Link href="/support" className="hover:text-[var(--glide-text)]">
+            </a>
+            <a
+              href="https://glidepay.cash/support"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-[var(--glide-text)]"
+            >
               Support
-            </Link>
+            </a>
           </div>
         </div>
 
