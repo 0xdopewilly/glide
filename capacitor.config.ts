@@ -17,7 +17,7 @@ const config: CapacitorConfig = {
   appName: "glidepay",
   webDir: "out", // unused with server.url, but Capacitor requires this field
   server: {
-    url: "https://glide-arc.vercel.app",
+    url: "https://app.glidepay.cash",
     cleartext: false,
     androidScheme: "https",
   },

@@ -35,7 +35,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://glide-arc.vercel.app"),
+  metadataBase: new URL("https://app.glidepay.cash"),
   title: "glidepay",
   description: "Send and receive stablecoins instantly. A Cash App for USDC on Arc.",
   manifest: "/manifest.json",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     title: "glidepay — money like a text",
     description:
       "Send and receive stablecoins instantly. A Cash App for USDC on Arc.",
-    url: "https://glide-arc.vercel.app",
+    url: "https://app.glidepay.cash",
     images: [
       {
         url: "/icon-512.png",

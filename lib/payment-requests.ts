@@ -10,7 +10,7 @@ export function paymentRequestUrl(code: string, origin?: string) {
   const base =
     origin?.replace(/\/$/, "") ??
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-    "https://glide-arc.vercel.app";
+    "https://app.glidepay.cash";
   return `${base}/pay/${code}`;
 }
 

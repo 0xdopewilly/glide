@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
 /** Dev instance on Vercel - no custom domain in Clerk; allow these origins explicitly. */
 const authorizedParties = [
   "http://localhost:3000",
+  "https://app.glidepay.cash",
   "https://glide-arc.vercel.app",
   ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
   // Phone testing on local WiFi (dev-only; ignored in production).
