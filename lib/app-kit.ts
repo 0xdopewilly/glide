@@ -1,6 +1,7 @@
 import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
 import { AppKit } from "@circle-fin/app-kit";
 import { createGlideBridgeAdapter } from "@/lib/glide-bridge-adapter";
+import { ensureSourceGas } from "@/lib/gas-refill";
 import { kitKeyStatus, resolveKitKey } from "@/lib/kit-key";
 import {
   ArcTestnet,
@@ -19,6 +20,16 @@ export const BRIDGE_NETWORKS = {
 } as const;
 
 export type BridgeNetworkKey = keyof typeof BRIDGE_NETWORKS;
+
+/** Maps Glide's BridgeNetworkKey to Circle's blockchain identifier. Shared by
+ * both inbound sweeps (cctp-receive) and outbound bridges (executeArcBridge)
+ * so gas-refill targets stay in sync across directions. */
+export const BRIDGE_TO_CIRCLE_BLOCKCHAIN: Record<BridgeNetworkKey, string> = {
+  base: "BASE-SEPOLIA",
+  ethereum: "ETH-SEPOLIA",
+  polygon: "MATIC-AMOY",
+  arbitrum: "ARB-SEPOLIA",
+};
 
 type GlideAppKit = {
   kit: AppKit;
@@ -243,6 +254,28 @@ export async function executeArcBridge(input: {
 
   const bridgeAdapter = createGlideBridgeAdapter({ apiKey, entitySecret });
 
+  // Outbound mirror of cctp-receive's inbound refill: Circle's bridge SDK
+  // pre-flights native balance on BOTH chains. Source (Arc) is fine - USDC
+  // pays gas. Destination is an EVM testnet where the user's same DCW
+  // address has 0 native ETH on first use, so the SDK throws
+  // "Insufficient <native> on <chain> to cover gas fees". Top up from the
+  // Glide service wallet for that chain before signing so the bridge stays
+  // gasless from the user's perspective.
+  const destCircleBlockchain = BRIDGE_TO_CIRCLE_BLOCKCHAIN[input.network];
+  if (destCircleBlockchain) {
+    try {
+      await ensureSourceGas({
+        circleBlockchain: destCircleBlockchain,
+        userWalletAddress: input.walletAddress,
+      });
+    } catch (err) {
+      console.error("[Glide] outbound bridge gas refill:", err);
+      // Don't abort - if the user already has gas (e.g. from a prior
+      // inbound sweep refill), the bridge can still succeed. Otherwise
+      // the SDK will surface the real error and the catch below maps it.
+    }
+  }
+
   try {
     const result = await kit.bridge({
       from: {
@@ -272,6 +305,21 @@ export async function executeArcBridge(input: {
     if (message.includes("CIRCLE_KIT_KEY") || message.includes("Missing")) {
       throw err;
     }
+    // Gas-fee check must run BEFORE the generic "insufficient/balance"
+    // catch: the SDK's destination-gas error is "Insufficient <native>
+    // on <chain> to cover gas fees", which would otherwise match the
+    // generic case and re-throw the raw message.
+    if (
+      message.toLowerCase().includes("cover gas fees") ||
+      message.toLowerCase().includes("pay for gas") ||
+      message.toLowerCase().includes("native balance") ||
+      message.includes("156001") ||
+      message.toLowerCase().includes("unknown rpc")
+    ) {
+      throw new Error(
+        "We weren't able to fund gas for this bridge. Try again in a moment, or contact support if it persists.",
+      );
+    }
     if (
       message.toLowerCase().includes("insufficient") ||
       message.toLowerCase().includes("balance")
@@ -284,15 +332,6 @@ export async function executeArcBridge(input: {
     ) {
       throw new Error(
         "Your wallet needs a small on-chain transaction first. Try sending USDC once, then bridge again.",
-      );
-    }
-    if (
-      message.toLowerCase().includes("native balance") ||
-      message.includes("156001") ||
-      message.toLowerCase().includes("unknown rpc")
-    ) {
-      throw new Error(
-        "Could not reach the destination network RPC. Try Base instead of Ethereum, or retry in a minute.",
       );
     }
     if (

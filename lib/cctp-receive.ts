@@ -1,5 +1,5 @@
 import type { BridgeNetworkKey } from "@/lib/app-kit";
-import { sweepIncomingToArc } from "@/lib/app-kit";
+import { BRIDGE_TO_CIRCLE_BLOCKCHAIN, sweepIncomingToArc } from "@/lib/app-kit";
 import {
   getReceiveChainByCircleBlockchain,
   RECEIVE_CHAINS,
@@ -20,13 +20,6 @@ const RECEIVE_TO_BRIDGE: Record<ReceiveChainKey, BridgeNetworkKey> = {
   ethereum: "ethereum",
   polygon: "polygon",
   arbitrum: "arbitrum",
-};
-
-const BRIDGE_TO_CIRCLE_BLOCKCHAIN: Record<BridgeNetworkKey, string> = {
-  base: "BASE-SEPOLIA",
-  ethereum: "ETH-SEPOLIA",
-  polygon: "MATIC-AMOY",
-  arbitrum: "ARB-SEPOLIA",
 };
 
 export type IncomingTransfer = {

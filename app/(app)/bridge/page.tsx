@@ -240,7 +240,23 @@ export default function BridgePage() {
                   </p>
                 ) : null}
                 {error ? (
-                  <p className="mt-3 text-sm text-red-400">{error}</p>
+                  <p className="mt-3 text-sm text-red-400">
+                    {error}
+                    {/(gas|fund)/i.test(error) ? (
+                      <>
+                        {" "}
+                        <a
+                          href="https://glidepay.cash/support"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="underline"
+                        >
+                          Contact support
+                        </a>
+                        .
+                      </>
+                    ) : null}
+                  </p>
                 ) : null}
 
                 <GlidePillButton
