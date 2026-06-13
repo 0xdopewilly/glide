@@ -6,7 +6,6 @@ import { TransactionList } from "@/components/transaction-list";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePrivacy } from "@/context/privacy-context";
 import { useProfile, useWallet } from "@/context/wallet-context";
-import { formatUsd } from "@/lib/format";
 import { tokenAmountFromBalances } from "@/lib/tokens";
 import type { TransactionKind } from "@/lib/types";
 import {
@@ -58,12 +57,8 @@ export default function HomePage() {
   const { hideBalance, blurAmounts } = usePrivacy();
   const [filter, setFilter] = useState<Filter>("all");
 
-  const usdcAmount = useMemo(() => tokenAmountFromBalances(tokens, "USDC"), [tokens]);
-  const eurcAmount = useMemo(() => tokenAmountFromBalances(tokens, "EURC"), [tokens]);
-  const cirBtcAmount = useMemo(
-    () => tokenAmountFromBalances(tokens, "cirBTC"),
-    [tokens],
-  );
+  const usdcAmount = useMemo(() => tokenAmountFromBalances(tokens ?? [], "USDC"), [tokens]);
+  const eurcAmount = useMemo(() => tokenAmountFromBalances(tokens ?? [], "EURC"), [tokens]);
 
   const greeting = useMemo(() => greetingFor(new Date()), []);
   const firstName = (profile.displayName ?? "").trim().split(" ")[0] || "there";
@@ -75,7 +70,15 @@ export default function HomePage() {
 
   const visibleTransactions = filteredTransactions.slice(0, 6);
 
-  const heroValueText = `$${formatUsd(totalUsd ?? 0)}`;
+  // Pre-format BEFORE JSX so the number always renders even when totalUsd is
+  // 0 or undefined (fixes invisible-balance bug where number went missing).
+  const formattedTotalUsd = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(typeof totalUsd === "number" ? totalUsd : 0);
+  const usdcDisplay = (Number.isFinite(usdcAmount) ? usdcAmount : 0).toFixed(2);
+  const eurcDisplay = (Number.isFinite(eurcAmount) ? eurcAmount : 0).toFixed(2);
 
   return (
     <>
@@ -111,72 +114,69 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {/* HERO BALANCE CARD */}
+        {/* HERO BALANCE CARD — bright vibrant green, focal point of the screen. */}
         <section
-          className="glow-green relative mt-4 overflow-hidden rounded-3xl p-6"
+          className="glow-green relative mt-4 overflow-hidden rounded-3xl p-6 shadow-[0_30px_80px_-30px_rgba(74,222,128,0.5)]"
           style={{
             background:
-              "radial-gradient(120% 80% at 0% 0%, rgba(74, 222, 128, 0.22) 0%, transparent 55%), linear-gradient(155deg, #0F2E1C 0%, #0A0A0A 70%)",
-            color: "#FFFFFF",
+              "linear-gradient(135deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
           }}
         >
-          <div className="flex items-center justify-between">
-            <span
-              className="glide-label-mono text-[10px] font-semibold uppercase tracking-wider"
-              style={{ color: "#A1A1AA" }}
-            >
-              Total balance
-            </span>
+          {/* radial highlight in top-left for depth */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-60"
+            style={{
+              background:
+                "radial-gradient(circle at 20% 0%, rgba(255,255,255,0.25), transparent 50%)",
+            }}
+            aria-hidden
+          />
+
+          <div className="relative flex items-start justify-between">
+            <p className="text-[11px] font-bold tracking-[0.18em] text-white/80 uppercase">
+              Total Balance
+            </p>
             <button
               type="button"
               onClick={() => void refresh()}
               disabled={refreshing}
               aria-label="Refresh balances"
-              className="glide-tap inline-flex h-8 w-8 items-center justify-center rounded-full disabled:opacity-40"
-              style={{
-                background: "rgba(255, 255, 255, 0.06)",
-                border: "1px solid rgba(74, 222, 128, 0.22)",
-                color: "#FFFFFF",
-              }}
+              className="glide-tap rounded-full bg-black/20 p-2 text-white transition-colors hover:bg-black/30 disabled:opacity-40"
             >
               <RefreshCw
-                className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
                 strokeWidth={2.25}
               />
             </button>
           </div>
 
-          <h1
-            className={`mt-3 font-bold leading-[1.02] tabular-nums ${
-              hideBalance
-                ? "text-4xl tracking-[0.18em]"
-                : "text-[2.75rem] tracking-[-0.04em] sm:text-5xl"
-            }`}
-            style={{ color: "#FFFFFF" }}
-          >
-            {hideBalance ? "······" : heroValueText}
-          </h1>
+          <p className="relative mt-2 font-display text-5xl font-bold text-white tabular-nums">
+            {hideBalance ? "••••••" : formattedTotalUsd}
+          </p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <TokenPill
-              symbol="USDC"
-              amount={usdcAmount}
-              active
-              blur={blurAmounts}
-            />
-            <TokenPill
-              symbol="EURC"
-              amount={eurcAmount}
-              blur={blurAmounts}
-            />
-            {cirBtcAmount > 0 ? (
-              <TokenPill
-                symbol="cirBTC"
-                amount={cirBtcAmount}
-                blur={blurAmounts}
-                decimals={6}
-              />
-            ) : null}
+          <div className="relative mt-5 grid grid-cols-2 gap-2.5">
+            <div className="rounded-2xl bg-[#0A0A0A] p-3.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-white/55 uppercase">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80]/15">
+                  <span className="h-2 w-2 rounded-full bg-[#4ADE80]" />
+                </span>
+                USDC
+              </div>
+              <p className="mt-1.5 font-display text-lg font-bold text-white tabular-nums">
+                {hideBalance || blurAmounts ? "••••" : `$${usdcDisplay}`}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-[#0A0A0A] p-3.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-white/55 uppercase">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#3B82F6]/15">
+                  <span className="h-2 w-2 rounded-full bg-[#3B82F6]" />
+                </span>
+                EURC
+              </div>
+              <p className="mt-1.5 font-display text-lg font-bold text-white tabular-nums">
+                {hideBalance || blurAmounts ? "••••" : `€${eurcDisplay}`}
+              </p>
+            </div>
           </div>
         </section>
 
@@ -275,55 +275,3 @@ export default function HomePage() {
   );
 }
 
-function TokenPill({
-  symbol,
-  amount,
-  active = false,
-  blur = false,
-  decimals = 2,
-}: {
-  symbol: string;
-  amount: number;
-  active?: boolean;
-  blur?: boolean;
-  decimals?: number;
-}) {
-  const formatted = blur
-    ? "•••"
-    : amount.toLocaleString("en-US", {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      });
-
-  const dotColor = active ? "#0A0A0A" : "#4ADE80";
-
-  return (
-    <span
-      className="inline-flex items-center gap-2 rounded-full px-3 py-1.5"
-      style={
-        active
-          ? { background: "#4ADE80", color: "#0A0A0A" }
-          : {
-              background: "rgba(255, 255, 255, 0.06)",
-              color: "#FFFFFF",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
-            }
-      }
-    >
-      <span
-        className="inline-block h-1.5 w-1.5 shrink-0 rounded-full"
-        style={{ background: dotColor }}
-        aria-hidden
-      />
-      <span className="flex flex-col leading-tight">
-        <span
-          className="glide-label-mono text-[9px] font-bold uppercase tracking-wider"
-          style={{ opacity: active ? 0.72 : 0.7 }}
-        >
-          {symbol}
-        </span>
-        <span className="text-[12px] font-bold tabular-nums">{formatted}</span>
-      </span>
-    </span>
-  );
-}
