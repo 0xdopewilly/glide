@@ -54,7 +54,7 @@ export default function HomePage() {
     refresh,
   } = useWallet();
   const { profile } = useProfile();
-  const { hideBalance, blurAmounts } = usePrivacy();
+  const { hideBalance } = usePrivacy();
   const [filter, setFilter] = useState<Filter>("all");
 
   const usdcAmount = useMemo(() => tokenAmountFromBalances(tokens ?? [], "USDC"), [tokens]);
@@ -76,7 +76,10 @@ export default function HomePage() {
     style: "currency",
     currency: "USD",
     minimumFractionDigits: 2,
-  }).format(typeof totalUsd === "number" ? totalUsd : 0);
+    maximumFractionDigits: 2,
+  }).format(
+    typeof totalUsd === "number" && Number.isFinite(totalUsd) ? totalUsd : 0,
+  );
   const usdcDisplay = (Number.isFinite(usdcAmount) ? usdcAmount : 0).toFixed(2);
   const eurcDisplay = (Number.isFinite(eurcAmount) ? eurcAmount : 0).toFixed(2);
 
@@ -114,9 +117,13 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {/* HERO BALANCE CARD — bright vibrant green, focal point of the screen. */}
+        {/* HERO BALANCE CARD — bright vibrant green, focal point of the screen.
+            CRITICAL: `flex flex-col gap-4` guarantees vertical stacking of children
+            with consistent spacing. Do NOT use `mt-*` between siblings here — gap
+            handles spacing. Previous bug: stray utilities collapsed the rows so
+            the balance number rendered but was clipped/overlapped. */}
         <section
-          className="glow-green relative mt-4 overflow-hidden rounded-3xl p-6 shadow-[0_30px_80px_-30px_rgba(74,222,128,0.5)]"
+          className="glow-green relative mt-4 flex flex-col gap-4 overflow-hidden rounded-3xl p-6 shadow-[0_30px_80px_-30px_rgba(74,222,128,0.5)]"
           style={{
             background:
               "linear-gradient(135deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
@@ -132,6 +139,7 @@ export default function HomePage() {
             aria-hidden
           />
 
+          {/* Row 1: label + refresh */}
           <div className="relative flex items-start justify-between">
             <p className="text-[11px] font-bold tracking-[0.18em] text-white/80 uppercase">
               Total Balance
@@ -150,11 +158,19 @@ export default function HomePage() {
             </button>
           </div>
 
-          <p className="relative mt-2 font-display text-5xl font-bold text-white tabular-nums">
+          {/* Row 2: balance number — rendered UNCONDITIONALLY. Inline
+              `filter: none` defeats any inherited blur filter so the hero
+              balance always reads clearly. `leading-none` + min-height
+              guarantee the row has visible height even before hydration. */}
+          <p
+            className="relative min-h-[3rem] font-display text-5xl font-bold leading-none text-white tabular-nums"
+            style={{ filter: "none" }}
+          >
             {hideBalance ? "••••••" : formattedTotalUsd}
           </p>
 
-          <div className="relative mt-5 grid grid-cols-2 gap-2.5">
+          {/* Row 3: token pills — rendered UNCONDITIONALLY. */}
+          <div className="relative grid grid-cols-2 gap-2.5">
             <div className="rounded-2xl bg-[#0A0A0A] p-3.5">
               <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-white/55 uppercase">
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80]/15">
@@ -162,8 +178,11 @@ export default function HomePage() {
                 </span>
                 USDC
               </div>
-              <p className="mt-1.5 font-display text-lg font-bold text-white tabular-nums">
-                {hideBalance || blurAmounts ? "••••" : `$${usdcDisplay}`}
+              <p
+                className="mt-1.5 font-display text-lg font-bold text-white tabular-nums"
+                style={{ filter: "none" }}
+              >
+                {hideBalance ? "••••" : `$${usdcDisplay}`}
               </p>
             </div>
             <div className="rounded-2xl bg-[#0A0A0A] p-3.5">
@@ -173,8 +192,11 @@ export default function HomePage() {
                 </span>
                 EURC
               </div>
-              <p className="mt-1.5 font-display text-lg font-bold text-white tabular-nums">
-                {hideBalance || blurAmounts ? "••••" : `€${eurcDisplay}`}
+              <p
+                className="mt-1.5 font-display text-lg font-bold text-white tabular-nums"
+                style={{ filter: "none" }}
+              >
+                {hideBalance ? "••••" : `€${eurcDisplay}`}
               </p>
             </div>
           </div>
