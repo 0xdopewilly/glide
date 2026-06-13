@@ -5,7 +5,7 @@ const baseElements = {
   headerTitle: "text-[1.5rem] font-semibold tracking-tight text-left",
   headerSubtitle: "text-left text-[15px]",
   socialButtonsBlockButton:
-    "border rounded-2xl py-3 h-auto font-medium",
+    "border rounded-full py-3 h-auto font-medium",
   socialButtonsBlockButtonText: "font-medium",
   formButtonPrimary:
     "rounded-2xl py-3 h-auto text-sm font-semibold normal-case shadow-none",
@@ -54,7 +54,7 @@ const lightAppearance = {
       "!bg-white !border-[rgba(34,197,94,0.18)] !text-[#0A0A0A] placeholder:!text-[#A1A1AA]",
     formFieldLabel: "!text-[#475569]",
     formButtonPrimary:
-      "!bg-[#4ADE80] !text-[#0A0A0A] hover:!bg-[#22C55E] !shadow-none rounded-full py-3 h-auto text-sm font-semibold normal-case",
+      "!bg-[#4ADE80] !text-[#0A0A0A] hover:!bg-[#22C55E] !shadow-none !rounded-full py-3 h-auto text-sm font-semibold normal-case glow-green",
     otpCodeFieldInput:
       "!bg-white !border-[rgba(34,197,94,0.18)] !text-[#0A0A0A] caret-[#4ADE80]",
     footerActionLink: "!text-[#22C55E] !font-semibold",
@@ -94,7 +94,7 @@ const darkAppearance = {
       "!bg-[#0F0F0F] !border-[rgba(74,222,128,0.18)] !text-[#FFFFFF] placeholder:!text-[#A1A1AA]",
     formFieldLabel: "!text-[#A1A1AA]",
     formButtonPrimary:
-      "!bg-[#4ADE80] !text-[#0A0A0A] hover:!bg-[#6EE7A2] !shadow-none rounded-full py-3 h-auto text-sm font-semibold normal-case",
+      "!bg-[#4ADE80] !text-[#0A0A0A] hover:!bg-[#6EE7A2] !shadow-none !rounded-full py-3 h-auto text-sm font-semibold normal-case glow-green",
     otpCodeFieldInput:
       "!bg-[#0F0F0F] !border-[rgba(74,222,128,0.18)] !text-[#FFFFFF] caret-[#4ADE80]",
     footerActionLink: "!text-[#4ADE80] !font-semibold",

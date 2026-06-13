@@ -1,12 +1,8 @@
 "use client";
 
-import { AnimatedAmount } from "@/components/animated-amount";
 import { FlowPage } from "@/components/flow-page";
-import { NumericKeypad } from "@/components/numeric-keypad";
-import { UserAvatar } from "@/components/user-avatar";
-import { GlideButton } from "@/components/glide-button";
 import { SendScanSheet } from "@/components/send-scan-sheet";
-import { StableTokenSegment } from "@/components/stable-token-segment";
+import { UserAvatar } from "@/components/user-avatar";
 import { shortenAddress } from "@/lib/format";
 import {
   currencyPrefixForToken,
@@ -24,7 +20,14 @@ import {
 import { useWallet } from "@/context/wallet-context";
 import { AtSign, Check, QrCode, User, Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 
 type Step = "amount" | "review" | "success";
 
@@ -39,6 +42,8 @@ type ResolvedMeta = {
   source: "wallet" | "username" | "contact";
   label: string;
 };
+
+const TOKENS_FULL: readonly StableToken[] = ["USDC", "EURC", "cirBTC"];
 
 export default function SendPage() {
   const router = useRouter();
@@ -64,6 +69,7 @@ export default function SendPage() {
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const amountInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (searchParams.get("scan") === "1") setScanOpen(true);
@@ -154,24 +160,34 @@ export default function SendPage() {
 
   // cirBTC needs up to 8 decimal places; USDC/EURC are 2.
   const maxDecimals = token === "cirBTC" ? 8 : 2;
-  const onKey = useCallback(
-    (key: string) => {
-      setAmount((prev) => {
-        if (key === "back") {
-          if (prev.length <= 1) return "0";
-          const next = prev.slice(0, -1);
-          return next === "" || next === "." ? "0" : next;
-        }
-        if (key === "." && prev.includes(".")) return prev;
-        if (prev === "0" && key !== ".") return key;
-        if (
-          prev.includes(".") &&
-          (prev.split(".")[1]?.length ?? 0) >= maxDecimals
-        ) {
-          return prev;
-        }
-        return prev + key;
-      });
+
+  const handleAmountChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value;
+      // strip anything that isn't a digit or dot
+      let cleaned = raw.replace(/[^0-9.]/g, "");
+      // only one decimal point allowed
+      const firstDot = cleaned.indexOf(".");
+      if (firstDot !== -1) {
+        cleaned =
+          cleaned.slice(0, firstDot + 1) +
+          cleaned.slice(firstDot + 1).replace(/\./g, "");
+      }
+      // enforce decimal places
+      if (cleaned.includes(".")) {
+        const [intPart, decPart = ""] = cleaned.split(".");
+        cleaned = `${intPart}.${decPart.slice(0, maxDecimals)}`;
+      }
+      // collapse to "0" when empty, but allow "0.5" / leading "0."
+      if (cleaned === "") {
+        setAmount("0");
+        return;
+      }
+      // strip redundant leading zeros (but keep "0.x")
+      if (/^0\d/.test(cleaned)) {
+        cleaned = cleaned.replace(/^0+/, "") || "0";
+      }
+      setAmount(cleaned);
     },
     [maxDecimals],
   );
@@ -249,13 +265,13 @@ export default function SendPage() {
             Sent
           </h1>
           <div
-            className="glide-pop mt-10 flex h-28 w-28 items-center justify-center rounded-full"
-            style={{ background: "var(--glide-accent)" }}
+            className="glide-pop glow-green mt-10 flex h-28 w-28 items-center justify-center rounded-full"
+            style={{ background: "#4ADE80" }}
           >
             <Check
               className="h-14 w-14"
               strokeWidth={2.5}
-              style={{ color: "var(--glide-bg)" }}
+              style={{ color: "#0A0A0A" }}
             />
           </div>
           <p className="glide-label-mono mt-10 text-[11px] font-semibold text-[var(--glide-muted)]">
@@ -281,12 +297,14 @@ export default function SendPage() {
               resolvedMeta?.source === "wallet" ? null : resolvedMeta?.label ?? null
             }
           />
-          <GlideButton
+          <button
+            type="button"
             onClick={() => router.push("/")}
-            className="mt-auto mb-8 max-w-sm"
+            className="glide-tap glow-green mt-auto mb-8 w-full max-w-sm rounded-full px-6 py-4 text-[15px] font-bold"
+            style={{ background: "#4ADE80", color: "#0A0A0A" }}
           >
             Done
-          </GlideButton>
+          </button>
         </div>
       </FlowPage>
     );
@@ -297,20 +315,24 @@ export default function SendPage() {
       <FlowPage title="Review" onBack={() => setStep("amount")}>
         <div className="slide-up-bouncy flex flex-col px-5 pb-6">
           <div
-            className="mt-6 rounded-2xl border p-5 text-center"
+            className="mt-6 rounded-3xl border p-6 text-center"
             style={{
-              background: "var(--glide-surface-elevated)",
-              borderColor: "var(--glide-border)",
+              background: "#0F0F0F",
+              borderColor: "rgba(74,222,128,0.18)",
+              color: "#FFFFFF",
             }}
           >
             <UserAvatar size="lg" />
-            <p className="glide-label-mono mt-3 text-[11px] font-semibold text-[var(--glide-muted)]">
+            <p
+              className="glide-label-mono mt-3 text-[11px] font-semibold uppercase tracking-wide"
+              style={{ color: "#A1A1AA" }}
+            >
               Sending to
             </p>
-            <p className="mt-2 text-[20px] font-bold tracking-tight text-[var(--glide-text)]">
+            <p className="mt-2 text-[20px] font-bold tracking-tight">
               {recipientLabel}
             </p>
-            <p className="mt-4 text-[48px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[var(--glide-text)]">
+            <p className="mt-4 text-[48px] font-bold leading-none tracking-[-0.03em] tabular-nums">
               {amountPrefix}
               {formatAmountDisplay(amount)}
             </p>
@@ -319,7 +341,7 @@ export default function SendPage() {
           <div className="mt-6 flex items-baseline justify-between">
             <label
               htmlFor="send-note"
-              className="glide-label-mono block text-[11px] font-semibold text-[var(--glide-muted)]"
+              className="glide-label-mono block text-[11px] font-semibold uppercase tracking-wide text-[var(--glide-muted)]"
             >
               Note (optional)
             </label>
@@ -338,42 +360,58 @@ export default function SendPage() {
             placeholder="Dinner, rent, thanks"
             maxLength={140}
             style={{
-              background: "var(--glide-input)",
-              borderColor: "var(--glide-border)",
-              color: "var(--glide-text)",
+              background: "#0F0F0F",
+              border: "1px solid rgba(74,222,128,0.18)",
+              color: "#FFFFFF",
             }}
-            className="mt-2 w-full rounded-xl border px-4 py-3.5 text-[16px] font-medium placeholder:text-[var(--glide-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--glide-accent)]/30"
+            className="mt-2 w-full rounded-2xl px-4 py-3.5 text-[16px] font-medium placeholder:font-medium placeholder:text-[#A1A1AA] focus:outline-none focus:ring-2 focus:ring-[#4ADE80]/40"
           />
 
           <div
-            className="mt-5 flex items-center justify-between rounded-xl border px-4 py-3.5"
+            className="mt-5 flex items-center justify-between rounded-2xl px-4 py-3.5"
             style={{
-              background: "var(--glide-surface-container)",
-              borderColor: "var(--glide-border)",
+              background: "#0F0F0F",
+              border: "1px solid rgba(74,222,128,0.18)",
+              color: "#FFFFFF",
             }}
           >
-            <span className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+            <span
+              className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide"
+              style={{ color: "#A1A1AA" }}
+            >
               From
             </span>
-            <span className="text-sm font-bold text-[var(--glide-text)]">
-              glidepay · {token}
-            </span>
+            <span className="text-sm font-bold">glidepay · {token}</span>
           </div>
 
-          {(localError || error) && (
-            <p className="mt-4 text-center text-sm font-medium text-red-400">
+          {(localError || error) ? (
+            <div
+              className="mt-4 rounded-2xl px-4 py-3 text-center text-sm font-medium"
+              style={{
+                background: "rgba(248,113,113,0.08)",
+                border: "1px solid rgba(248,113,113,0.25)",
+                color: "#F87171",
+              }}
+            >
               {localError ?? error}
-            </p>
-          )}
+            </div>
+          ) : null}
 
-          <GlideButton
+          <button
+            type="button"
             onClick={() => void handlePay()}
             disabled={submitting || loading}
-            variant="simple"
-            className="mt-6"
+            className="glide-tap glow-green mt-6 w-full rounded-full px-6 text-[15px] font-bold disabled:opacity-60"
+            style={{
+              background: "#4ADE80",
+              color: "#0A0A0A",
+              height: "56px",
+              boxShadow:
+                submitting || loading ? "none" : undefined,
+            }}
           >
             {submitting ? "Paying…" : `Pay ${formatStableAmount(parsed, token)}`}
-          </GlideButton>
+          </button>
         </div>
       </FlowPage>
     );
@@ -390,20 +428,135 @@ export default function SendPage() {
   const KindIcon =
     kind === "wallet" ? Wallet : kind === "username" ? AtSign : User;
 
+  const tokenOptions: readonly StableToken[] = requestCode
+    ? [token]
+    : TOKENS_FULL;
+
+  const submitDisabled = !canContinue;
+
   return (
-    <FlowPage backHref="/">
+    <FlowPage title="Send" backFallback="/">
       <SendScanSheet open={scanOpen} onClose={() => setScanOpen(false)} />
-      <div className="flex min-h-0 flex-1 flex-col px-5 pb-4">
-        {/* Recipient row - compact pill with scan icon inline */}
+      <div className="flex min-h-0 flex-1 flex-col px-5 pb-6">
+        {/* AMOUNT CARD --------------------------------------------------- */}
         <div
-          className={`mt-2 flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all ${recipientBorderClass}`}
+          className="mt-2 rounded-3xl p-6"
           style={{
-            background: "var(--glide-surface-elevated)",
-            borderColor: "var(--glide-border)",
+            background: "#0F0F0F",
+            border: "1px solid rgba(74,222,128,0.18)",
+            color: "#FFFFFF",
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <label
+              htmlFor="send-amount"
+              className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide"
+              style={{ color: "#A1A1AA" }}
+            >
+              Amount
+            </label>
+
+            {/* Token pills */}
+            <div
+              className="flex items-center gap-1 rounded-full p-1"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(74,222,128,0.18)",
+              }}
+              role="tablist"
+              aria-label="Token"
+            >
+              {tokenOptions.map((t) => {
+                const active = t === token;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setToken(t)}
+                    className={`glide-tap rounded-full px-3 py-1.5 text-[11px] font-bold tracking-tight transition-colors ${
+                      active ? "glow-green" : ""
+                    }`}
+                    style={
+                      active
+                        ? { background: "#4ADE80", color: "#0A0A0A" }
+                        : { color: "#FFFFFF", background: "transparent" }
+                    }
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-baseline gap-2">
+            <span
+              className="text-[36px] font-bold leading-none"
+              style={{ color: "#A1A1AA" }}
+            >
+              {amountPrefix}
+            </span>
+            <input
+              ref={amountInputRef}
+              id="send-amount"
+              value={formatAmountDisplay(amount)}
+              onChange={handleAmountChange}
+              onFocus={(e) => {
+                if (e.currentTarget.value === "0") {
+                  // tap selects so user can overwrite the placeholder zero
+                  e.currentTarget.select();
+                }
+              }}
+              inputMode="decimal"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-label="Amount"
+              className="w-full min-w-0 bg-transparent text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums caret-[#4ADE80] focus:outline-none"
+              style={{ color: "#FFFFFF" }}
+            />
+          </div>
+
+          <p
+            className={`mt-3 text-[12px] font-semibold ${
+              hint && (resolveState === "fail" || overBalance)
+                ? "text-[#F87171]"
+                : ""
+            }`}
+            style={
+              hint && recipientOk && !overBalance
+                ? { color: "#4ADE80" }
+                : !hint || (!overBalance && resolveState !== "fail")
+                  ? { color: "#A1A1AA" }
+                  : undefined
+            }
+          >
+            {hint ?? `Balance ${formatStableAmount(tokenBalance, token)}`}
+          </p>
+        </div>
+
+        {/* RECIPIENT FIELD ---------------------------------------------- */}
+        <label
+          htmlFor="send-recipient"
+          className="glide-label-mono mt-6 block text-[11px] font-semibold uppercase tracking-wide text-[var(--glide-muted)]"
+        >
+          To
+        </label>
+        <div
+          className={`mt-2 flex items-center gap-2 rounded-2xl px-3 py-2 transition-all ${recipientBorderClass}`}
+          style={{
+            background: "#0F0F0F",
+            border: "1px solid rgba(74,222,128,0.18)",
+            color: "#FFFFFF",
           }}
         >
           {(kind === "username" || (inputLooksLikeUsername && !kind)) ? (
-            <span className="shrink-0 pl-1 text-[18px] font-bold text-[var(--glide-muted)]">
+            <span
+              className="shrink-0 pl-1 text-[18px] font-bold"
+              style={{ color: "#A1A1AA" }}
+            >
               @
             </span>
           ) : null}
@@ -419,27 +572,29 @@ export default function SendPage() {
             autoCorrect="off"
             spellCheck={false}
             aria-label="Recipient"
-            style={{ color: "var(--glide-text)" }}
-            className={`min-w-0 flex-1 bg-transparent py-2 text-[15px] font-semibold tracking-tight placeholder:font-medium placeholder:text-[var(--glide-muted)] focus:outline-none ${
+            className={`min-w-0 flex-1 bg-transparent py-2 text-[15px] font-semibold tracking-tight placeholder:font-medium placeholder:text-[#A1A1AA] focus:outline-none ${
               kind === "wallet" || isValidWalletAddress(recipient.trim())
                 ? "font-mono text-[13px]"
                 : ""
             }`}
+            style={{ color: "#FFFFFF" }}
           />
           {recipientOk && kindLabel ? (
             <span
               className="glide-label-mono inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold"
               style={{
-                background:
-                  "color-mix(in srgb, var(--glide-success) 18%, transparent)",
-                color: "var(--glide-success)",
+                background: "rgba(74,222,128,0.18)",
+                color: "#4ADE80",
               }}
             >
               <KindIcon className="h-3 w-3" strokeWidth={2.5} />
               {kindLabel}
             </span>
           ) : resolveState === "checking" ? (
-            <span className="glide-label-mono shrink-0 text-[10px] font-bold text-[var(--glide-muted)]">
+            <span
+              className="glide-label-mono shrink-0 text-[10px] font-bold"
+              style={{ color: "#A1A1AA" }}
+            >
               Checking…
             </span>
           ) : null}
@@ -449,63 +604,77 @@ export default function SendPage() {
             aria-label="Scan QR"
             className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
             style={{
-              background: "var(--glide-surface-container-high)",
-              color: "var(--glide-text)",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(74,222,128,0.18)",
+              color: "#FFFFFF",
             }}
           >
             <QrCode className="h-4 w-4" strokeWidth={2.25} />
           </button>
         </div>
 
-        {/* Token segment */}
-        {!requestCode ? (
-          <div className="mt-3">
-            <StableTokenSegment value={token} onChange={setToken} />
-          </div>
-        ) : null}
-
-        {/* Amount hero */}
-        <div className="mt-6 flex flex-col items-center">
-          <p
-            key={amount}
-            className="glide-pop text-[72px] font-bold leading-none tracking-[-0.04em]"
-            style={{ color: "var(--glide-text)" }}
+        {/* NOTE FIELD --------------------------------------------------- */}
+        <div className="mt-5 flex items-baseline justify-between">
+          <label
+            htmlFor="send-note-inline"
+            className="glide-label-mono block text-[11px] font-semibold uppercase tracking-wide text-[var(--glide-muted)]"
           >
-            <AnimatedAmount
-              value={formatAmountDisplay(amount)}
-              prefix={amountPrefix}
-              prefixClassName="text-[36px] font-bold text-[var(--glide-muted)]"
-            />
-          </p>
-          <p
-            className={`mt-3 text-[13px] font-semibold leading-snug transition-opacity duration-150 ${
-              hint
-                ? resolveState === "fail" || overBalance
-                  ? "text-red-400"
-                  : "text-[var(--glide-muted)]"
-                : "text-[var(--glide-muted)]"
+            Note (optional)
+          </label>
+          <span
+            className={`glide-label-mono text-[10px] font-semibold ${
+              note.length > 130 ? "text-[#F87171]" : "text-[var(--glide-muted)]"
             }`}
-            style={
-              hint && recipientOk && !overBalance
-                ? { color: "var(--glide-success)" }
-                : undefined
-            }
           >
-            {hint ?? `Balance ${formatStableAmount(tokenBalance, token)}`}
-          </p>
+            {note.length}/140
+          </span>
         </div>
+        <input
+          id="send-note-inline"
+          value={note}
+          onChange={(e) => setNote(e.target.value.slice(0, 140))}
+          placeholder="Dinner, rent, thanks"
+          maxLength={140}
+          className="mt-2 w-full rounded-2xl px-4 py-3.5 text-[16px] font-medium placeholder:font-medium placeholder:text-[#A1A1AA] focus:outline-none focus:ring-2 focus:ring-[#4ADE80]/40"
+          style={{
+            background: "#0F0F0F",
+            border: "1px solid rgba(74,222,128,0.18)",
+            color: "#FFFFFF",
+          }}
+        />
 
-        {/* Keypad + Continue */}
-        <div className="mt-auto pt-3">
-          <NumericKeypad onKey={onKey} />
-          <GlideButton
-            disabled={!canContinue}
+        {/* SUBMIT ------------------------------------------------------- */}
+        <div className="mt-auto pt-6">
+          <button
+            type="button"
+            disabled={submitDisabled}
             onClick={() => setStep("review")}
-            variant="simple"
-            className="mb-2 mt-3"
+            className={`glide-tap w-full rounded-full px-6 text-[15px] font-bold transition-opacity ${
+              submitDisabled ? "" : "glow-green"
+            }`}
+            style={{
+              background: "#4ADE80",
+              color: "#0A0A0A",
+              height: "56px",
+              opacity: submitDisabled ? 0.45 : 1,
+              boxShadow: submitDisabled ? "none" : undefined,
+            }}
           >
-            Continue
-          </GlideButton>
+            {`Send ${token}`}
+          </button>
+
+          {localError || error ? (
+            <div
+              className="mt-3 rounded-2xl px-4 py-3 text-center text-sm font-medium"
+              style={{
+                background: "rgba(248,113,113,0.08)",
+                border: "1px solid rgba(248,113,113,0.25)",
+                color: "#F87171",
+              }}
+            >
+              {localError ?? error}
+            </div>
+          ) : null}
         </div>
       </div>
     </FlowPage>
@@ -598,8 +767,8 @@ function SaveContactPrompt({
           disabled={status === "saving"}
           className="glide-tap glide-label-mono flex-1 rounded-full py-2.5 text-[11px] font-bold disabled:opacity-50"
           style={{
-            background: "var(--glide-accent)",
-            color: "var(--glide-bg)",
+            background: "#4ADE80",
+            color: "#0A0A0A",
           }}
         >
           {status === "saving" ? "Saving…" : "Save"}
