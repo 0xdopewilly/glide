@@ -4,41 +4,43 @@
 
 :root {
   color-scheme: light;
-  /* glidepay light, teal palette: white base, teal #0D9488 brand highlight,
-     near-black #0F172A primary text, soft grey-white surfaces. */
+  /* glidepay light, Spendly-inspired green palette: mint #DCFCE7 page bg,
+     #4ADE80 brand green, near-black #0A0A0A primary text + signature dark
+     cards, white #FFFFFF for elevated cards / inputs. */
 
-  /* New semantic tokens (Material You teal palette) */
-  --glide-primary: #0D9488;
-  --glide-primary-hover: #0F766E;
-  --glide-on-primary: #FFFFFF;
-  --glide-on-surface: #0F172A;
-  --glide-on-surface-variant: #64748B;
-  --glide-outline: #E2E8F0;
+  /* New semantic tokens (Spendly green palette) */
+  --glide-primary: #4ADE80;
+  --glide-primary-hover: #22C55E;
+  --glide-on-primary: #0A0A0A;
+  --glide-on-surface: #0A0A0A;
+  --glide-on-surface-variant: #475569;
+  --glide-on-surface-elevated: #FFFFFF;
+  --glide-outline: rgba(34, 197, 94, 0.18);
   --glide-error: #EF4444;
 
   /* Surfaces */
-  --glide-bg: #FFFFFF;
-  --glide-shell: #FFFFFF;
-  --glide-surface: #FFFFFF;
-  --glide-surface-elevated: #FFFFFF;
-  --glide-surface-container: #F8FAFC;
-  --glide-surface-container-high: #F1F5F9;
+  --glide-bg: #DCFCE7;
+  --glide-shell: #DCFCE7;
+  --glide-surface: #DCFCE7;
+  --glide-surface-elevated: #0A0A0A;
+  --glide-surface-container: #FFFFFF;
+  --glide-surface-container-high: #FFFFFF;
   --glide-nav-surface: #FFFFFF;
-  --glide-primary-container: #CCFBF1;
-  --glide-success-container: #DCFCE7;
+  --glide-primary-container: rgba(74, 222, 128, 0.12);
+  --glide-success-container: rgba(74, 222, 128, 0.18);
 
-  /* Legacy tokens — remapped to teal palette so existing components inherit */
-  --glide-text: #0F172A;
-  --glide-muted: #64748B;
-  --glide-border: #E2E8F0;
+  /* Legacy tokens — remapped to green palette so existing components inherit */
+  --glide-text: #0A0A0A;
+  --glide-muted: #475569;
+  --glide-border: rgba(34, 197, 94, 0.18);
   --glide-input: #FFFFFF;
-  --glide-accent: #0D9488;
-  --glide-accent-hover: #0F766E;
-  --glide-success: #22C55E;
-  --glide-on-nav-inactive: #64748B;
+  --glide-accent: #4ADE80;
+  --glide-accent-hover: #22C55E;
+  --glide-success: #4ADE80;
+  --glide-on-nav-inactive: #475569;
 
-  /* Rare accent (warm sand) — kept available, not applied broadly */
-  --glide-accent-warm: #F59E0B;
+  /* Rare accent (bright lime) — kept available, not applied broadly */
+  --glide-accent-warm: #84CC16;
 
   --glide-radius-sm: 12px;
   --glide-radius-md: 16px;
@@ -52,9 +54,9 @@
   --glide-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   --glide-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* Gradients — subtle teal wash pulled from primary-container */
-  --glide-gradient-from: #CCFBF1;
-  --glide-gradient-to: #FFFFFF;
+  /* Gradients — subtle green wash pulled from primary */
+  --glide-gradient-from: rgba(74, 222, 128, 0.25);
+  --glide-gradient-to: #DCFCE7;
   --glide-glow-primary: transparent;
   --glide-glow-secondary: transparent;
   --glide-glow-accent: transparent;
@@ -63,44 +65,45 @@
 
 .dark {
   color-scheme: dark;
-  /* glidepay dark, teal palette: deep dark #0A0F0F base, lighter teal #14B8A6
-     primary, off-white text, dark slate surfaces. */
+  /* glidepay dark, Spendly-inspired green palette: deep near-black #050505
+     base, #4ADE80 brand green, off-white text, dark raised surfaces. */
 
   /* New semantic tokens */
-  --glide-primary: #14B8A6;
-  --glide-primary-hover: #2DD4BF;
-  --glide-on-primary: #0A0F0F;
-  --glide-on-surface: #F1F5F9;
-  --glide-on-surface-variant: #94A3B8;
-  --glide-outline: #1E293B;
+  --glide-primary: #4ADE80;
+  --glide-primary-hover: #6EE7A2;
+  --glide-on-primary: #050505;
+  --glide-on-surface: #FFFFFF;
+  --glide-on-surface-variant: #A1A1AA;
+  --glide-on-surface-elevated: #FFFFFF;
+  --glide-outline: rgba(74, 222, 128, 0.18);
   --glide-error: #F87171;
 
   /* Surfaces */
-  --glide-bg: #0A0F0F;
-  --glide-shell: #0A0F0F;
-  --glide-surface: #111827;
-  --glide-surface-elevated: #111827;
-  --glide-surface-container: #111827;
-  --glide-surface-container-high: #1E293B;
-  --glide-nav-surface: #0A0F0F;
-  --glide-primary-container: #0F766E;
-  --glide-success-container: #14532D;
+  --glide-bg: #050505;
+  --glide-shell: #050505;
+  --glide-surface: #0F0F0F;
+  --glide-surface-elevated: #1A1A1A;
+  --glide-surface-container: #0F0F0F;
+  --glide-surface-container-high: #1A1A1A;
+  --glide-nav-surface: #050505;
+  --glide-primary-container: rgba(74, 222, 128, 0.18);
+  --glide-success-container: rgba(74, 222, 128, 0.22);
 
   /* Legacy tokens — remapped */
-  --glide-text: #F1F5F9;
-  --glide-muted: #94A3B8;
-  --glide-border: #1E293B;
-  --glide-input: #111827;
-  --glide-accent: #14B8A6;
-  --glide-accent-hover: #2DD4BF;
+  --glide-text: #FFFFFF;
+  --glide-muted: #A1A1AA;
+  --glide-border: rgba(74, 222, 128, 0.18);
+  --glide-input: #0F0F0F;
+  --glide-accent: #4ADE80;
+  --glide-accent-hover: #6EE7A2;
   --glide-success: #4ADE80;
-  --glide-on-nav-inactive: #94A3B8;
+  --glide-on-nav-inactive: #A1A1AA;
 
-  --glide-accent-warm: #FBBF24;
+  --glide-accent-warm: #84CC16;
 
-  /* Soft teal-on-black wash */
-  --glide-gradient-from: #0F766E;
-  --glide-gradient-to: #0A0F0F;
+  /* Soft green-on-black wash */
+  --glide-gradient-from: rgba(74, 222, 128, 0.22);
+  --glide-gradient-to: #050505;
   --glide-glow-primary: transparent;
   --glide-glow-secondary: transparent;
   --glide-glow-accent: transparent;
@@ -140,13 +143,13 @@ body {
   }
 }
 
-/* Subtle teal wash - pulls from primary-container in light, soft teal-on-black
-   in dark. Kept low-intensity so it doesn't compete with content. */
+/* Subtle green wash - faint green-on-mint in light, soft green-on-black in
+   dark. Kept low-intensity so it doesn't compete with content. */
 .glide-bg-wash {
   background:
     radial-gradient(
       ellipse 80% 60% at 50% 0%,
-      color-mix(in srgb, var(--glide-primary-container) 35%, transparent) 0%,
+      rgba(74, 222, 128, 0.28) 0%,
       transparent 70%
     ),
     var(--glide-bg);
@@ -157,10 +160,27 @@ body {
   background:
     radial-gradient(
       ellipse 80% 60% at 50% 0%,
-      color-mix(in srgb, var(--glide-primary) 12%, transparent) 0%,
+      rgba(74, 222, 128, 0.14) 0%,
       transparent 70%
     ),
     var(--glide-bg);
+}
+
+/* Green glow utility — apply sparingly to the user's primary focal points
+   (hero / balance card, primary CTAs, active nav). The glow is a callout,
+   not on every element. */
+.glow-green {
+  box-shadow:
+    0 0 0 1px rgba(74, 222, 128, 0.18),
+    0 20px 60px -20px rgba(74, 222, 128, 0.35),
+    0 0 80px -20px rgba(74, 222, 128, 0.25);
+}
+
+.dark .glow-green {
+  box-shadow:
+    0 0 0 1px rgba(74, 222, 128, 0.22),
+    0 20px 60px -20px rgba(74, 222, 128, 0.45),
+    0 0 80px -20px rgba(74, 222, 128, 0.32);
 }
 
 .page-motion-panel {
@@ -942,7 +962,7 @@ body {
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: 1rem;
+    border-radius: 999px;
     padding: 0.85rem 1.15rem;
     background: var(--glide-primary);
     color: var(--glide-on-primary);
@@ -950,6 +970,10 @@ body {
     font-weight: 600;
     letter-spacing: 0.01em;
     cursor: pointer;
+    box-shadow:
+      0 0 0 1px rgba(74, 222, 128, 0.18),
+      0 20px 60px -20px rgba(74, 222, 128, 0.35),
+      0 0 80px -20px rgba(74, 222, 128, 0.25);
     transition:
       transform 0.12s ease,
       filter 0.12s ease;
@@ -967,7 +991,10 @@ body {
   :root:not(.dark) .glide-btn-simple {
     background: var(--glide-primary);
     color: var(--glide-on-primary);
-    box-shadow: 0 10px 28px color-mix(in srgb, var(--glide-primary) 22%, transparent);
+    box-shadow:
+      0 0 0 1px rgba(74, 222, 128, 0.18),
+      0 20px 60px -20px rgba(74, 222, 128, 0.35),
+      0 0 80px -20px rgba(74, 222, 128, 0.25);
   }
 
   :root:not(.dark) .glide-btn-simple:not(:disabled):hover {
@@ -1180,9 +1207,12 @@ body {
     font-size: 16px;
     font-weight: 700;
     letter-spacing: -0.01em;
-    background: var(--glide-accent);
-    color: var(--glide-bg);
-    box-shadow: 0 12px 36px color-mix(in srgb, var(--glide-accent) 28%, transparent);
+    background: var(--glide-primary);
+    color: var(--glide-on-primary);
+    box-shadow:
+      0 0 0 1px rgba(74, 222, 128, 0.18),
+      0 20px 60px -20px rgba(74, 222, 128, 0.35),
+      0 0 80px -20px rgba(74, 222, 128, 0.25);
     transition:
       transform 0.22s var(--glide-ease-spring),
       box-shadow 0.22s var(--glide-ease-out);

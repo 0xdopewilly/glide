@@ -197,8 +197,8 @@ export default async function ArcPartnersPage({
   return (
     <main
       style={{
-        backgroundColor: "#ffffff",
-        color: "#0F172A",
+        backgroundColor: "#DCFCE7",
+        color: "#0A0A0A",
         minHeight: "100vh",
         fontFamily:
           "var(--font-jakarta), var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -219,7 +219,7 @@ export default async function ArcPartnersPage({
             justifyContent: "space-between",
             gap: 16,
             paddingBottom: 32,
-            borderBottom: "1px solid rgba(15, 23, 42, 0.08)",
+            borderBottom: "1px solid rgba(34, 197, 94, 0.18)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -246,7 +246,7 @@ export default async function ArcPartnersPage({
               fontSize: 11,
               letterSpacing: "0.12em",
               textTransform: "uppercase",
-              color: "rgba(15, 23, 42, 0.5)",
+              color: "rgba(10, 10, 10, 0.5)",
               fontWeight: 700,
             }}
           >
@@ -261,7 +261,7 @@ export default async function ArcPartnersPage({
               fontSize: 11,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "rgba(15, 23, 42, 0.55)",
+              color: "rgba(10, 10, 10, 0.55)",
               fontWeight: 700,
               margin: 0,
               marginBottom: 16,
@@ -275,7 +275,7 @@ export default async function ArcPartnersPage({
               lineHeight: 0.95,
               fontWeight: 700,
               letterSpacing: "-0.04em",
-              color: "#0F172A",
+              color: "#0A0A0A",
             }}
           >
             {fmtInt(totalSweeps)}
@@ -284,7 +284,7 @@ export default async function ArcPartnersPage({
             style={{
               marginTop: 16,
               fontSize: 16,
-              color: "rgba(15, 23, 42, 0.65)",
+              color: "rgba(10, 10, 10, 0.65)",
               maxWidth: 640,
               lineHeight: 1.5,
             }}
@@ -311,7 +311,7 @@ export default async function ArcPartnersPage({
               fontSize: 11,
               letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "rgba(15, 23, 42, 0.55)",
+              color: "rgba(10, 10, 10, 0.55)",
               fontWeight: 700,
               margin: 0,
               marginBottom: 24,
@@ -340,7 +340,7 @@ export default async function ArcPartnersPage({
                     style={{
                       fontSize: 16,
                       fontWeight: 600,
-                      color: "#0F172A",
+                      color: "#0A0A0A",
                     }}
                   >
                     {label}
@@ -350,7 +350,7 @@ export default async function ArcPartnersPage({
                       style={{
                         fontSize: 20,
                         fontWeight: 700,
-                        color: "#0F172A",
+                        color: "#0A0A0A",
                         letterSpacing: "-0.02em",
                       }}
                     >
@@ -359,7 +359,7 @@ export default async function ArcPartnersPage({
                     <span
                       style={{
                         fontSize: 13,
-                        color: "rgba(15, 23, 42, 0.5)",
+                        color: "rgba(10, 10, 10, 0.5)",
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
@@ -380,7 +380,7 @@ export default async function ArcPartnersPage({
                     style={{
                       height: "100%",
                       width: `${pct}%`,
-                      backgroundColor: "#0D9488",
+                      backgroundColor: "#4ADE80",
                       borderRadius: 999,
                       transition: "width 0.4s ease",
                     }}
@@ -431,13 +431,13 @@ export default async function ArcPartnersPage({
         <footer
           style={{
             paddingTop: 24,
-            borderTop: "1px solid rgba(15, 23, 42, 0.08)",
+            borderTop: "1px solid rgba(34, 197, 94, 0.18)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             gap: 16,
             fontSize: 12,
-            color: "rgba(15, 23, 42, 0.55)",
+            color: "rgba(10, 10, 10, 0.55)",
             flexWrap: "wrap",
           }}
         >
@@ -472,7 +472,7 @@ function Stat({
     <div
       style={{
         padding: "20px 0",
-        borderTop: "1px solid rgba(15, 23, 42, 0.08)",
+        borderTop: "1px solid rgba(34, 197, 94, 0.18)",
       }}
     >
       <div
@@ -480,7 +480,7 @@ function Stat({
           fontSize: 10,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
-          color: "rgba(15, 23, 42, 0.55)",
+          color: "rgba(10, 10, 10, 0.55)",
           fontWeight: 700,
           marginBottom: 12,
         }}
@@ -492,7 +492,7 @@ function Stat({
           fontSize: 40,
           fontWeight: 700,
           letterSpacing: "-0.03em",
-          color: "#0F172A",
+          color: "#0A0A0A",
           lineHeight: 1,
         }}
       >
@@ -503,7 +503,7 @@ function Stat({
           style={{
             marginTop: 8,
             fontSize: 12,
-            color: "rgba(15, 23, 42, 0.55)",
+            color: "rgba(10, 10, 10, 0.55)",
           }}
         >
           {hint}
