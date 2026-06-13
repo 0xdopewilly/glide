@@ -45,7 +45,7 @@ export function ProfileAvatarUpload({
         type="button"
         disabled={disabled || busy}
         onClick={() => inputRef.current?.click()}
-        className="glide-tap relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-neutral-200 dark:bg-[#2c2c2e]"
+        className="glide-tap relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-neutral-200 dark:bg-[var(--glide-surface-container-high)]"
         aria-label="Change profile photo"
       >
         {avatarUrl ? (

@@ -4,25 +4,42 @@
 
 :root {
   color-scheme: light;
-  /* glidepay light, Arcium-style: white base, near-black #031a36 brand,
-     stepped grays for surfaces. No transparency, no gradients. */
-  --glide-bg: #ffffff;
-  --glide-shell: #ffffff;
-  --glide-surface: #ffffff;
-  --glide-surface-elevated: #ffffff;
-  --glide-surface-container: #f3f5f9;
-  --glide-surface-container-high: #e4e8ef;
-  --glide-nav-surface: #ffffff;
-  --glide-primary-container: #e4e8ef;
-  --glide-success-container: #dcefe3;
-  --glide-text: #031a36;
-  --glide-muted: #4a5470;
-  --glide-border: #d6dbe5;
-  --glide-input: #ffffff;
-  --glide-accent: #031a36;
-  --glide-accent-hover: #052449;
-  --glide-success: #2d9956;
-  --glide-on-nav-inactive: #4a5470;
+  /* glidepay light, teal palette: white base, teal #0D9488 brand highlight,
+     near-black #0F172A primary text, soft grey-white surfaces. */
+
+  /* New semantic tokens (Material You teal palette) */
+  --glide-primary: #0D9488;
+  --glide-primary-hover: #0F766E;
+  --glide-on-primary: #FFFFFF;
+  --glide-on-surface: #0F172A;
+  --glide-on-surface-variant: #64748B;
+  --glide-outline: #E2E8F0;
+  --glide-error: #EF4444;
+
+  /* Surfaces */
+  --glide-bg: #FFFFFF;
+  --glide-shell: #FFFFFF;
+  --glide-surface: #FFFFFF;
+  --glide-surface-elevated: #FFFFFF;
+  --glide-surface-container: #F8FAFC;
+  --glide-surface-container-high: #F1F5F9;
+  --glide-nav-surface: #FFFFFF;
+  --glide-primary-container: #CCFBF1;
+  --glide-success-container: #DCFCE7;
+
+  /* Legacy tokens — remapped to teal palette so existing components inherit */
+  --glide-text: #0F172A;
+  --glide-muted: #64748B;
+  --glide-border: #E2E8F0;
+  --glide-input: #FFFFFF;
+  --glide-accent: #0D9488;
+  --glide-accent-hover: #0F766E;
+  --glide-success: #22C55E;
+  --glide-on-nav-inactive: #64748B;
+
+  /* Rare accent (warm sand) — kept available, not applied broadly */
+  --glide-accent-warm: #F59E0B;
+
   --glide-radius-sm: 12px;
   --glide-radius-md: 16px;
   --glide-radius-lg: 20px;
@@ -34,8 +51,10 @@
   --glide-ease: cubic-bezier(0.2, 0, 0, 1);
   --glide-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   --glide-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --glide-gradient-from: #ffffff;
-  --glide-gradient-to: #ffffff;
+
+  /* Gradients — subtle teal wash pulled from primary-container */
+  --glide-gradient-from: #CCFBF1;
+  --glide-gradient-to: #FFFFFF;
   --glide-glow-primary: transparent;
   --glide-glow-secondary: transparent;
   --glide-glow-accent: transparent;
@@ -44,28 +63,44 @@
 
 .dark {
   color-scheme: dark;
-  /* glidepay dark, Arcium-style: one solid brand color, no gradients, no
-     glow layers. Surfaces are stepped flat shades of the brand blue rather
-     than transparency-on-transparency. */
-  --glide-bg: #041f3d;
-  --glide-shell: #062349;
-  --glide-surface: #0a2f5c;
-  --glide-surface-elevated: #0d376b;
-  --glide-surface-container: #082c55;
-  --glide-surface-container-high: #114475;
-  --glide-nav-surface: #062349;
-  --glide-primary-container: #0d376b;
-  --glide-success-container: #0d4929;
-  --glide-text: #ffffff;
-  --glide-muted: #8aa5c2;
-  --glide-border: #1a4877;
-  --glide-input: #082c55;
-  --glide-accent: #ffffff;
-  --glide-accent-hover: #ebebed;
-  --glide-success: #4ade80;
-  --glide-on-nav-inactive: #6f88a8;
-  --glide-gradient-from: #041f3d;
-  --glide-gradient-to: #041f3d;
+  /* glidepay dark, teal palette: deep dark #0A0F0F base, lighter teal #14B8A6
+     primary, off-white text, dark slate surfaces. */
+
+  /* New semantic tokens */
+  --glide-primary: #14B8A6;
+  --glide-primary-hover: #2DD4BF;
+  --glide-on-primary: #0A0F0F;
+  --glide-on-surface: #F1F5F9;
+  --glide-on-surface-variant: #94A3B8;
+  --glide-outline: #1E293B;
+  --glide-error: #F87171;
+
+  /* Surfaces */
+  --glide-bg: #0A0F0F;
+  --glide-shell: #0A0F0F;
+  --glide-surface: #111827;
+  --glide-surface-elevated: #111827;
+  --glide-surface-container: #111827;
+  --glide-surface-container-high: #1E293B;
+  --glide-nav-surface: #0A0F0F;
+  --glide-primary-container: #0F766E;
+  --glide-success-container: #14532D;
+
+  /* Legacy tokens — remapped */
+  --glide-text: #F1F5F9;
+  --glide-muted: #94A3B8;
+  --glide-border: #1E293B;
+  --glide-input: #111827;
+  --glide-accent: #14B8A6;
+  --glide-accent-hover: #2DD4BF;
+  --glide-success: #4ADE80;
+  --glide-on-nav-inactive: #94A3B8;
+
+  --glide-accent-warm: #FBBF24;
+
+  /* Soft teal-on-black wash */
+  --glide-gradient-from: #0F766E;
+  --glide-gradient-to: #0A0F0F;
   --glide-glow-primary: transparent;
   --glide-glow-secondary: transparent;
   --glide-glow-accent: transparent;
@@ -105,11 +140,27 @@ body {
   }
 }
 
-/* Solid shell - no radial gradients, no glow layers. Plain brand color so
-   the app reads as clean, opinionated, monospace-adjacent (Arcium aesthetic). */
+/* Subtle teal wash - pulls from primary-container in light, soft teal-on-black
+   in dark. Kept low-intensity so it doesn't compete with content. */
 .glide-bg-wash {
-  background: var(--glide-bg);
+  background:
+    radial-gradient(
+      ellipse 80% 60% at 50% 0%,
+      color-mix(in srgb, var(--glide-primary-container) 35%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--glide-bg);
   opacity: 1;
+}
+
+.dark .glide-bg-wash {
+  background:
+    radial-gradient(
+      ellipse 80% 60% at 50% 0%,
+      color-mix(in srgb, var(--glide-primary) 12%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--glide-bg);
 }
 
 .page-motion-panel {
@@ -424,8 +475,8 @@ body {
 .glide-processing-card {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--glide-accent) 88%, #1e1b4b),
-    color-mix(in srgb, var(--glide-gradient-to) 75%, #0f172a)
+    color-mix(in srgb, var(--glide-primary) 88%, var(--glide-on-surface)),
+    color-mix(in srgb, var(--glide-gradient-to) 75%, var(--glide-on-surface))
   );
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
 }
@@ -802,7 +853,7 @@ body {
   }
 
   .dark .glide-btn-notch__accent {
-    background: #27272a;
+    background: var(--glide-surface-container-high);
   }
 
   .glide-btn-notch__inner {
@@ -815,8 +866,8 @@ body {
     justify-content: center;
     gap: 0.375rem;
     padding: 0.7rem 1.15rem;
-    background: #ffffff;
-    color: #000000;
+    background: var(--glide-primary);
+    color: var(--glide-on-primary);
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.01em;
@@ -874,14 +925,14 @@ body {
   }
 
   :root:not(.dark) .glide-btn-notch:not(:disabled) .glide-btn-notch__inner {
-    background: #0a0a0a;
-    color: #ffffff;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+    background: var(--glide-primary);
+    color: var(--glide-on-primary);
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--glide-primary) 22%, transparent);
   }
 
   :root:not(.dark) .glide-btn-notch:not(:disabled):hover .glide-btn-notch__inner {
-    background: #171717;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+    background: var(--glide-primary-hover);
+    box-shadow: 0 14px 36px color-mix(in srgb, var(--glide-primary) 28%, transparent);
     filter: none;
   }
 
@@ -893,8 +944,8 @@ body {
     border: none;
     border-radius: 1rem;
     padding: 0.85rem 1.15rem;
-    background: #ffffff;
-    color: #000000;
+    background: var(--glide-primary);
+    color: var(--glide-on-primary);
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 0.01em;
@@ -914,19 +965,19 @@ body {
   }
 
   :root:not(.dark) .glide-btn-simple {
-    background: #0a0a0a;
-    color: #ffffff;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+    background: var(--glide-primary);
+    color: var(--glide-on-primary);
+    box-shadow: 0 10px 28px color-mix(in srgb, var(--glide-primary) 22%, transparent);
   }
 
   :root:not(.dark) .glide-btn-simple:not(:disabled):hover {
-    background: #171717;
+    background: var(--glide-primary-hover);
     filter: none;
   }
 
   .dark .glide-btn-simple {
-    background: #ffffff;
-    color: #000000;
+    background: var(--glide-primary);
+    color: var(--glide-on-primary);
   }
 
   .glide-btn-ghost {
@@ -960,7 +1011,7 @@ body {
   }
 
   .dark .glide-btn-ghost {
-    color: #6eb8f0;
+    color: var(--glide-primary-hover);
   }
 
   .glide-surface-card {

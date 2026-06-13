@@ -64,7 +64,7 @@ export function TransactionDetailSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="tx-detail-title"
-        className="relative z-10 w-full max-w-md rounded-t-3xl bg-white px-6 pb-8 pt-5 shadow-xl dark:bg-[#141416] sm:rounded-3xl"
+        className="relative z-10 w-full max-w-md rounded-t-3xl bg-white px-6 pb-8 pt-5 shadow-xl dark:bg-[var(--glide-surface)] sm:rounded-3xl"
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 id="tx-detail-title" className="text-lg font-semibold tracking-tight">
@@ -73,7 +73,7 @@ export function TransactionDetailSheet({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 dark:bg-[#1c1c1e] dark:text-white/70"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 dark:bg-[var(--glide-surface-container)] dark:text-white/70"
             aria-label="Close details"
           >
             <X className="h-4 w-4" />
@@ -93,13 +93,13 @@ export function TransactionDetailSheet({
           {status ? ` · ${status}` : ""}
         </p>
         {note ? (
-          <p className="mt-3 rounded-xl bg-neutral-100 px-4 py-3 text-sm dark:bg-[#1c1c1e]">
+          <p className="mt-3 rounded-xl bg-neutral-100 px-4 py-3 text-sm dark:bg-[var(--glide-surface-container)]">
             &ldquo;{note}&rdquo;
           </p>
         ) : null}
 
         {txHash ? (
-          <div className="mt-5 rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-[#1c1c1e]">
+          <div className="mt-5 rounded-2xl bg-neutral-100 px-4 py-3 dark:bg-[var(--glide-surface-container)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-neutral-500 dark:text-white/45">
               Transaction hash
             </p>

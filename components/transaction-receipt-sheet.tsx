@@ -47,10 +47,10 @@ async function renderReceiptCanvas(opts: {
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
-  // Background - solid navy with subtle gradient sheen
+  // Background - deep teal-black with subtle gradient sheen
   const grad = ctx.createLinearGradient(0, 0, 0, H);
-  grad.addColorStop(0, "#0e1a3a");
-  grad.addColorStop(1, "#06112c");
+  grad.addColorStop(0, "#111827");
+  grad.addColorStop(1, "#0A0F0F");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 

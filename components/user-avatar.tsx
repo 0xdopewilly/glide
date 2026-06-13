@@ -36,7 +36,7 @@ export function UserAvatar({
     </span>
   ) : (
     <span
-      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-neutral-200 font-semibold tracking-tight text-neutral-800 dark:bg-[#2c2c2e] dark:text-white ${sizeClass}`}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full bg-neutral-200 font-semibold tracking-tight text-neutral-800 dark:bg-[var(--glide-surface-container-high)] dark:text-white ${sizeClass}`}
     >
       {initial}
     </span>

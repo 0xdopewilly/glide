@@ -21,20 +21,20 @@ const config: CapacitorConfig = {
     cleartext: false,
     androidScheme: "https",
   },
-  backgroundColor: "#041f3d",
+  backgroundColor: "#0A0F0F",
   ios: {
     contentInset: "always",
-    backgroundColor: "#041f3d",
+    backgroundColor: "#0A0F0F",
   },
   android: {
-    backgroundColor: "#041f3d",
+    backgroundColor: "#0A0F0F",
     allowMixedContent: false,
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 1200,
       launchAutoHide: true,
-      backgroundColor: "#041f3d",
+      backgroundColor: "#0A0F0F",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
@@ -45,7 +45,7 @@ const config: CapacitorConfig = {
       presentationOptions: ["badge", "sound", "alert"],
     },
     StatusBar: {
-      backgroundColor: "#041f3d",
+      backgroundColor: "#0A0F0F",
       style: "DARK",
       overlaysWebView: false,
     },

@@ -100,7 +100,7 @@ export function PushNotificationsToggle({ className = "" }: { className?: string
           }
         })();
       }}
-      className={`glide-tap flex w-full items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3.5 dark:bg-[#1c1c1e] ${className}`}
+      className={`glide-tap flex w-full items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3.5 dark:bg-[var(--glide-surface-container)] ${className}`}
     >
       <span className="flex items-center gap-3">
         {enabled ? (
