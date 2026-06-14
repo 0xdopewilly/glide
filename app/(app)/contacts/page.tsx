@@ -47,7 +47,7 @@ export default function ContactsPage() {
             className="glide-on-elevated-surface mt-8 flex flex-col items-center rounded-2xl border px-6 py-12 text-center"
             style={{
               background: "var(--glide-surface-elevated)",
-              borderColor: "var(--glide-border)",
+              borderColor: "var(--glide-elevated-border)",
             }}
           >
             <div
@@ -78,7 +78,7 @@ export default function ContactsPage() {
                   className="glide-tap glide-on-elevated-surface flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-left transition-colors"
                   style={{
                     background: "var(--glide-surface-elevated)",
-                    borderColor: "var(--glide-border)",
+                    borderColor: "var(--glide-elevated-border)",
                   }}
                 >
                   <span>

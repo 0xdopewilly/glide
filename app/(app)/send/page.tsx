@@ -751,7 +751,7 @@ function SaveContactPrompt({
       className="mt-6 w-full max-w-sm rounded-2xl border px-4 py-4 text-left"
       style={{
         background: "var(--glide-surface-elevated)",
-        borderColor: "var(--glide-border)",
+        borderColor: "var(--glide-elevated-border)",
       }}
     >
       <p className="text-[14px] font-semibold text-[var(--glide-text)]">

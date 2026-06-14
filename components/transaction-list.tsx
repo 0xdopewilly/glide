@@ -42,7 +42,8 @@ function TransactionSkeleton() {
       {[0, 1, 2].map((i) => (
         <li
           key={i}
-          className="h-[68px] animate-pulse rounded-2xl bg-[#0F0F0F]"
+          className="h-[68px] animate-pulse rounded-2xl border bg-[color:var(--glide-surface-elevated)]"
+          style={{ borderColor: "var(--glide-elevated-border)" }}
         />
       ))}
     </ul>
@@ -71,7 +72,10 @@ export function TransactionList({
 
   if (transactions.length === 0 && !grouped) {
     return (
-      <div className="rounded-2xl bg-[#0F0F0F] p-6 text-center text-sm text-white/55">
+      <div
+        className="rounded-2xl border bg-[color:var(--glide-surface-elevated)] p-6 text-center text-sm text-[color:var(--glide-on-elevated-variant)]"
+        style={{ borderColor: "var(--glide-elevated-border)" }}
+      >
         {emptyMessage}
       </div>
     );
@@ -94,13 +98,16 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
   const Icon = v.Icon;
   const amountColor =
     tx.variant === "credit"
-      ? "text-[#4ADE80]"
+      ? "text-[#16A34A] dark:text-[#4ADE80]"
       : tx.variant === "debit"
-        ? "text-[#F87171]"
-        : "text-white/70";
+        ? "text-[#DC2626] dark:text-[#F87171]"
+        : "text-[color:var(--glide-on-elevated-variant)]";
 
   return (
-    <article className="flex items-center gap-3 rounded-2xl bg-[#0F0F0F] p-3.5">
+    <article
+      className="flex items-center gap-3 rounded-2xl border bg-[color:var(--glide-surface-elevated)] p-3.5"
+      style={{ borderColor: "var(--glide-elevated-border)" }}
+    >
       <div
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
         style={{
@@ -108,11 +115,18 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
           boxShadow: `inset 0 0 0 1px ${v.ring}`,
         }}
       >
-        <Icon className="h-4 w-4 text-white" strokeWidth={2.25} />
+        <Icon
+          className="h-4 w-4 text-[color:var(--glide-on-elevated)]"
+          strokeWidth={2.25}
+        />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-white">{tx.title}</p>
-        <p className="mt-0.5 truncate text-[11px] text-white/55">{tx.meta}</p>
+        <p className="truncate text-sm font-semibold text-[color:var(--glide-on-elevated)]">
+          {tx.title}
+        </p>
+        <p className="mt-0.5 truncate text-[11px] text-[color:var(--glide-on-elevated-variant)]">
+          {tx.meta}
+        </p>
       </div>
       <p
         className={`shrink-0 font-display text-sm font-bold tabular-nums ${amountColor} ${

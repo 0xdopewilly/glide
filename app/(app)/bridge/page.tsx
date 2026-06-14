@@ -105,7 +105,7 @@ export default function BridgePage() {
                   className="rounded-3xl border p-5"
                   style={{
                     background: "var(--glide-surface-elevated)",
-                    borderColor: "var(--glide-border)",
+                    borderColor: "var(--glide-elevated-border)",
                   }}
                 >
                   <div className="flex items-center justify-between">
@@ -175,7 +175,7 @@ export default function BridgePage() {
                   className="rounded-3xl border p-5"
                   style={{
                     background: "var(--glide-surface-elevated)",
-                    borderColor: "var(--glide-border)",
+                    borderColor: "var(--glide-elevated-border)",
                   }}
                 >
                   <div className="flex items-center justify-between">

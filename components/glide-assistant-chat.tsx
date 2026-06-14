@@ -822,7 +822,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
               className="glide-chat-typing flex gap-1.5 rounded-[20px] rounded-bl-[6px] border px-4 py-3.5"
               style={{
                 background: "var(--glide-surface-elevated)",
-                borderColor: "var(--glide-border)",
+                borderColor: "var(--glide-elevated-border)",
               }}
             >
               <span />
@@ -841,7 +841,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           className="glide-on-elevated-surface flex items-center gap-2 rounded-[28px] border p-1.5"
           style={{
             background: "var(--glide-surface-elevated)",
-            borderColor: "var(--glide-border)",
+            borderColor: "var(--glide-elevated-border)",
           }}
         >
           <label htmlFor="glide-assistant-input" className="sr-only">

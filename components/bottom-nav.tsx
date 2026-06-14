@@ -24,15 +24,22 @@ export function BottomNav() {
               key={href}
               href={href}
               aria-label={label}
-              className={`relative flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+              className={`relative flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${
                 active
                   ? "bg-[#4ADE80]/15 ring-1 ring-[#4ADE80]/35"
-                  : "bg-[#0F0F0F] ring-1 ring-white/5 hover:ring-white/10"
+                  : "bg-[color:var(--glide-surface-elevated)]"
               }`}
+              style={
+                active
+                  ? { borderColor: "transparent" }
+                  : { borderColor: "var(--glide-elevated-border)" }
+              }
             >
               <Icon
                 className={`h-5 w-5 ${
-                  active ? "text-[#4ADE80]" : "text-white/70"
+                  active
+                    ? "text-[#4ADE80]"
+                    : "text-[color:var(--glide-on-elevated-variant)]"
                 }`}
                 strokeWidth={2.25}
               />

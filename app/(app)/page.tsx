@@ -228,8 +228,8 @@ export default function HomePage() {
                 className="flex h-14 w-14 items-center justify-center rounded-full transition-colors"
                 style={{
                   background: "var(--glide-surface-elevated)",
-                  border: "1px solid rgba(74, 222, 128, 0.22)",
-                  color: "var(--glide-on-surface-elevated)",
+                  border: "1px solid var(--glide-elevated-border)",
+                  color: "var(--glide-on-elevated)",
                 }}
               >
                 <Icon className="h-5 w-5" strokeWidth={2.25} />

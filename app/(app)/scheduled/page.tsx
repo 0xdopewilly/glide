@@ -13,7 +13,7 @@ export default function ScheduledPage() {
           className="slide-up-bouncy mt-2 flex items-start gap-3 rounded-3xl border p-4"
           style={{
             background: "var(--glide-surface-elevated)",
-            borderColor: "var(--glide-border)",
+            borderColor: "var(--glide-elevated-border)",
           }}
         >
           <span

@@ -74,7 +74,7 @@ export function ChatMessageBubble({
           className="glide-on-elevated-surface max-w-[min(88%,280px)] rounded-[20px] rounded-bl-[6px] border px-3.5 py-3"
           style={{
             background: "var(--glide-surface-elevated)",
-            borderColor: "var(--glide-border)",
+            borderColor: "var(--glide-elevated-border)",
           }}
         >
           <p className="text-[15px] leading-snug text-[var(--glide-text)]">
@@ -155,7 +155,7 @@ export function ChatMessageBubble({
               }
             : {
                 background: "var(--glide-surface-elevated)",
-                borderColor: "var(--glide-border)",
+                borderColor: "var(--glide-elevated-border)",
                 color: "var(--glide-on-elevated)",
               }
         }

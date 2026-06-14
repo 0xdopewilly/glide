@@ -247,7 +247,7 @@ export function QrScannerView({ onScanned }: { onScanned?: () => void }) {
             className="flex aspect-square w-full flex-col items-center justify-center gap-3 rounded-3xl border"
             style={{
               background: "var(--glide-surface-elevated)",
-              borderColor: "var(--glide-border)",
+              borderColor: "var(--glide-elevated-border)",
             }}
           >
             <span

@@ -31,7 +31,7 @@ export function ConfirmActionCard({
       className="glide-chat-enter rounded-2xl border p-4"
       style={{
         background: "var(--glide-surface-elevated)",
-        borderColor: "var(--glide-border)",
+        borderColor: "var(--glide-elevated-border)",
       }}
     >
       <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">

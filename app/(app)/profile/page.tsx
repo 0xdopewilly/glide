@@ -315,7 +315,7 @@ function DeleteAccountButton() {
       className="mt-2 rounded-2xl border p-4"
       style={{
         background: "var(--glide-surface-elevated)",
-        borderColor: "var(--glide-border)",
+        borderColor: "var(--glide-elevated-border)",
       }}
     >
       <p className="text-[14px] font-semibold text-[var(--glide-text)]">

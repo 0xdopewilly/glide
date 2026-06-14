@@ -242,7 +242,7 @@ export default function ReceivePage() {
             className="glide-on-elevated-surface mt-6 rounded-2xl border px-4 py-5"
             style={{
               background: "var(--glide-surface-elevated)",
-              borderColor: "var(--glide-border)",
+              borderColor: "var(--glide-elevated-border)",
             }}
           >
             <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
@@ -277,7 +277,7 @@ export default function ReceivePage() {
               className="glide-on-elevated-surface mt-3 rounded-2xl border px-4 py-4"
               style={{
                 background: "var(--glide-surface-elevated)",
-                borderColor: "var(--glide-border)",
+                borderColor: "var(--glide-elevated-border)",
               }}
             >
               <div className="flex items-center justify-between">

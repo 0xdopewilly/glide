@@ -19,10 +19,10 @@ export function ActivityFeed({
   if (groups.length === 0) {
     return (
       <p
-        className="mt-6 rounded-2xl border px-4 py-12 text-center text-sm font-medium text-[var(--glide-muted)]"
+        className="mt-6 rounded-2xl border px-4 py-12 text-center text-sm font-medium text-[color:var(--glide-on-elevated-variant)]"
         style={{
           background: "var(--glide-surface-elevated)",
-          borderColor: "var(--glide-border)",
+          borderColor: "var(--glide-elevated-border)",
         }}
       >
         {emptyMessage ?? "No activity matches these filters"}

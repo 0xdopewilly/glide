@@ -68,7 +68,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
       className={`glide-on-elevated-surface rounded-3xl border p-4 ${className}`}
       style={{
         background: "var(--glide-surface-elevated)",
-        borderColor: "var(--glide-border)",
+        borderColor: "var(--glide-elevated-border)",
       }}
     >
       <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
