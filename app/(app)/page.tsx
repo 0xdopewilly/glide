@@ -118,29 +118,39 @@ export default function HomePage() {
         ) : null}
 
         {/* HERO BALANCE CARD — bright vibrant green, focal point of the screen.
-            CRITICAL: `flex flex-col gap-4` guarantees vertical stacking of children
-            with consistent spacing. Do NOT use `mt-*` between siblings here — gap
-            handles spacing. Previous bug: stray utilities collapsed the rows so
-            the balance number rendered but was clipped/overlapped. */}
+            CRITICAL: the <section> itself has NO `overflow-hidden`. Clipping
+            the section caused the USDC/EURC pills (the section's own children)
+            to be cut off in some render paths. The radial highlight overlay is
+            isolated in its own absolutely-positioned, rounded-3xl,
+            overflow-hidden child so the overlay clips to the card's rounded
+            corners without clipping the sibling content below it.
+            `flex flex-col gap-4` guarantees vertical stacking with consistent
+            spacing — do NOT use `mt-*` between siblings here. */}
         <section
-          className="glow-green relative mt-4 flex flex-col gap-4 overflow-hidden rounded-3xl p-6 shadow-[0_30px_80px_-30px_rgba(74,222,128,0.5)]"
+          className="glow-green relative mt-4 flex flex-col gap-4 rounded-3xl p-6 shadow-[0_30px_80px_-30px_rgba(74,222,128,0.5)]"
           style={{
             background:
               "linear-gradient(135deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
           }}
         >
-          {/* radial highlight in top-left for depth */}
+          {/* Radial highlight in top-left for depth. Isolated in its own
+              overflow-hidden wrapper so the radial mask clips to the rounded
+              corners but does NOT clip the section's real children. */}
           <div
-            className="pointer-events-none absolute inset-0 opacity-60"
-            style={{
-              background:
-                "radial-gradient(circle at 20% 0%, rgba(255,255,255,0.25), transparent 50%)",
-            }}
             aria-hidden
-          />
+            className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl"
+          >
+            <div
+              className="absolute inset-0 opacity-60"
+              style={{
+                background:
+                  "radial-gradient(circle at 20% 0%, rgba(255,255,255,0.25), transparent 50%)",
+              }}
+            />
+          </div>
 
           {/* Row 1: label + refresh */}
-          <div className="relative flex items-start justify-between">
+          <div className="relative z-10 flex items-start justify-between">
             <p className="text-[11px] font-bold tracking-[0.18em] text-white/80 uppercase">
               Total Balance
             </p>
@@ -163,14 +173,14 @@ export default function HomePage() {
               balance always reads clearly. `leading-none` + min-height
               guarantee the row has visible height even before hydration. */}
           <p
-            className="relative min-h-[3rem] font-display text-5xl font-bold leading-none text-white tabular-nums"
+            className="relative z-10 min-h-[3rem] font-display text-5xl font-bold leading-none text-white tabular-nums"
             style={{ filter: "none" }}
           >
             {hideBalance ? "••••••" : formattedTotalUsd}
           </p>
 
           {/* Row 3: token pills — rendered UNCONDITIONALLY. */}
-          <div className="relative grid grid-cols-2 gap-2.5">
+          <div className="relative z-10 grid grid-cols-2 gap-2.5">
             <div className="rounded-2xl bg-[#0A0A0A] p-3.5">
               <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-white/55 uppercase">
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80]/15">
