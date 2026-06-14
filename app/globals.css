@@ -15,6 +15,11 @@
   --glide-on-surface: #0A0A0A;
   --glide-on-surface-variant: #475569;
   --glide-on-surface-elevated: #FFFFFF;
+  /* Text colors for content rendered ON dark elevated cards (e.g. the
+     signature near-black surfaces). Same values in light + dark — the cards
+     themselves are dark in both modes. */
+  --glide-on-elevated: #FFFFFF;
+  --glide-on-elevated-variant: #A1A1AA;
   --glide-outline: rgba(34, 197, 94, 0.18);
   --glide-error: #EF4444;
 
@@ -75,6 +80,8 @@
   --glide-on-surface: #FFFFFF;
   --glide-on-surface-variant: #A1A1AA;
   --glide-on-surface-elevated: #FFFFFF;
+  --glide-on-elevated: #FFFFFF;
+  --glide-on-elevated-variant: #A1A1AA;
   --glide-outline: rgba(74, 222, 128, 0.18);
   --glide-error: #F87171;
 
@@ -135,6 +142,16 @@ body {
 .glide-scroll {
   scroll-behavior: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Reserve clearance for the floating bottom-nav so content doesn't sit under
+   the icons. Nav is ~56px tall + 12px gap below + 12px above + safe-area;
+   100px + safe-area gives a comfortable margin above the icons. Applied only
+   on routes where the nav is rendered (see app-shell.tsx). Padding goes on
+   the children wrapper itself so it shifts ALL bottom content (scroll
+   regions, sticky forms, footers) above the fixed nav uniformly. */
+.glide-shell-with-nav {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1045,6 +1062,27 @@ body {
     background: var(--glide-surface-elevated);
     border: 1px solid var(--glide-border);
     border-radius: var(--glide-radius-md);
+    /* Cards sit on the dark elevated surface in BOTH modes. Remap the
+       inherited legacy tokens so every `text-[var(--glide-text)]` and
+       `glide-muted` descendant gets readable on-elevated colors instead of
+       the page-level near-black / dark-slate values that vanish on #0A0A0A. */
+    --glide-text: var(--glide-on-elevated);
+    --glide-muted: var(--glide-on-elevated-variant);
+    --glide-on-surface: var(--glide-on-elevated);
+    --glide-on-surface-variant: var(--glide-on-elevated-variant);
+    color: var(--glide-on-elevated);
+  }
+
+  /* Helper for raw inline-styled dark elevated cards (where the surface is
+     applied via `style={{ background: 'var(--glide-surface-elevated)' }}`
+     instead of the `.glide-surface-card` class). Apply this class to the
+     same element to scope the text tokens for legibility. */
+  .glide-on-elevated-surface {
+    --glide-text: var(--glide-on-elevated);
+    --glide-muted: var(--glide-on-elevated-variant);
+    --glide-on-surface: var(--glide-on-elevated);
+    --glide-on-surface-variant: var(--glide-on-elevated-variant);
+    color: var(--glide-on-elevated);
   }
 
   .glide-tonal-card {

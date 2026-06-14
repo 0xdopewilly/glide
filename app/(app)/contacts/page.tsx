@@ -44,7 +44,7 @@ export default function ContactsPage() {
           </ul>
         ) : contacts.length === 0 ? (
           <div
-            className="mt-8 flex flex-col items-center rounded-2xl border px-6 py-12 text-center"
+            className="glide-on-elevated-surface mt-8 flex flex-col items-center rounded-2xl border px-6 py-12 text-center"
             style={{
               background: "var(--glide-surface-elevated)",
               borderColor: "var(--glide-border)",
@@ -75,7 +75,7 @@ export default function ContactsPage() {
                       `/send?to=${encodeURIComponent(c.walletAddress)}`,
                     )
                   }
-                  className="glide-tap flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-left transition-colors"
+                  className="glide-tap glide-on-elevated-surface flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-left transition-colors"
                   style={{
                     background: "var(--glide-surface-elevated)",
                     borderColor: "var(--glide-border)",

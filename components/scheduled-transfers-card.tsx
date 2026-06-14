@@ -65,7 +65,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
 
   return (
     <div
-      className={`rounded-3xl border p-4 ${className}`}
+      className={`glide-on-elevated-surface rounded-3xl border p-4 ${className}`}
       style={{
         background: "var(--glide-surface-elevated)",
         borderColor: "var(--glide-border)",

@@ -71,7 +71,7 @@ export function ChatMessageBubble({
     return (
       <div className="glide-chat-enter flex justify-start px-1 py-0.5">
         <div
-          className="max-w-[min(88%,280px)] rounded-[20px] rounded-bl-[6px] border px-3.5 py-3"
+          className="glide-on-elevated-surface max-w-[min(88%,280px)] rounded-[20px] rounded-bl-[6px] border px-3.5 py-3"
           style={{
             background: "var(--glide-surface-elevated)",
             borderColor: "var(--glide-border)",
@@ -145,7 +145,7 @@ export function ChatMessageBubble({
         className={`min-w-0 max-w-[min(88%,280px)] text-[15px] leading-[1.45] [overflow-wrap:anywhere] break-words ${
           isUser
             ? "rounded-[20px] rounded-br-[6px] px-3.5 py-2.5 font-medium"
-            : "rounded-[20px] rounded-bl-[6px] border px-3.5 py-2.5"
+            : "glide-on-elevated-surface rounded-[20px] rounded-bl-[6px] border px-3.5 py-2.5"
         } ${isAddress ? "font-mono text-[13px] tracking-tight" : ""}`}
         style={
           isUser
@@ -156,7 +156,7 @@ export function ChatMessageBubble({
             : {
                 background: "var(--glide-surface-elevated)",
                 borderColor: "var(--glide-border)",
-                color: "var(--glide-text)",
+                color: "var(--glide-on-elevated)",
               }
         }
         title={isAddress ? rawText.trim() : undefined}

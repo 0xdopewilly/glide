@@ -72,7 +72,7 @@ export default function PaymentsPage() {
               key={href}
               href={href}
               prefetch
-              className="glide-tap group relative flex min-h-[9.5rem] flex-col justify-between rounded-3xl border p-4"
+              className="glide-tap glide-on-elevated-surface group relative flex min-h-[9.5rem] flex-col justify-between rounded-3xl border p-4"
               style={{
                 background: "var(--glide-surface-elevated)",
                 borderColor: "var(--glide-border)",

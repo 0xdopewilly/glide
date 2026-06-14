@@ -239,7 +239,7 @@ export default function ReceivePage() {
           <ReceiveQr address={address} />
 
           <div
-            className="mt-6 rounded-2xl border px-4 py-5"
+            className="glide-on-elevated-surface mt-6 rounded-2xl border px-4 py-5"
             style={{
               background: "var(--glide-surface-elevated)",
               borderColor: "var(--glide-border)",
@@ -274,7 +274,7 @@ export default function ReceivePage() {
 
           {active.key !== "arc" ? (
             <div
-              className="mt-3 rounded-2xl border px-4 py-4"
+              className="glide-on-elevated-surface mt-3 rounded-2xl border px-4 py-4"
               style={{
                 background: "var(--glide-surface-elevated)",
                 borderColor: "var(--glide-border)",

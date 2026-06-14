@@ -838,7 +838,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
       >
         <div
-          className="flex items-center gap-2 rounded-[28px] border p-1.5"
+          className="glide-on-elevated-surface flex items-center gap-2 rounded-[28px] border p-1.5"
           style={{
             background: "var(--glide-surface-elevated)",
             borderColor: "var(--glide-border)",
