@@ -314,19 +314,9 @@ export default function SendPage() {
     return (
       <FlowPage title="Review" onBack={() => setStep("amount")}>
         <div className="slide-up-bouncy flex flex-col px-5 pb-6">
-          <div
-            className="mt-6 rounded-3xl border p-6 text-center"
-            style={{
-              background: "#0F0F0F",
-              borderColor: "rgba(74,222,128,0.18)",
-              color: "#FFFFFF",
-            }}
-          >
+          <div className="mt-6 rounded-3xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] p-6 text-center text-[color:var(--glide-on-elevated)]">
             <UserAvatar size="lg" />
-            <p
-              className="glide-label-mono mt-3 text-[11px] font-semibold uppercase tracking-wide"
-              style={{ color: "#A1A1AA" }}
-            >
+            <p className="glide-label-mono mt-3 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
               Sending to
             </p>
             <p className="mt-2 text-[20px] font-bold tracking-tight">
@@ -341,13 +331,13 @@ export default function SendPage() {
           <div className="mt-6 flex items-baseline justify-between">
             <label
               htmlFor="send-note"
-              className="glide-label-mono block text-[11px] font-semibold uppercase tracking-wide text-[var(--glide-muted)]"
+              className="glide-label-mono block text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]"
             >
               Note (optional)
             </label>
             <span
               className={`glide-label-mono text-[10px] font-semibold ${
-                note.length > 130 ? "text-red-400" : "text-[var(--glide-muted)]"
+                note.length > 130 ? "text-red-400" : "text-[color:var(--glide-on-elevated-variant)]"
               }`}
             >
               {note.length}/140
@@ -359,26 +349,11 @@ export default function SendPage() {
             onChange={(e) => setNote(e.target.value.slice(0, 140))}
             placeholder="Dinner, rent, thanks"
             maxLength={140}
-            style={{
-              background: "#0F0F0F",
-              border: "1px solid rgba(74,222,128,0.18)",
-              color: "#FFFFFF",
-            }}
-            className="mt-2 w-full rounded-2xl px-4 py-3.5 text-[16px] font-medium placeholder:font-medium placeholder:text-[#A1A1AA] focus:outline-none focus:ring-2 focus:ring-[#4ADE80]/40"
+            className="mt-2 w-full rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[16px] font-medium text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none focus:ring-2 focus:ring-[#4ADE80]/40"
           />
 
-          <div
-            className="mt-5 flex items-center justify-between rounded-2xl px-4 py-3.5"
-            style={{
-              background: "#0F0F0F",
-              border: "1px solid rgba(74,222,128,0.18)",
-              color: "#FFFFFF",
-            }}
-          >
-            <span
-              className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide"
-              style={{ color: "#A1A1AA" }}
-            >
+          <div className="mt-5 flex items-center justify-between rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[color:var(--glide-on-elevated)]">
+            <span className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
               From
             </span>
             <span className="text-sm font-bold">glidepay · {token}</span>
@@ -439,30 +414,18 @@ export default function SendPage() {
       <SendScanSheet open={scanOpen} onClose={() => setScanOpen(false)} />
       <div className="flex min-h-0 flex-1 flex-col px-5 pb-6">
         {/* AMOUNT CARD --------------------------------------------------- */}
-        <div
-          className="mt-2 rounded-3xl p-6"
-          style={{
-            background: "#0F0F0F",
-            border: "1px solid rgba(74,222,128,0.18)",
-            color: "#FFFFFF",
-          }}
-        >
+        <div className="mt-2 rounded-3xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] p-6 text-[color:var(--glide-on-elevated)]">
           <div className="flex items-start justify-between gap-3">
             <label
               htmlFor="send-amount"
-              className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide"
-              style={{ color: "#A1A1AA" }}
+              className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]"
             >
               Amount
             </label>
 
             {/* Token pills */}
             <div
-              className="flex items-center gap-1 rounded-full p-1"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(74,222,128,0.18)",
-              }}
+              className="flex items-center gap-1 rounded-full border border-[color:var(--glide-elevated-border)] p-1"
               role="tablist"
               aria-label="Token"
             >
@@ -476,13 +439,10 @@ export default function SendPage() {
                     aria-selected={active}
                     onClick={() => setToken(t)}
                     className={`glide-tap rounded-full px-3 py-1.5 text-[11px] font-bold tracking-tight transition-colors ${
-                      active ? "glow-green" : ""
-                    }`}
-                    style={
                       active
-                        ? { background: "#4ADE80", color: "#0A0A0A" }
-                        : { color: "#FFFFFF", background: "transparent" }
-                    }
+                        ? "glow-green bg-[#4ADE80] text-[#0A0A0A]"
+                        : "border border-[color:var(--glide-elevated-border)] bg-transparent text-[color:var(--glide-on-elevated)]"
+                    }`}
                   >
                     {t}
                   </button>
@@ -492,10 +452,7 @@ export default function SendPage() {
           </div>
 
           <div className="mt-4 flex items-baseline gap-2">
-            <span
-              className="text-[36px] font-bold leading-none"
-              style={{ color: "#A1A1AA" }}
-            >
+            <span className="text-[36px] font-bold leading-none text-[color:var(--glide-on-elevated-variant)]">
               {amountPrefix}
             </span>
             <input
@@ -514,8 +471,7 @@ export default function SendPage() {
               autoCorrect="off"
               spellCheck={false}
               aria-label="Amount"
-              className="w-full min-w-0 bg-transparent text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums caret-[#4ADE80] focus:outline-none"
-              style={{ color: "#FFFFFF" }}
+              className="w-full min-w-0 bg-transparent text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[color:var(--glide-on-elevated)] caret-[#4ADE80] focus:outline-none"
             />
           </div>
 
@@ -523,15 +479,10 @@ export default function SendPage() {
             className={`mt-3 text-[12px] font-semibold ${
               hint && (resolveState === "fail" || overBalance)
                 ? "text-[#F87171]"
-                : ""
+                : hint && recipientOk && !overBalance
+                  ? "text-[#4ADE80]"
+                  : "text-[color:var(--glide-on-elevated-variant)]"
             }`}
-            style={
-              hint && recipientOk && !overBalance
-                ? { color: "#4ADE80" }
-                : !hint || (!overBalance && resolveState !== "fail")
-                  ? { color: "#A1A1AA" }
-                  : undefined
-            }
           >
             {hint ?? `Balance ${formatStableAmount(tokenBalance, token)}`}
           </p>
@@ -540,23 +491,15 @@ export default function SendPage() {
         {/* RECIPIENT FIELD ---------------------------------------------- */}
         <label
           htmlFor="send-recipient"
-          className="glide-label-mono mt-6 block text-[11px] font-semibold uppercase tracking-wide text-[var(--glide-muted)]"
+          className="glide-label-mono mt-6 block text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]"
         >
           To
         </label>
         <div
-          className={`mt-2 flex items-center gap-2 rounded-2xl px-3 py-2 transition-all ${recipientBorderClass}`}
-          style={{
-            background: "#0F0F0F",
-            border: "1px solid rgba(74,222,128,0.18)",
-            color: "#FFFFFF",
-          }}
+          className={`mt-2 flex items-center gap-2 rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-3 py-2 text-[color:var(--glide-on-elevated)] transition-all ${recipientBorderClass}`}
         >
           {(kind === "username" || (inputLooksLikeUsername && !kind)) ? (
-            <span
-              className="shrink-0 pl-1 text-[18px] font-bold"
-              style={{ color: "#A1A1AA" }}
-            >
+            <span className="shrink-0 pl-1 text-[18px] font-bold text-[color:var(--glide-on-elevated-variant)]">
               @
             </span>
           ) : null}
@@ -572,12 +515,11 @@ export default function SendPage() {
             autoCorrect="off"
             spellCheck={false}
             aria-label="Recipient"
-            className={`min-w-0 flex-1 bg-transparent py-2 text-[15px] font-semibold tracking-tight placeholder:font-medium placeholder:text-[#A1A1AA] focus:outline-none ${
+            className={`min-w-0 flex-1 bg-transparent py-2 text-[15px] font-semibold tracking-tight text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none ${
               kind === "wallet" || isValidWalletAddress(recipient.trim())
                 ? "font-mono text-[13px]"
                 : ""
             }`}
-            style={{ color: "#FFFFFF" }}
           />
           {recipientOk && kindLabel ? (
             <span
@@ -591,10 +533,7 @@ export default function SendPage() {
               {kindLabel}
             </span>
           ) : resolveState === "checking" ? (
-            <span
-              className="glide-label-mono shrink-0 text-[10px] font-bold"
-              style={{ color: "#A1A1AA" }}
-            >
+            <span className="glide-label-mono shrink-0 text-[10px] font-bold text-[color:var(--glide-on-elevated-variant)]">
               Checking…
             </span>
           ) : null}
@@ -602,12 +541,7 @@ export default function SendPage() {
             type="button"
             onClick={() => setScanOpen(true)}
             aria-label="Scan QR"
-            className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(74,222,128,0.18)",
-              color: "#FFFFFF",
-            }}
+            className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[color:var(--glide-elevated-border)] text-[color:var(--glide-on-elevated)]"
           >
             <QrCode className="h-4 w-4" strokeWidth={2.25} />
           </button>
@@ -617,13 +551,13 @@ export default function SendPage() {
         <div className="mt-5 flex items-baseline justify-between">
           <label
             htmlFor="send-note-inline"
-            className="glide-label-mono block text-[11px] font-semibold uppercase tracking-wide text-[var(--glide-muted)]"
+            className="glide-label-mono block text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]"
           >
             Note (optional)
           </label>
           <span
             className={`glide-label-mono text-[10px] font-semibold ${
-              note.length > 130 ? "text-[#F87171]" : "text-[var(--glide-muted)]"
+              note.length > 130 ? "text-[#F87171]" : "text-[color:var(--glide-on-elevated-variant)]"
             }`}
           >
             {note.length}/140
@@ -635,12 +569,7 @@ export default function SendPage() {
           onChange={(e) => setNote(e.target.value.slice(0, 140))}
           placeholder="Dinner, rent, thanks"
           maxLength={140}
-          className="mt-2 w-full rounded-2xl px-4 py-3.5 text-[16px] font-medium placeholder:font-medium placeholder:text-[#A1A1AA] focus:outline-none focus:ring-2 focus:ring-[#4ADE80]/40"
-          style={{
-            background: "#0F0F0F",
-            border: "1px solid rgba(74,222,128,0.18)",
-            color: "#FFFFFF",
-          }}
+          className="mt-2 w-full rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[16px] font-medium text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none focus:ring-2 focus:ring-[#4ADE80]/40"
         />
 
         {/* SUBMIT ------------------------------------------------------- */}
