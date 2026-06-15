@@ -179,31 +179,34 @@ export default function HomePage() {
             {hideBalance ? "••••••" : formattedTotalUsd}
           </p>
 
-          {/* Row 3: token pills — rendered UNCONDITIONALLY. */}
+          {/* Row 3: token pills — rendered UNCONDITIONALLY. Pills follow the
+              theme: white surface + dark text in light mode, dark surface +
+              white text in dark mode. Tokens resolve to #FFFFFF (light) /
+              #0F0F0F (dark) so the pills read cleanly on the green card. */}
           <div className="relative z-10 grid grid-cols-2 gap-2.5">
-            <div className="rounded-2xl bg-[#0A0A0A] p-3.5">
-              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-white/55 uppercase">
+            <div className="rounded-2xl bg-[color:var(--glide-surface-container)] p-3.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-[color:var(--glide-on-elevated-variant)] uppercase">
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80]/15">
                   <span className="h-2 w-2 rounded-full bg-[#4ADE80]" />
                 </span>
                 USDC
               </div>
               <p
-                className="mt-1.5 font-display text-lg font-bold text-white tabular-nums"
+                className="mt-1.5 font-display text-lg font-bold text-[color:var(--glide-on-elevated)] tabular-nums"
                 style={{ filter: "none" }}
               >
                 {hideBalance ? "••••" : `$${usdcDisplay}`}
               </p>
             </div>
-            <div className="rounded-2xl bg-[#0A0A0A] p-3.5">
-              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-white/55 uppercase">
+            <div className="rounded-2xl bg-[color:var(--glide-surface-container)] p-3.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-[color:var(--glide-on-elevated-variant)] uppercase">
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#3B82F6]/15">
                   <span className="h-2 w-2 rounded-full bg-[#3B82F6]" />
                 </span>
                 EURC
               </div>
               <p
-                className="mt-1.5 font-display text-lg font-bold text-white tabular-nums"
+                className="mt-1.5 font-display text-lg font-bold text-[color:var(--glide-on-elevated)] tabular-nums"
                 style={{ filter: "none" }}
               >
                 {hideBalance ? "••••" : `€${eurcDisplay}`}

@@ -6,27 +6,29 @@ import { shortenAddress } from "@/lib/format";
 import type { LucideIcon } from "lucide-react";
 import { ArrowLeftRight, Globe2, Send } from "lucide-react";
 
+// All success cards share the brand green gradient — unified action
+// confirmation visual language. Failure / cancellation states are handled
+// elsewhere (red) and intentionally not green.
+const BRAND_GREEN_GRADIENT =
+  "linear-gradient(135deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)";
+
 const CONFIG: Record<
   ActionSuccessType,
   {
     label: string;
-    gradient: string;
     Icon: LucideIcon;
   }
 > = {
   send: {
     label: "Payment sent",
-    gradient: "from-emerald-500 via-emerald-600 to-teal-600",
     Icon: Send,
   },
   swap: {
     label: "Swap done",
-    gradient: "from-violet-500 via-violet-600 to-indigo-600",
     Icon: ArrowLeftRight,
   },
   bridge: {
     label: "Bridge done",
-    gradient: "from-sky-500 via-blue-600 to-indigo-600",
     Icon: Globe2,
   },
 };
@@ -55,7 +57,7 @@ export function ActionSuccessCard({
   receivedAmount?: string;
   network?: string;
 }) {
-  const { label, gradient, Icon } = CONFIG[action];
+  const { label, Icon } = CONFIG[action];
   const recipient =
     recipientName?.trim() ||
     (to ? shortenAddress(to) : action === "send" ? "recipient" : "");
@@ -78,11 +80,12 @@ export function ActionSuccessCard({
   return (
     <div className="flex w-full justify-end px-1 py-2">
       <div
-        className={`glide-chat-card flex aspect-square w-[min(100%,300px)] max-w-[300px] shrink-0 flex-col items-center justify-center rounded-[28px] rounded-br-md bg-gradient-to-br ${gradient} p-6 text-center text-white`}
+        className="glide-chat-card flex aspect-square w-[min(100%,300px)] max-w-[300px] shrink-0 flex-col items-center justify-center rounded-[28px] rounded-br-md p-6 text-center text-white shadow-[0_20px_60px_-20px_rgba(74,222,128,0.5)]"
+        style={{ background: BRAND_GREEN_GRADIENT }}
         role="status"
         aria-label={`${label}${amount ? `: ${formatStableAmount(amount, action === "swap" ? "USDC" : token)}` : ""}`}
       >
-        <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 ring-1 ring-white/25">
+        <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
           <Icon className="h-7 w-7" strokeWidth={2.25} />
         </span>
         <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">

@@ -58,10 +58,10 @@ export function ProcessingBubble({ action }: { action: ProcessingAction }) {
         aria-busy="true"
         aria-live="polite"
       >
-        <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-violet-600 dark:text-violet-300">
+        <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#4ADE80]/15 text-[#16A34A] dark:text-[#4ADE80]">
           <Icon className="h-5 w-5" strokeWidth={2.25} />
           <span
-            className="glide-processing-pulse absolute inset-0 rounded-xl ring-2 ring-violet-500/50"
+            className="glide-processing-pulse absolute inset-0 rounded-xl ring-2 ring-[#4ADE80]/50"
             aria-hidden
           />
         </span>
@@ -74,7 +74,7 @@ export function ProcessingBubble({ action }: { action: ProcessingAction }) {
             className="relative mt-2 h-0.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-white/10"
             aria-hidden
           >
-            <span className="glide-processing-bar-indeterminate absolute inset-y-0 left-0 w-1/2 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500" />
+            <span className="glide-processing-bar-indeterminate absolute inset-y-0 left-0 w-1/2 rounded-full bg-gradient-to-r from-[#4ADE80] to-[#16A34A]" />
           </div>
         </div>
       </div>
