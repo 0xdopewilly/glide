@@ -2,6 +2,7 @@
 
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TokenBalances } from "@/components/token-balances";
 import { TransactionList } from "@/components/transaction-list";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePrivacy } from "@/context/privacy-context";
@@ -48,6 +49,8 @@ function greetingFor(date: Date) {
 export default function HomePage() {
   const {
     totalUsd,
+    tokens,
+    loading,
     refreshing,
     transactions,
     transactionsLoading,
@@ -124,7 +127,7 @@ export default function HomePage() {
             Right: stacked square buttons (Add Funds, Scan, Refresh).
             Subtle radial decoration in the lower-middle for depth. */}
         <section
-          className="relative mt-4 flex gap-4 overflow-hidden rounded-3xl border p-5 sm:p-6"
+          className="relative mt-4 overflow-hidden rounded-3xl border p-5 sm:p-6"
           style={{
             background: "var(--glide-surface-container)",
             borderColor: "var(--glide-elevated-border)",
@@ -156,113 +159,123 @@ export default function HomePage() {
             ))}
           </svg>
 
-          {/* Left side: portfolio info */}
-          <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium text-[color:var(--glide-on-surface-variant)]">
-                Total Portfolio
+          <div className="relative z-10 flex gap-4">
+            {/* Left side: portfolio info */}
+            <div className="flex min-w-0 flex-1 flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-[color:var(--glide-on-surface-variant)]">
+                  Total Portfolio
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setHideBalance(!hideBalance)}
+                  aria-label={hideBalance ? "Show balance" : "Hide balance"}
+                  aria-pressed={hideBalance}
+                  className="glide-tap text-[color:var(--glide-on-surface-variant)] transition-colors hover:text-[color:var(--glide-on-surface)]"
+                >
+                  {hideBalance ? (
+                    <EyeOff className="h-4 w-4" strokeWidth={2.25} />
+                  ) : (
+                    <Eye className="h-4 w-4" strokeWidth={2.25} />
+                  )}
+                </button>
+              </div>
+
+              <p
+                className="font-display text-4xl font-bold leading-none text-[color:var(--glide-on-surface)] tabular-nums sm:text-5xl"
+                style={{ filter: "none" }}
+              >
+                {hideBalance ? "••••" : formattedTotalUsd}
               </p>
+
+              <div
+                className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1"
+                style={{
+                  background: portfolioChangePositive
+                    ? "rgba(16, 185, 129, 0.12)"
+                    : "rgba(239, 68, 68, 0.12)",
+                }}
+              >
+                {portfolioChangePositive ? (
+                  <ArrowUp
+                    className="h-3 w-3 text-[#10B981]"
+                    strokeWidth={2.5}
+                  />
+                ) : (
+                  <ArrowDown
+                    className="h-3 w-3 text-[#EF4444]"
+                    strokeWidth={2.5}
+                  />
+                )}
+                <span
+                  className="text-xs font-semibold tabular-nums"
+                  style={{
+                    color: portfolioChangePositive ? "#10B981" : "#EF4444",
+                  }}
+                >
+                  {Math.abs(portfolioChange).toFixed(2)}% today
+                </span>
+              </div>
+            </div>
+
+            {/* Right side: stacked square buttons */}
+            <div className="flex shrink-0 flex-col gap-2">
+              <Link
+                href="/receive"
+                prefetch
+                className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors"
+                style={{
+                  background: "var(--glide-surface-elevated)",
+                  borderColor: "var(--glide-elevated-border)",
+                }}
+              >
+                <Plus
+                  className="h-5 w-5 text-[color:var(--glide-primary)]"
+                  strokeWidth={2.25}
+                />
+                <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
+                  Add Funds
+                </span>
+              </Link>
+              <Link
+                href="/scan"
+                prefetch
+                className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors"
+                style={{
+                  background: "var(--glide-surface-elevated)",
+                  borderColor: "var(--glide-elevated-border)",
+                }}
+              >
+                <QrCode
+                  className="h-5 w-5 text-[color:var(--glide-primary)]"
+                  strokeWidth={2.25}
+                />
+                <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
+                  Scan
+                </span>
+              </Link>
               <button
                 type="button"
-                onClick={() => setHideBalance(!hideBalance)}
-                aria-label={hideBalance ? "Show balance" : "Hide balance"}
-                aria-pressed={hideBalance}
-                className="glide-tap text-[color:var(--glide-on-surface-variant)] transition-colors hover:text-[color:var(--glide-on-surface)]"
+                onClick={() => void refresh()}
+                disabled={refreshing}
+                aria-label="Refresh balances"
+                className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors disabled:opacity-50"
+                style={{
+                  background: "var(--glide-surface-elevated)",
+                  borderColor: "var(--glide-elevated-border)",
+                }}
               >
-                {hideBalance ? (
-                  <EyeOff className="h-4 w-4" strokeWidth={2.25} />
-                ) : (
-                  <Eye className="h-4 w-4" strokeWidth={2.25} />
-                )}
+                <RefreshCw
+                  className={`h-5 w-5 text-[color:var(--glide-primary)] ${
+                    refreshing ? "animate-spin" : ""
+                  }`}
+                  strokeWidth={2.25}
+                />
+                <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
+                  Refresh
+                </span>
               </button>
             </div>
-
-            <p
-              className="font-display text-4xl font-bold leading-none text-[color:var(--glide-on-surface)] tabular-nums sm:text-5xl"
-              style={{ filter: "none" }}
-            >
-              {hideBalance ? "••••" : formattedTotalUsd}
-            </p>
-
-            <div
-              className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1"
-              style={{
-                background: portfolioChangePositive
-                  ? "rgba(16, 185, 129, 0.12)"
-                  : "rgba(239, 68, 68, 0.12)",
-              }}
-            >
-              {portfolioChangePositive ? (
-                <ArrowUp className="h-3 w-3 text-[#10B981]" strokeWidth={2.5} />
-              ) : (
-                <ArrowDown className="h-3 w-3 text-[#EF4444]" strokeWidth={2.5} />
-              )}
-              <span
-                className="text-xs font-semibold tabular-nums"
-                style={{ color: portfolioChangePositive ? "#10B981" : "#EF4444" }}
-              >
-                {Math.abs(portfolioChange).toFixed(2)}% today
-              </span>
-            </div>
-          </div>
-
-          {/* Right side: stacked square buttons */}
-          <div className="relative z-10 flex shrink-0 flex-col gap-2">
-            <Link
-              href="/receive"
-              prefetch
-              className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors"
-              style={{
-                background: "var(--glide-surface-elevated)",
-                borderColor: "var(--glide-elevated-border)",
-              }}
-            >
-              <Plus
-                className="h-5 w-5 text-[color:var(--glide-primary)]"
-                strokeWidth={2.25}
-              />
-              <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
-                Add Funds
-              </span>
-            </Link>
-            <Link
-              href="/scan"
-              prefetch
-              className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors"
-              style={{
-                background: "var(--glide-surface-elevated)",
-                borderColor: "var(--glide-elevated-border)",
-              }}
-            >
-              <QrCode
-                className="h-5 w-5 text-[color:var(--glide-primary)]"
-                strokeWidth={2.25}
-              />
-              <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
-                Scan
-              </span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => void refresh()}
-              disabled={refreshing}
-              aria-label="Refresh balances"
-              className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors disabled:opacity-50"
-              style={{
-                background: "var(--glide-surface-elevated)",
-                borderColor: "var(--glide-elevated-border)",
-              }}
-            >
-              <RefreshCw
-                className={`h-5 w-5 text-[color:var(--glide-primary)] ${
-                  refreshing ? "animate-spin" : ""
-                }`}
-                strokeWidth={2.25}
-              />
-              <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
-                Refresh
-              </span>
-            </button>
           </div>
         </section>
 
@@ -294,6 +307,11 @@ export default function HomePage() {
             </Link>
           ))}
         </nav>
+
+        {/* ASSETS — token balances list (USDC / EURC / cirBTC) */}
+        <div className="mt-8">
+          <TokenBalances tokens={tokens} loading={loading} />
+        </div>
 
         {/* TRANSACTIONS */}
         <section className="mt-8 flex-1 pb-4">
