@@ -1,39 +1,57 @@
 "use client";
 
-import { getTokenLogo } from "@/lib/token-meta";
-import Image from "next/image";
-import { useState } from "react";
+import {
+  Bitcoin,
+  CircleDollarSign,
+  DollarSign,
+  Euro,
+  type LucideIcon,
+} from "lucide-react";
 
-export function TokenIcon({ symbol, size = 40 }: { symbol: string; size?: number }) {
-  const logo = getTokenLogo(symbol);
-  const [failed, setFailed] = useState(false);
-  const initial = symbol.trim().charAt(0) || "?";
+type TokenVisual = { bg: string; Icon: LucideIcon };
 
-  if (!logo || failed) {
-    return (
-      <span
-        className="inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-violet-600 font-bold text-white"
-        style={{ width: size, height: size, fontSize: size * 0.38 }}
-        aria-hidden
-      >
-        {initial}
-      </span>
-    );
+// Brand-colored coin badges. Keys are normalized to UPPERCASE; the lookup also
+// strips common decorative prefixes like "CIR" so cirBTC / CIRBTC / BTC all
+// resolve to the bitcoin visual.
+const TOKEN_VISUALS: Record<string, TokenVisual> = {
+  USDC: { bg: "#000000", Icon: DollarSign },
+  EURC: { bg: "#3B82F6", Icon: Euro },
+  CIRBTC: { bg: "#8B5CF6", Icon: Bitcoin },
+  BTC: { bg: "#8B5CF6", Icon: Bitcoin },
+};
+
+const FALLBACK: TokenVisual = { bg: "#6B7280", Icon: CircleDollarSign };
+
+function resolveVisual(symbol: string): TokenVisual {
+  const key = symbol.trim().toUpperCase();
+  if (TOKEN_VISUALS[key]) return TOKEN_VISUALS[key];
+  // Strip a leading "CIR" prefix (e.g. cirBTC, cirETH).
+  if (key.startsWith("CIR") && TOKEN_VISUALS[key.slice(3)]) {
+    return TOKEN_VISUALS[key.slice(3)];
   }
+  return FALLBACK;
+}
 
+export function TokenIcon({
+  symbol,
+  size = 40,
+  className,
+}: {
+  symbol: string;
+  size?: number;
+  className?: string;
+}) {
+  const { bg, Icon } = resolveVisual(symbol);
   return (
     <span
-      className="relative inline-flex shrink-0 overflow-hidden rounded-full bg-white ring-1 ring-black/5 dark:ring-white/10"
-      style={{ width: size, height: size }}
+      className={`inline-flex shrink-0 items-center justify-center rounded-full ${className ?? ""}`}
+      style={{ width: size, height: size, backgroundColor: bg }}
+      aria-hidden
     >
-      <Image
-        src={logo}
-        alt=""
-        width={size}
-        height={size}
-        className="object-cover"
-        onError={() => setFailed(true)}
-        unoptimized
+      <Icon
+        className="text-white"
+        style={{ width: size * 0.55, height: size * 0.55 }}
+        strokeWidth={2.5}
       />
     </span>
   );

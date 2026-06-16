@@ -130,15 +130,31 @@ export default function HomePage() {
             borderColor: "var(--glide-elevated-border)",
           }}
         >
-          {/* Subtle sound-wave / glow decoration */}
-          <div
+          {/* Sound-wave / equalizer decoration — 24 vertical bars of
+              varying heights forming a horizontal wave pattern. */}
+          <svg
             aria-hidden
-            className="pointer-events-none absolute bottom-2 left-24 right-24 h-12 opacity-40"
-            style={{
-              background:
-                "radial-gradient(ellipse at center, rgba(139,92,246,0.22), transparent 70%)",
-            }}
-          />
+            viewBox="0 0 200 60"
+            className="pointer-events-none absolute bottom-3 right-4 h-14 w-48 opacity-40"
+            fill="none"
+            preserveAspectRatio="none"
+          >
+            {[
+              30, 45, 60, 75, 85, 90, 85, 70, 55, 40, 30, 25, 40, 55, 70, 80,
+              85, 80, 70, 55, 40, 30, 25, 20,
+            ].map((h, i) => (
+              <rect
+                key={i}
+                x={i * 8 + 2}
+                y={30 - h * 0.25}
+                width={3}
+                height={h * 0.5}
+                rx={1.5}
+                className="fill-[color:var(--glide-primary)]"
+                opacity={0.3 + h / 200}
+              />
+            ))}
+          </svg>
 
           {/* Left side: portfolio info */}
           <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-3">

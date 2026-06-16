@@ -2,13 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Wallet, Sparkles, Clock, UserCircle2 } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Home,
+  Sparkles,
+  UserCircle2,
+  Wallet,
+} from "lucide-react";
 
 const SLOTS = [
   { href: "/", icon: Home, label: "Home" },
   { href: "/payments", icon: Wallet, label: "Wallet" },
   { href: "/ask", icon: Sparkles, label: "Discover" },
-  { href: "/activity", icon: Clock, label: "Activity" },
+  { href: "/activity", icon: ArrowLeftRight, label: "Activity" },
   { href: "/profile", icon: UserCircle2, label: "Profile" },
 ] as const;
 
@@ -28,12 +34,12 @@ export function BottomNav() {
               key={href}
               href={href}
               aria-label={label}
-              className="group relative flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 transition-colors"
+              className="group relative flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 transition-colors"
             >
               {active && (
                 <span
                   aria-hidden
-                  className="absolute inset-x-1 inset-y-0 -z-10 rounded-xl"
+                  className="absolute inset-x-1.5 inset-y-0.5 -z-10 rounded-2xl"
                   style={{ backgroundColor: "var(--glide-primary-container)" }}
                 />
               )}
