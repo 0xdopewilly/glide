@@ -122,25 +122,43 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {/* HERO PORTFOLIO CARD — new "Total Portfolio" design.
+        {/* HERO PORTFOLIO CARD — "Total Portfolio" design.
             Left: privacy-toggleable portfolio total + 24h change pill.
-            Right: stacked square buttons (Add Funds, Scan, Refresh).
-            Subtle radial decoration in the lower-middle for depth. */}
+            Right: stacked 64x64 square buttons (Add Funds, Scan, Refresh).
+            Sound-wave decoration in the lower area for depth.
+
+            LAYOUT GUARANTEES (do not change without testing):
+            - Section has explicit minHeight so it cannot collapse.
+            - Inner layout uses CSS GRID (1fr auto), not nested flex,
+              so the right column's width is auto-computed from its
+              fixed-width children and never squashes the left side.
+            - Each button is explicit 64x64 inline. */}
         <section
           className="relative mt-4 overflow-hidden rounded-3xl border p-5 sm:p-6"
           style={{
             background: "var(--glide-surface-container)",
             borderColor: "var(--glide-elevated-border)",
+            minHeight: "220px",
+            flexShrink: 0,
           }}
         >
-          {/* Sound-wave / equalizer decoration — 24 vertical bars of
-              varying heights forming a horizontal wave pattern. */}
+          {/* Sound-wave / equalizer decoration — bottom-left of card,
+              behind content, fixed-size so it never grows to fill. */}
           <svg
             aria-hidden
             viewBox="0 0 200 60"
-            className="pointer-events-none absolute bottom-3 right-4 h-14 w-48 opacity-40"
-            fill="none"
             preserveAspectRatio="none"
+            fill="none"
+            style={{
+              position: "absolute",
+              bottom: 16,
+              left: 20,
+              width: 180,
+              height: 50,
+              opacity: 0.35,
+              pointerEvents: "none",
+              zIndex: 0,
+            }}
           >
             {[
               30, 45, 60, 75, 85, 90, 85, 70, 55, 40, 30, 25, 40, 55, 70, 80,
@@ -159,9 +177,15 @@ export default function HomePage() {
             ))}
           </svg>
 
-          <div className="relative z-10 flex gap-4">
-            {/* Left side: portfolio info */}
-            <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div
+            className="relative grid gap-4"
+            style={{
+              gridTemplateColumns: "1fr auto",
+              zIndex: 1,
+            }}
+          >
+            {/* LEFT: label, balance, change chip */}
+            <div className="flex min-w-0 flex-col gap-3">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-[color:var(--glide-on-surface-variant)]">
                   Total Portfolio
@@ -183,7 +207,7 @@ export default function HomePage() {
 
               <p
                 className="font-display text-4xl font-bold leading-none text-[color:var(--glide-on-surface)] tabular-nums sm:text-5xl"
-                style={{ filter: "none" }}
+                style={{ minHeight: "3rem" }}
               >
                 {hideBalance ? "••••" : formattedTotalUsd}
               </p>
@@ -218,13 +242,18 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right side: stacked square buttons */}
-            <div className="flex shrink-0 flex-col gap-2">
+            {/* RIGHT: 3 stacked 64x64 buttons (explicit width column) */}
+            <div
+              className="flex flex-col gap-2"
+              style={{ width: "64px" }}
+            >
               <Link
                 href="/receive"
                 prefetch
-                className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors"
+                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-colors"
                 style={{
+                  width: "64px",
+                  height: "64px",
                   background: "var(--glide-surface-elevated)",
                   borderColor: "var(--glide-elevated-border)",
                 }}
@@ -240,8 +269,10 @@ export default function HomePage() {
               <Link
                 href="/scan"
                 prefetch
-                className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors"
+                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-colors"
                 style={{
+                  width: "64px",
+                  height: "64px",
                   background: "var(--glide-surface-elevated)",
                   borderColor: "var(--glide-elevated-border)",
                 }}
@@ -259,8 +290,10 @@ export default function HomePage() {
                 onClick={() => void refresh()}
                 disabled={refreshing}
                 aria-label="Refresh balances"
-                className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors disabled:opacity-50"
+                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-colors disabled:opacity-50"
                 style={{
+                  width: "64px",
+                  height: "64px",
                   background: "var(--glide-surface-elevated)",
                   borderColor: "var(--glide-elevated-border)",
                 }}
