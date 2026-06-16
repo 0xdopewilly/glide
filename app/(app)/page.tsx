@@ -136,7 +136,7 @@ export default function HomePage() {
         <section
           className="relative mt-4 overflow-hidden rounded-3xl border p-5 sm:p-6"
           style={{
-            background: "var(--glide-surface-container)",
+            background: "var(--glide-surface-elevated)",
             borderColor: "var(--glide-elevated-border)",
             minHeight: "220px",
             flexShrink: 0,
@@ -171,7 +171,7 @@ export default function HomePage() {
                 width={3}
                 height={h * 0.5}
                 rx={1.5}
-                className="fill-[color:var(--glide-primary)]"
+                style={{ fill: "var(--glide-mesh-wave)" }}
                 opacity={0.3 + h / 200}
               />
             ))}
@@ -216,13 +216,13 @@ export default function HomePage() {
                 className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1"
                 style={{
                   background: portfolioChangePositive
-                    ? "rgba(16, 185, 129, 0.12)"
+                    ? "rgba(22, 199, 132, 0.12)"
                     : "rgba(239, 68, 68, 0.12)",
                 }}
               >
                 {portfolioChangePositive ? (
                   <ArrowUp
-                    className="h-3 w-3 text-[#10B981]"
+                    className="h-3 w-3 text-[#16C784]"
                     strokeWidth={2.5}
                   />
                 ) : (
@@ -234,7 +234,7 @@ export default function HomePage() {
                 <span
                   className="text-xs font-semibold tabular-nums"
                   style={{
-                    color: portfolioChangePositive ? "#10B981" : "#EF4444",
+                    color: portfolioChangePositive ? "#16C784" : "#EF4444",
                   }}
                 >
                   {Math.abs(portfolioChange).toFixed(2)}% today

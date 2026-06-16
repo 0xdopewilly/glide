@@ -16,11 +16,11 @@ type TokenVisual = { bg: string; Icon: LucideIcon };
 const TOKEN_VISUALS: Record<string, TokenVisual> = {
   USDC: { bg: "#000000", Icon: DollarSign },
   EURC: { bg: "#3B82F6", Icon: Euro },
-  CIRBTC: { bg: "#8B5CF6", Icon: Bitcoin },
-  BTC: { bg: "#8B5CF6", Icon: Bitcoin },
+  CIRBTC: { bg: "#5B3DF5", Icon: Bitcoin },
+  BTC: { bg: "#5B3DF5", Icon: Bitcoin },
 };
 
-const FALLBACK: TokenVisual = { bg: "#6B7280", Icon: CircleDollarSign };
+const FALLBACK: TokenVisual = { bg: "#5D6B85", Icon: CircleDollarSign };
 
 function resolveVisual(symbol: string): TokenVisual {
   const key = symbol.trim().toUpperCase();

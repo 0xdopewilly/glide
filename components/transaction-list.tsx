@@ -16,13 +16,13 @@ const KIND_VISUALS: Record<
   },
   receive: {
     Icon: ArrowDown,
-    iconBg: "rgba(16,185,129,0.12)",
-    iconColor: "#10B981",
+    iconBg: "rgba(22,199,132,0.12)",
+    iconColor: "#16C784",
   },
   swap: {
     Icon: ArrowLeftRight,
-    iconBg: "rgba(139,92,246,0.12)",
-    iconColor: "#8B5CF6",
+    iconBg: "rgba(91,61,245,0.12)",
+    iconColor: "#5B3DF5",
   },
   bridge: {
     Icon: Link2,
@@ -155,7 +155,7 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
       ? "var(--glide-success)"
       : tx.variant === "debit"
         ? "var(--glide-error)"
-        : "#8B5CF6";
+        : "#5B3DF5";
 
   const title = buildTitle(tx);
   const subtitle = buildSubtitle(tx);
