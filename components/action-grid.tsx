@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowDown, ArrowLeftRight, ArrowUp, Workflow } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, Link2 } from "lucide-react";
 import Link from "next/link";
 
 const ACTIONS = [
   { href: "/receive", label: "Receive", icon: ArrowDown },
   { href: "/send", label: "Send", icon: ArrowUp },
   { href: "/swap", label: "Swap", icon: ArrowLeftRight },
-  { href: "/bridge", label: "Bridge", icon: Workflow },
+  { href: "/bridge", label: "Bridge", icon: Link2 },
 ] as const;
 
 export function ActionGrid() {
@@ -24,12 +24,11 @@ export function ActionGrid() {
           className="glide-tap group flex flex-1 flex-col items-center gap-2"
         >
           <span
-            className="flex h-14 w-14 items-center justify-center rounded-full border bg-[color:var(--glide-surface-elevated)] text-[color:var(--glide-on-elevated)] transition-colors group-hover:bg-[var(--glide-surface-container-high)]"
-            style={{ borderColor: "var(--glide-elevated-border)" }}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--glide-surface-container)] border border-[color:var(--glide-primary)]/15 ring-1 ring-[color:var(--glide-primary)]/10 text-[color:var(--glide-primary)] transition-all duration-200 group-hover:ring-[color:var(--glide-primary)]/25 group-hover:scale-105"
           >
-            <Icon className="h-5 w-5" strokeWidth={2} />
+            <Icon className="h-[22px] w-[22px]" strokeWidth={2} />
           </span>
-          <span className="glide-label-mono text-[10px] font-semibold text-[color:var(--glide-on-surface-variant)]">
+          <span className="text-sm font-medium text-[color:var(--glide-on-surface)]">
             {label}
           </span>
         </Link>

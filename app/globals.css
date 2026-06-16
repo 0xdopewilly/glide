@@ -4,49 +4,49 @@
 
 :root {
   color-scheme: light;
-  /* glidepay light, navy/white brand palette: pure white #FFFFFF page bg,
-     deep navy #041f3d as primary brand + text, soft off-white containers,
-     faint navy outlines. */
+  /* glidepay light, purple/white brand palette: pure white #FFFFFF page bg,
+     violet #8B5CF6 as primary brand, dark navy #1F2937 as text, soft
+     gray-blue containers, faint outlines. */
 
-  /* New semantic tokens (navy/white palette) */
-  --glide-primary: #041f3d;
-  --glide-primary-hover: #1a4877;
+  /* New semantic tokens (purple/white palette) */
+  --glide-primary: #8B5CF6;
+  --glide-primary-hover: #7C3AED;
   --glide-on-primary: #FFFFFF;
-  --glide-on-surface: #041f3d;
-  --glide-on-surface-variant: rgba(4, 31, 61, 0.55);
-  --glide-on-surface-elevated: #041f3d;
+  --glide-on-surface: #1F2937;
+  --glide-on-surface-variant: #6B7280;
+  --glide-on-surface-elevated: #1F2937;
   /* Text colors for content rendered on elevated cards. In light mode the
-     elevated surface is WHITE so on-elevated text is deep navy. In dark
+     elevated surface is WHITE so on-elevated text is dark navy. In dark
      mode the elevated surface is a lifted navy so on-elevated is white. */
-  --glide-on-elevated: #041f3d;
-  --glide-on-elevated-variant: rgba(4, 31, 61, 0.55);
-  --glide-elevated-border: rgba(4, 31, 61, 0.08);
-  --glide-outline: rgba(4, 31, 61, 0.08);
-  --glide-error: #DC2626;
+  --glide-on-elevated: #1F2937;
+  --glide-on-elevated-variant: #6B7280;
+  --glide-elevated-border: rgba(31, 41, 55, 0.06);
+  --glide-outline: #E5E7EB;
+  --glide-error: #EF4444;
 
   /* Surfaces */
   --glide-bg: #FFFFFF;
   --glide-shell: #FFFFFF;
   --glide-surface: #FFFFFF;
   --glide-surface-elevated: #FFFFFF;
-  --glide-surface-container: #F5F7FB;
+  --glide-surface-container: #F8FAFC;
   --glide-surface-container-high: #FFFFFF;
   --glide-nav-surface: #FFFFFF;
-  --glide-primary-container: rgba(4, 31, 61, 0.08);
-  --glide-success-container: rgba(22, 163, 74, 0.14);
+  --glide-primary-container: rgba(139, 92, 246, 0.10);
+  --glide-success-container: rgba(16, 185, 129, 0.14);
 
-  /* Legacy tokens — remapped to navy palette so existing components inherit */
-  --glide-text: #041f3d;
-  --glide-muted: rgba(4, 31, 61, 0.55);
-  --glide-border: rgba(4, 31, 61, 0.08);
+  /* Legacy tokens — remapped to purple palette so existing components inherit */
+  --glide-text: #1F2937;
+  --glide-muted: #6B7280;
+  --glide-border: #E5E7EB;
   --glide-input: #FFFFFF;
-  --glide-accent: #041f3d;
-  --glide-accent-hover: #1a4877;
-  --glide-success: #16A34A;
-  --glide-on-nav-inactive: rgba(4, 31, 61, 0.55);
+  --glide-accent: #8B5CF6;
+  --glide-accent-hover: #7C3AED;
+  --glide-success: #10B981;
+  --glide-on-nav-inactive: #6B7280;
 
   /* Rare accent (kept available, not applied broadly) */
-  --glide-accent-warm: #1a4877;
+  --glide-accent-warm: #7C3AED;
 
   --glide-radius-sm: 12px;
   --glide-radius-md: 16px;
@@ -60,8 +60,8 @@
   --glide-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   --glide-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* Gradients — subtle navy wash on white */
-  --glide-gradient-from: rgba(4, 31, 61, 0.10);
+  /* Gradients — subtle violet wash on white */
+  --glide-gradient-from: rgba(139, 92, 246, 0.10);
   --glide-gradient-to: #FFFFFF;
   --glide-glow-primary: transparent;
   --glide-glow-secondary: transparent;
@@ -69,51 +69,52 @@
   --glide-glow-warm: transparent;
 }
 
-.dark {
+.dark,
+[data-theme="dark"] {
   color-scheme: dark;
-  /* glidepay dark, navy/white brand palette: deep navy #041f3d base,
-     white as the bright element (text + primary surfaces), slightly lifted
+  /* glidepay dark, purple/navy brand palette: deep navy-black #060B1C base,
+     lighter violet #A78BFA as primary brand, white text, slightly lifted
      navy raised surfaces. */
 
   /* New semantic tokens */
-  --glide-primary: #FFFFFF;
-  --glide-primary-hover: rgba(255, 255, 255, 0.85);
-  --glide-on-primary: #041f3d;
+  --glide-primary: #A78BFA;
+  --glide-primary-hover: #C4B5FD;
+  --glide-on-primary: #060B1C;
   --glide-on-surface: #FFFFFF;
-  --glide-on-surface-variant: rgba(255, 255, 255, 0.65);
+  --glide-on-surface-variant: #94A3B8;
   --glide-on-surface-elevated: #FFFFFF;
   --glide-on-elevated: #FFFFFF;
-  --glide-on-elevated-variant: rgba(255, 255, 255, 0.65);
-  --glide-elevated-border: rgba(255, 255, 255, 0.08);
+  --glide-on-elevated-variant: #94A3B8;
+  --glide-elevated-border: rgba(255, 255, 255, 0.04);
   --glide-outline: rgba(255, 255, 255, 0.08);
   --glide-error: #F87171;
 
   /* Surfaces */
-  --glide-bg: #041f3d;
-  --glide-shell: #041f3d;
-  --glide-surface: #0a2a4d;
-  --glide-surface-elevated: #103861;
-  --glide-surface-container: #0a2a4d;
-  --glide-surface-container-high: #103861;
-  --glide-nav-surface: #041f3d;
-  --glide-primary-container: rgba(255, 255, 255, 0.10);
-  --glide-success-container: rgba(74, 222, 128, 0.18);
+  --glide-bg: #060B1C;
+  --glide-shell: #060B1C;
+  --glide-surface: #101935;
+  --glide-surface-elevated: #1A2347;
+  --glide-surface-container: #0F1937;
+  --glide-surface-container-high: #1A2347;
+  --glide-nav-surface: #060B1C;
+  --glide-primary-container: rgba(167, 139, 250, 0.16);
+  --glide-success-container: rgba(52, 211, 153, 0.18);
 
   /* Legacy tokens — remapped */
   --glide-text: #FFFFFF;
-  --glide-muted: rgba(255, 255, 255, 0.65);
+  --glide-muted: #94A3B8;
   --glide-border: rgba(255, 255, 255, 0.08);
-  --glide-input: #0a2a4d;
-  --glide-accent: #FFFFFF;
-  --glide-accent-hover: rgba(255, 255, 255, 0.85);
-  --glide-success: #4ADE80;
-  --glide-on-nav-inactive: rgba(255, 255, 255, 0.65);
+  --glide-input: #101935;
+  --glide-accent: #A78BFA;
+  --glide-accent-hover: #C4B5FD;
+  --glide-success: #34D399;
+  --glide-on-nav-inactive: #64748B;
 
-  --glide-accent-warm: #1a4877;
+  --glide-accent-warm: #C4B5FD;
 
-  /* Soft white-on-navy wash */
-  --glide-gradient-from: rgba(255, 255, 255, 0.10);
-  --glide-gradient-to: #041f3d;
+  /* Soft violet-on-navy wash */
+  --glide-gradient-from: rgba(167, 139, 250, 0.16);
+  --glide-gradient-to: #060B1C;
   --glide-glow-primary: transparent;
   --glide-glow-secondary: transparent;
   --glide-glow-accent: transparent;
@@ -163,13 +164,13 @@ body {
   }
 }
 
-/* Subtle navy wash - faint navy-on-white in light, soft white-on-navy in
-   dark. Kept low-intensity so it doesn't compete with content. */
+/* Subtle violet wash - soft violet on white in light, soft violet on
+   deep navy in dark. Kept low-intensity so it doesn't compete with content. */
 .glide-bg-wash {
   background:
     radial-gradient(
       ellipse 80% 60% at 50% 0%,
-      rgba(4, 31, 61, 0.08) 0%,
+      rgba(139, 92, 246, 0.08) 0%,
       transparent 70%
     ),
     var(--glide-bg);
@@ -180,7 +181,7 @@ body {
   background:
     radial-gradient(
       ellipse 80% 60% at 50% 0%,
-      rgba(255, 255, 255, 0.08) 0%,
+      rgba(167, 139, 250, 0.14) 0%,
       transparent 70%
     ),
     var(--glide-bg);
@@ -188,34 +189,50 @@ body {
 
 /* Brand glow utility — apply sparingly to the user's primary focal points
    (hero / balance card, primary CTAs, active nav). The glow is a callout,
-   not on every element. Navy-tinted in light, white-tinted in dark. */
+   not on every element. Violet-tinted in both modes. */
 .glow-brand {
   box-shadow:
-    0 0 0 1px rgba(4, 31, 61, 0.10),
-    0 20px 60px -20px rgba(4, 31, 61, 0.35),
-    0 0 80px -20px rgba(4, 31, 61, 0.20);
+    0 0 0 1px rgba(139, 92, 246, 0.18),
+    0 20px 60px -20px rgba(139, 92, 246, 0.45),
+    0 0 80px -20px rgba(139, 92, 246, 0.35);
 }
 
 .dark .glow-brand {
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 20px 60px -20px rgba(255, 255, 255, 0.18),
-    0 0 80px -20px rgba(255, 255, 255, 0.12);
+    0 0 0 1px rgba(167, 139, 250, 0.22),
+    0 20px 60px -20px rgba(167, 139, 250, 0.55),
+    0 0 80px -20px rgba(167, 139, 250, 0.40);
 }
 
-/* Backwards-compat alias — older components reference .glow-green. */
+/* Backwards-compat alias — older components reference .glow-green. The
+   name is preserved for compatibility but the tint is the brand violet. */
 .glow-green {
   box-shadow:
-    0 0 0 1px rgba(4, 31, 61, 0.10),
-    0 20px 60px -20px rgba(4, 31, 61, 0.35),
-    0 0 80px -20px rgba(4, 31, 61, 0.20);
+    0 0 0 1px rgba(139, 92, 246, 0.14),
+    0 20px 60px -20px rgba(139, 92, 246, 0.35),
+    0 0 80px -20px rgba(139, 92, 246, 0.25);
 }
 
 .dark .glow-green {
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 20px 60px -20px rgba(255, 255, 255, 0.18),
-    0 0 80px -20px rgba(255, 255, 255, 0.12);
+    0 0 0 1px rgba(167, 139, 250, 0.18),
+    0 20px 60px -20px rgba(167, 139, 250, 0.45),
+    0 0 80px -20px rgba(167, 139, 250, 0.30);
+}
+
+/* Half-intensity version of .glow-green for subtler callouts. */
+.glow-green-soft {
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.08),
+    0 12px 32px -16px rgba(139, 92, 246, 0.18),
+    0 0 40px -20px rgba(139, 92, 246, 0.14);
+}
+
+.dark .glow-green-soft {
+  box-shadow:
+    0 0 0 1px rgba(167, 139, 250, 0.10),
+    0 12px 32px -16px rgba(167, 139, 250, 0.24),
+    0 0 40px -20px rgba(167, 139, 250, 0.18);
 }
 
 .page-motion-panel {
@@ -866,7 +883,7 @@ body {
 
   :root:not(.dark) .glide-glass-panel {
     box-shadow:
-      0 28px 90px rgba(4, 31, 61, 0.10),
+      0 28px 90px rgba(31, 41, 55, 0.08),
       0 0 0 1px color-mix(in srgb, var(--glide-border) 90%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, 0.9);
   }
@@ -1006,9 +1023,9 @@ body {
     letter-spacing: 0.01em;
     cursor: pointer;
     box-shadow:
-      0 0 0 1px rgba(4, 31, 61, 0.10),
-      0 20px 60px -20px rgba(4, 31, 61, 0.35),
-      0 0 80px -20px rgba(4, 31, 61, 0.20);
+      0 0 0 1px rgba(139, 92, 246, 0.14),
+      0 20px 60px -20px rgba(139, 92, 246, 0.35),
+      0 0 80px -20px rgba(139, 92, 246, 0.25);
     transition:
       transform 0.12s ease,
       filter 0.12s ease;
@@ -1027,9 +1044,9 @@ body {
     background: var(--glide-primary);
     color: var(--glide-on-primary);
     box-shadow:
-      0 0 0 1px rgba(4, 31, 61, 0.10),
-      0 20px 60px -20px rgba(4, 31, 61, 0.35),
-      0 0 80px -20px rgba(4, 31, 61, 0.20);
+      0 0 0 1px rgba(139, 92, 246, 0.14),
+      0 20px 60px -20px rgba(139, 92, 246, 0.35),
+      0 0 80px -20px rgba(139, 92, 246, 0.25);
   }
 
   :root:not(.dark) .glide-btn-simple:not(:disabled):hover {
@@ -1264,9 +1281,9 @@ body {
     background: var(--glide-primary);
     color: var(--glide-on-primary);
     box-shadow:
-      0 0 0 1px rgba(4, 31, 61, 0.10),
-      0 20px 60px -20px rgba(4, 31, 61, 0.35),
-      0 0 80px -20px rgba(4, 31, 61, 0.20);
+      0 0 0 1px rgba(139, 92, 246, 0.14),
+      0 20px 60px -20px rgba(139, 92, 246, 0.35),
+      0 0 80px -20px rgba(139, 92, 246, 0.25);
     transition:
       transform 0.22s var(--glide-ease-spring),
       box-shadow 0.22s var(--glide-ease-out);

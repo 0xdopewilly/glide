@@ -2,39 +2,93 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
-import {
-  ArrowDownLeft,
-  ArrowLeftRight,
-  ArrowUpRight,
-  Link2,
-} from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, Link2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const KIND_VISUALS: Record<
   TransactionKind,
-  { Icon: LucideIcon; bg: string; ring: string }
+  { Icon: LucideIcon; iconBg: string; iconColor: string }
 > = {
   send: {
-    Icon: ArrowUpRight,
-    bg: "rgba(59,130,246,0.18)",
-    ring: "rgba(59,130,246,0.35)",
+    Icon: ArrowUp,
+    iconBg: "rgba(239,68,68,0.12)",
+    iconColor: "#EF4444",
   },
   receive: {
-    Icon: ArrowDownLeft,
-    bg: "rgba(74,222,128,0.18)",
-    ring: "rgba(74,222,128,0.35)",
+    Icon: ArrowDown,
+    iconBg: "rgba(16,185,129,0.12)",
+    iconColor: "#10B981",
   },
   swap: {
     Icon: ArrowLeftRight,
-    bg: "rgba(251,191,36,0.18)",
-    ring: "rgba(251,191,36,0.35)",
+    iconBg: "rgba(139,92,246,0.12)",
+    iconColor: "#8B5CF6",
   },
   bridge: {
     Icon: Link2,
-    bg: "rgba(168,85,247,0.18)",
-    ring: "rgba(168,85,247,0.35)",
+    iconBg: "rgba(251,191,36,0.12)",
+    iconColor: "#F59E0B",
   },
 };
+
+const KIND_TITLE: Record<TransactionKind, string> = {
+  send: "Sent",
+  receive: "Received",
+  swap: "Swapped",
+  bridge: "Bridged",
+};
+
+/** Compact relative time: "Just now", "2m ago", "1h ago", "Yesterday", "Mar 4". */
+function formatRelativeTime(iso?: string) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const diffMs = Date.now() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDays = Math.floor(diffHr / 24);
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+const ADDR_RE = /0x[a-fA-F0-9]{40}/;
+
+function shortHex(value: string) {
+  return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+/** Build the row subtitle from a transaction. Prefer the existing tx.meta. */
+function buildSubtitle(tx: GlideTransaction): string {
+  if (tx.meta && tx.meta.trim().length > 0) {
+    // Shorten any embedded hex address found in the existing meta string so it
+    // matches the 0x123456...abcd format used in the new design.
+    return tx.meta.replace(ADDR_RE, (m) => shortHex(m));
+  }
+  const counterparty = tx.counterparty?.trim();
+  if (counterparty) {
+    const pretty = ADDR_RE.test(counterparty)
+      ? shortHex(counterparty)
+      : counterparty;
+    if (tx.kind === "receive") return `From ${pretty}`;
+    if (tx.kind === "send") return `To ${pretty}`;
+    return pretty;
+  }
+  if (tx.kind === "bridge" && tx.originChain) {
+    return `From ${tx.originChain}`;
+  }
+  return "";
+}
+
+function buildTitle(tx: GlideTransaction): string {
+  // Prefer the richer existing title (e.g. "Received from @fifi") when present.
+  if (tx.title && tx.title.trim().length > 0) return tx.title;
+  if (tx.kind) return KIND_TITLE[tx.kind];
+  return "Activity";
+}
 
 function TransactionSkeleton() {
   return (
@@ -55,8 +109,7 @@ export function TransactionList({
   loading = false,
   emptyMessage = "No activity yet",
   // Kept in the prop signature so existing callers (activity-feed) keep
-  // compiling — the new Spendly-style row is the same shape on both pages,
-  // so these are intentionally not used in the new visual.
+  // compiling — the row visual is the same on both pages.
   showTime: _showTime = false,
   grouped = false,
 }: {
@@ -96,12 +149,17 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
   const { blurAmounts } = usePrivacy();
   const v = (tx.kind && KIND_VISUALS[tx.kind]) || KIND_VISUALS.send;
   const Icon = v.Icon;
+
   const amountColor =
     tx.variant === "credit"
-      ? "text-[#16A34A] dark:text-[#4ADE80]"
+      ? "var(--glide-success)"
       : tx.variant === "debit"
-        ? "text-[#DC2626] dark:text-[#F87171]"
-        : "text-[color:var(--glide-on-elevated-variant)]";
+        ? "var(--glide-error)"
+        : "#8B5CF6";
+
+  const title = buildTitle(tx);
+  const subtitle = buildSubtitle(tx);
+  const relativeTime = formatRelativeTime(tx.createdAt);
 
   return (
     <article
@@ -110,31 +168,39 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
     >
       <div
         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-        style={{
-          backgroundColor: v.bg,
-          boxShadow: `inset 0 0 0 1px ${v.ring}`,
-        }}
+        style={{ backgroundColor: v.iconBg }}
       >
         <Icon
-          className="h-4 w-4 text-[color:var(--glide-on-elevated)]"
-          strokeWidth={2.25}
+          className="h-4 w-4"
+          style={{ color: v.iconColor }}
+          strokeWidth={2.5}
         />
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-[color:var(--glide-on-elevated)]">
-          {tx.title}
+          {title}
         </p>
-        <p className="mt-0.5 truncate text-[11px] text-[color:var(--glide-on-elevated-variant)]">
-          {tx.meta}
-        </p>
+        {subtitle ? (
+          <p className="mt-0.5 truncate text-xs text-[color:var(--glide-on-elevated-variant)]">
+            {subtitle}
+          </p>
+        ) : null}
       </div>
-      <p
-        className={`shrink-0 font-display text-sm font-bold tabular-nums ${amountColor} ${
-          blurAmounts ? "glide-amount-blur" : ""
-        }`}
-      >
-        {blurAmounts ? "•••" : tx.amount}
-      </p>
+      <div className="shrink-0 text-right">
+        <p
+          className={`text-sm font-bold tabular-nums ${
+            blurAmounts ? "glide-amount-blur" : ""
+          }`}
+          style={{ color: amountColor }}
+        >
+          {blurAmounts ? "•••" : tx.amount}
+        </p>
+        {relativeTime ? (
+          <p className="mt-0.5 text-xs text-[color:var(--glide-on-elevated-variant)]">
+            {relativeTime}
+          </p>
+        ) : null}
+      </div>
     </article>
   );
 }

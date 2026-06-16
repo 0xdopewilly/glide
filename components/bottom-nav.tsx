@@ -2,21 +2,24 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Wallet, Sparkles, Clock, ArrowLeftRight } from "lucide-react";
+import { Home, Wallet, Sparkles, Clock, UserCircle2 } from "lucide-react";
 
 const SLOTS = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/payments", icon: Wallet, label: "Payments" },
-  { href: "/ask", icon: Sparkles, label: "Billy" },
+  { href: "/payments", icon: Wallet, label: "Wallet" },
+  { href: "/ask", icon: Sparkles, label: "Discover" },
   { href: "/activity", icon: Clock, label: "Activity" },
-  { href: "/trade", icon: ArrowLeftRight, label: "Trade" },
+  { href: "/profile", icon: UserCircle2, label: "Profile" },
 ] as const;
 
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[max(env(safe-area-inset-bottom),12px)]">
-      <div className="pointer-events-auto mx-auto flex max-w-md items-center justify-between gap-2 px-5">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 border-t bg-[color:var(--glide-surface-container)] pb-[max(env(safe-area-inset-bottom),0px)]"
+      style={{ borderColor: "var(--glide-elevated-border)" }}
+    >
+      <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pt-2 pb-1">
         {SLOTS.map(({ href, icon: Icon, label }) => {
           const active =
             href === "/" ? pathname === "/" : pathname?.startsWith(href);
@@ -25,25 +28,34 @@ export function BottomNav() {
               key={href}
               href={href}
               aria-label={label}
-              className={`relative flex h-11 w-11 items-center justify-center rounded-full border transition-colors ${
-                active
-                  ? "bg-[#4ADE80]/15 ring-1 ring-[#4ADE80]/35"
-                  : "bg-[color:var(--glide-surface-elevated)]"
-              }`}
-              style={
-                active
-                  ? { borderColor: "transparent" }
-                  : { borderColor: "var(--glide-elevated-border)" }
-              }
+              className="group relative flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 transition-colors"
             >
+              {active && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-1 inset-y-0 -z-10 rounded-xl"
+                  style={{ backgroundColor: "var(--glide-primary-container)" }}
+                />
+              )}
               <Icon
-                className={`h-5 w-5 ${
-                  active
-                    ? "text-[#4ADE80]"
-                    : "text-[color:var(--glide-on-elevated-variant)]"
-                }`}
-                strokeWidth={2.25}
+                className={`h-5 w-5 ${active ? "" : "opacity-70"}`}
+                style={{
+                  color: active
+                    ? "var(--glide-primary)"
+                    : "var(--glide-on-surface-variant)",
+                }}
+                strokeWidth={active ? 2.5 : 2}
               />
+              <span
+                className="text-[10px] font-semibold tracking-wide"
+                style={{
+                  color: active
+                    ? "var(--glide-primary)"
+                    : "var(--glide-on-surface-variant)",
+                }}
+              >
+                {label}
+              </span>
             </Link>
           );
         })}

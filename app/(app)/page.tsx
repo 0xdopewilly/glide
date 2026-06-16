@@ -6,14 +6,15 @@ import { TransactionList } from "@/components/transaction-list";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePrivacy } from "@/context/privacy-context";
 import { useProfile, useWallet } from "@/context/wallet-context";
-import { tokenAmountFromBalances } from "@/lib/tokens";
 import type { TransactionKind } from "@/lib/types";
 import {
   ArrowDown,
   ArrowLeftRight,
   ArrowUp,
-  DollarSign,
-  Euro,
+  Eye,
+  EyeOff,
+  Plus,
+  QrCode,
   RefreshCw,
   Workflow,
 } from "lucide-react";
@@ -47,7 +48,6 @@ function greetingFor(date: Date) {
 export default function HomePage() {
   const {
     totalUsd,
-    tokens,
     refreshing,
     transactions,
     transactionsLoading,
@@ -56,11 +56,13 @@ export default function HomePage() {
     refresh,
   } = useWallet();
   const { profile } = useProfile();
-  const { hideBalance } = usePrivacy();
+  const { hideBalance, setHideBalance } = usePrivacy();
   const [filter, setFilter] = useState<Filter>("all");
 
-  const usdcAmount = useMemo(() => tokenAmountFromBalances(tokens ?? [], "USDC"), [tokens]);
-  const eurcAmount = useMemo(() => tokenAmountFromBalances(tokens ?? [], "EURC"), [tokens]);
+  // TODO: replace with a real 24h portfolio change calc from wallet-context.
+  // Hardcoded placeholder for now so the UI has the green pill.
+  const portfolioChange = 2.48;
+  const portfolioChangePositive = portfolioChange >= 0;
 
   const greeting = useMemo(() => greetingFor(new Date()), []);
   const firstName = (profile.displayName ?? "").trim().split(" ")[0] || "there";
@@ -82,8 +84,6 @@ export default function HomePage() {
   }).format(
     typeof totalUsd === "number" && Number.isFinite(totalUsd) ? totalUsd : 0,
   );
-  const usdcDisplay = (Number.isFinite(usdcAmount) ? usdcAmount : 0).toFixed(2);
-  const eurcDisplay = (Number.isFinite(eurcAmount) ? eurcAmount : 0).toFixed(2);
 
   return (
     <>
@@ -119,102 +119,134 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {/* HERO BALANCE CARD — deep navy brand gradient, focal point of the
-            screen.
-            CRITICAL: the <section> itself has NO `overflow-hidden`. Clipping
-            the section caused the USDC/EURC pills (the section's own children)
-            to be cut off in some render paths. The radial highlight overlay is
-            isolated in its own absolutely-positioned, rounded-3xl,
-            overflow-hidden child so the overlay clips to the card's rounded
-            corners without clipping the sibling content below it.
-            `flex flex-col gap-4` guarantees vertical stacking with consistent
-            spacing — do NOT use `mt-*` between siblings here. */}
+        {/* HERO PORTFOLIO CARD — new "Total Portfolio" design.
+            Left: privacy-toggleable portfolio total + 24h change pill.
+            Right: stacked square buttons (Add Funds, Scan, Refresh).
+            Subtle radial decoration in the lower-middle for depth. */}
         <section
-          className="glow-brand relative mt-4 flex flex-col gap-4 rounded-3xl p-6 shadow-[0_30px_80px_-30px_rgba(4,31,61,0.5)]"
+          className="relative mt-4 flex gap-4 overflow-hidden rounded-3xl border p-5 sm:p-6"
           style={{
-            background:
-              "linear-gradient(135deg, #041f3d 0%, #0a2a4d 50%, #03070d 100%)",
+            background: "var(--glide-surface-container)",
+            borderColor: "var(--glide-elevated-border)",
           }}
         >
-          {/* Radial highlight in top-left for depth. Isolated in its own
-              overflow-hidden wrapper so the radial mask clips to the rounded
-              corners but does NOT clip the section's real children. */}
+          {/* Subtle sound-wave / glow decoration */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl"
-          >
+            className="pointer-events-none absolute bottom-2 left-24 right-24 h-12 opacity-40"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, rgba(139,92,246,0.22), transparent 70%)",
+            }}
+          />
+
+          {/* Left side: portfolio info */}
+          <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-[color:var(--glide-on-surface-variant)]">
+                Total Portfolio
+              </p>
+              <button
+                type="button"
+                onClick={() => setHideBalance(!hideBalance)}
+                aria-label={hideBalance ? "Show balance" : "Hide balance"}
+                aria-pressed={hideBalance}
+                className="glide-tap text-[color:var(--glide-on-surface-variant)] transition-colors hover:text-[color:var(--glide-on-surface)]"
+              >
+                {hideBalance ? (
+                  <EyeOff className="h-4 w-4" strokeWidth={2.25} />
+                ) : (
+                  <Eye className="h-4 w-4" strokeWidth={2.25} />
+                )}
+              </button>
+            </div>
+
+            <p
+              className="font-display text-4xl font-bold leading-none text-[color:var(--glide-on-surface)] tabular-nums sm:text-5xl"
+              style={{ filter: "none" }}
+            >
+              {hideBalance ? "••••" : formattedTotalUsd}
+            </p>
+
             <div
-              className="absolute inset-0 opacity-60"
+              className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1"
               style={{
-                background:
-                  "radial-gradient(circle at 20% 0%, rgba(255,255,255,0.18), transparent 50%)",
+                background: portfolioChangePositive
+                  ? "rgba(16, 185, 129, 0.12)"
+                  : "rgba(239, 68, 68, 0.12)",
               }}
-            />
+            >
+              {portfolioChangePositive ? (
+                <ArrowUp className="h-3 w-3 text-[#10B981]" strokeWidth={2.5} />
+              ) : (
+                <ArrowDown className="h-3 w-3 text-[#EF4444]" strokeWidth={2.5} />
+              )}
+              <span
+                className="text-xs font-semibold tabular-nums"
+                style={{ color: portfolioChangePositive ? "#10B981" : "#EF4444" }}
+              >
+                {Math.abs(portfolioChange).toFixed(2)}% today
+              </span>
+            </div>
           </div>
 
-          {/* Row 1: label + refresh */}
-          <div className="relative z-10 flex items-start justify-between">
-            <p className="text-[11px] font-bold tracking-[0.18em] text-white/80 uppercase">
-              Total Balance
-            </p>
+          {/* Right side: stacked square buttons */}
+          <div className="relative z-10 flex shrink-0 flex-col gap-2">
+            <Link
+              href="/receive"
+              prefetch
+              className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors"
+              style={{
+                background: "var(--glide-surface-elevated)",
+                borderColor: "var(--glide-elevated-border)",
+              }}
+            >
+              <Plus
+                className="h-5 w-5 text-[color:var(--glide-primary)]"
+                strokeWidth={2.25}
+              />
+              <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
+                Add Funds
+              </span>
+            </Link>
+            <Link
+              href="/scan"
+              prefetch
+              className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors"
+              style={{
+                background: "var(--glide-surface-elevated)",
+                borderColor: "var(--glide-elevated-border)",
+              }}
+            >
+              <QrCode
+                className="h-5 w-5 text-[color:var(--glide-primary)]"
+                strokeWidth={2.25}
+              />
+              <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
+                Scan
+              </span>
+            </Link>
             <button
               type="button"
               onClick={() => void refresh()}
               disabled={refreshing}
               aria-label="Refresh balances"
-              className="glide-tap rounded-full bg-black/20 p-2 text-white transition-colors hover:bg-black/30 disabled:opacity-40"
+              className="glide-tap group flex h-16 w-16 flex-col items-center justify-center rounded-2xl border transition-colors disabled:opacity-50"
+              style={{
+                background: "var(--glide-surface-elevated)",
+                borderColor: "var(--glide-elevated-border)",
+              }}
             >
               <RefreshCw
-                className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+                className={`h-5 w-5 text-[color:var(--glide-primary)] ${
+                  refreshing ? "animate-spin" : ""
+                }`}
                 strokeWidth={2.25}
               />
+              <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
+                Refresh
+              </span>
             </button>
-          </div>
-
-          {/* Row 2: balance number — rendered UNCONDITIONALLY. Inline
-              `filter: none` defeats any inherited blur filter so the hero
-              balance always reads clearly. `leading-none` + min-height
-              guarantee the row has visible height even before hydration. */}
-          <p
-            className="relative z-10 min-h-[3rem] font-display text-5xl font-bold leading-none text-white tabular-nums"
-            style={{ filter: "none" }}
-          >
-            {hideBalance ? "••••••" : formattedTotalUsd}
-          </p>
-
-          {/* Row 3: token pills — rendered UNCONDITIONALLY. Pills use the
-              soft container token so they read cleanly on the navy card in
-              both themes. The dot indicator was replaced with the currency
-              symbol (DollarSign / Euro) to make the token instantly readable. */}
-          <div className="relative z-10 grid grid-cols-2 gap-2.5">
-            <div className="rounded-2xl bg-[color:var(--glide-surface-container)] p-3.5">
-              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-[color:var(--glide-on-elevated-variant)] uppercase">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#16A34A]/15">
-                  <DollarSign className="h-3.5 w-3.5 text-[#16A34A]" strokeWidth={2.5} />
-                </span>
-                USDC
-              </div>
-              <p
-                className="mt-1.5 font-display text-lg font-bold text-[color:var(--glide-on-elevated)] tabular-nums"
-                style={{ filter: "none" }}
-              >
-                {hideBalance ? "••••" : `$${usdcDisplay}`}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-[color:var(--glide-surface-container)] p-3.5">
-              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-[color:var(--glide-on-elevated-variant)] uppercase">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#3B82F6]/15">
-                  <Euro className="h-3.5 w-3.5 text-[#3B82F6]" strokeWidth={2.5} />
-                </span>
-                EURC
-              </div>
-              <p
-                className="mt-1.5 font-display text-lg font-bold text-[color:var(--glide-on-elevated)] tabular-nums"
-                style={{ filter: "none" }}
-              >
-                {hideBalance ? "••••" : `€${eurcDisplay}`}
-              </p>
-            </div>
           </div>
         </section>
 
