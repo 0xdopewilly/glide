@@ -6,11 +6,11 @@ import { shortenAddress } from "@/lib/format";
 import type { LucideIcon } from "lucide-react";
 import { ArrowLeftRight, Globe2, Send } from "lucide-react";
 
-// All success cards share the brand green gradient — unified action
+// All success cards share the navy brand gradient — unified action
 // confirmation visual language. Failure / cancellation states are handled
-// elsewhere (red) and intentionally not green.
-const BRAND_GREEN_GRADIENT =
-  "linear-gradient(135deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)";
+// elsewhere (red) and intentionally not this brand tone.
+const BRAND_NAVY_GRADIENT =
+  "linear-gradient(135deg, #041f3d 0%, #0a2a4d 50%, #03070d 100%)";
 
 const CONFIG: Record<
   ActionSuccessType,

@@ -12,6 +12,8 @@ import {
   ArrowDown,
   ArrowLeftRight,
   ArrowUp,
+  DollarSign,
+  Euro,
   RefreshCw,
   Workflow,
 } from "lucide-react";
@@ -117,7 +119,8 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {/* HERO BALANCE CARD — bright vibrant green, focal point of the screen.
+        {/* HERO BALANCE CARD — deep navy brand gradient, focal point of the
+            screen.
             CRITICAL: the <section> itself has NO `overflow-hidden`. Clipping
             the section caused the USDC/EURC pills (the section's own children)
             to be cut off in some render paths. The radial highlight overlay is
@@ -127,10 +130,10 @@ export default function HomePage() {
             `flex flex-col gap-4` guarantees vertical stacking with consistent
             spacing — do NOT use `mt-*` between siblings here. */}
         <section
-          className="glow-green relative mt-4 flex flex-col gap-4 rounded-3xl p-6 shadow-[0_30px_80px_-30px_rgba(74,222,128,0.5)]"
+          className="glow-brand relative mt-4 flex flex-col gap-4 rounded-3xl p-6 shadow-[0_30px_80px_-30px_rgba(4,31,61,0.5)]"
           style={{
             background:
-              "linear-gradient(135deg, #4ADE80 0%, #22C55E 50%, #16A34A 100%)",
+              "linear-gradient(135deg, #041f3d 0%, #0a2a4d 50%, #03070d 100%)",
           }}
         >
           {/* Radial highlight in top-left for depth. Isolated in its own
@@ -144,7 +147,7 @@ export default function HomePage() {
               className="absolute inset-0 opacity-60"
               style={{
                 background:
-                  "radial-gradient(circle at 20% 0%, rgba(255,255,255,0.25), transparent 50%)",
+                  "radial-gradient(circle at 20% 0%, rgba(255,255,255,0.18), transparent 50%)",
               }}
             />
           </div>
@@ -179,15 +182,15 @@ export default function HomePage() {
             {hideBalance ? "••••••" : formattedTotalUsd}
           </p>
 
-          {/* Row 3: token pills — rendered UNCONDITIONALLY. Pills follow the
-              theme: white surface + dark text in light mode, dark surface +
-              white text in dark mode. Tokens resolve to #FFFFFF (light) /
-              #0F0F0F (dark) so the pills read cleanly on the green card. */}
+          {/* Row 3: token pills — rendered UNCONDITIONALLY. Pills use the
+              soft container token so they read cleanly on the navy card in
+              both themes. The dot indicator was replaced with the currency
+              symbol (DollarSign / Euro) to make the token instantly readable. */}
           <div className="relative z-10 grid grid-cols-2 gap-2.5">
             <div className="rounded-2xl bg-[color:var(--glide-surface-container)] p-3.5">
               <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-[color:var(--glide-on-elevated-variant)] uppercase">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#4ADE80]/15">
-                  <span className="h-2 w-2 rounded-full bg-[#4ADE80]" />
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#16A34A]/15">
+                  <DollarSign className="h-3.5 w-3.5 text-[#16A34A]" strokeWidth={2.5} />
                 </span>
                 USDC
               </div>
@@ -201,7 +204,7 @@ export default function HomePage() {
             <div className="rounded-2xl bg-[color:var(--glide-surface-container)] p-3.5">
               <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.14em] text-[color:var(--glide-on-elevated-variant)] uppercase">
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#3B82F6]/15">
-                  <span className="h-2 w-2 rounded-full bg-[#3B82F6]" />
+                  <Euro className="h-3.5 w-3.5 text-[#3B82F6]" strokeWidth={2.5} />
                 </span>
                 EURC
               </div>
@@ -272,13 +275,13 @@ export default function HomePage() {
                   type="button"
                   onClick={() => setFilter(f.id)}
                   className={`glide-tap shrink-0 rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
-                    isActive ? "glow-green" : ""
+                    isActive ? "glow-brand" : ""
                   }`}
                   style={
                     isActive
                       ? {
-                          background: "#4ADE80",
-                          color: "#0A0A0A",
+                          background: "var(--glide-primary)",
+                          color: "var(--glide-on-primary)",
                           border: "1px solid transparent",
                         }
                       : {
