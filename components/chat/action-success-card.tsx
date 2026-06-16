@@ -80,8 +80,8 @@ export function ActionSuccessCard({
   return (
     <div className="flex w-full justify-end px-1 py-2">
       <div
-        className="glide-chat-card flex aspect-square w-[min(100%,300px)] max-w-[300px] shrink-0 flex-col items-center justify-center rounded-[28px] rounded-br-md p-6 text-center text-white shadow-[0_20px_60px_-20px_rgba(74,222,128,0.5)]"
-        style={{ background: BRAND_GREEN_GRADIENT }}
+        className="glide-chat-card flex aspect-square w-[min(100%,300px)] max-w-[300px] shrink-0 flex-col items-center justify-center rounded-[28px] rounded-br-md p-6 text-center text-white shadow-[0_20px_60px_-20px_rgba(139,92,246,0.5)]"
+        style={{ background: BRAND_NAVY_GRADIENT }}
         role="status"
         aria-label={`${label}${amount ? `: ${formatStableAmount(amount, action === "swap" ? "USDC" : token)}` : ""}`}
       >
