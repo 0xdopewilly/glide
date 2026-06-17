@@ -106,7 +106,7 @@
   --glide-success-container: rgba(22, 199, 132, 0.18);
 
   /* Decorative mesh / waveform tint (used by hero sound-wave SVG, etc.) */
-  --glide-mesh-wave: rgba(255, 255, 255, 0.12);
+  --glide-mesh-wave: rgba(255, 255, 255, 0.22);
 
   /* Legacy tokens — remapped */
   --glide-text: #FFFFFF;

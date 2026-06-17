@@ -21,7 +21,7 @@ export function ActionGrid() {
           key={href}
           href={href}
           prefetch
-          className="glide-tap group flex flex-1 flex-col items-center gap-2"
+          className="glide-tap group flex flex-1 flex-col items-center gap-2 transition-transform active:scale-95"
         >
           <span
             className="flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--glide-surface-container)] border border-[color:var(--glide-primary)]/15 ring-1 ring-[color:var(--glide-primary)]/10 text-[color:var(--glide-primary)] transition-all duration-200 group-hover:ring-[color:var(--glide-primary)]/25 group-hover:scale-105"

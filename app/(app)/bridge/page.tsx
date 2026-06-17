@@ -5,8 +5,8 @@ import { FlowPage } from "@/components/flow-page";
 import { FlowProcessingOverlay } from "@/components/flow-processing-overlay";
 import { FlowStepMotion } from "@/components/flow-step-motion";
 import { GlideButton } from "@/components/glide-button";
-import { GlidePillButton } from "@/components/glide-pill-button";
 import { KitSetupBanner, useCircleReady } from "@/components/kit-setup-banner";
+import { SwipeToConfirm } from "@/components/swipe-to-confirm";
 import { TokenIcon } from "@/components/token-icon";
 import { useWallet } from "@/context/wallet-context";
 import { BRIDGE_KEY_TO_CHAIN } from "@/lib/chain-meta";
@@ -41,8 +41,7 @@ export default function BridgePage() {
   const overBalance = parsed > balance;
   const canSubmit = parsed > 0 && !overBalance && !submitting && circleReady;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     clearError();
@@ -94,8 +93,7 @@ export default function BridgePage() {
               </GlideButton>
             </div>
           ) : (
-            <form
-              onSubmit={(e) => void handleSubmit(e)}
+            <div
               className="slide-up-bouncy flex flex-col pb-8"
             >
               <KitSetupBanner mode="bridge" />
@@ -259,15 +257,17 @@ export default function BridgePage() {
                   </p>
                 ) : null}
 
-                <GlidePillButton
-                  type="submit"
-                  disabled={!canSubmit}
-                  className="mt-8 w-full"
-                >
-                  {submitting ? "Processing" : "Confirm bridge"}
-                </GlidePillButton>
+                <div className="mt-8">
+                  <SwipeToConfirm
+                    label="Slide to bridge"
+                    onConfirm={handleSubmit}
+                    disabled={!canSubmit}
+                    loading={submitting}
+                    successLabel="Bridge initiated"
+                  />
+                </div>
               </div>
-            </form>
+            </div>
           )}
         </FlowStepMotion>
       </div>

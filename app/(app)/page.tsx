@@ -142,39 +142,56 @@ export default function HomePage() {
             flexShrink: 0,
           }}
         >
-          {/* Sound-wave / equalizer decoration — bottom-left of card,
+          {/* Layered curved-wave decoration — bottom-right of card,
               behind content, fixed-size so it never grows to fill. */}
           <svg
             aria-hidden
-            viewBox="0 0 200 60"
+            viewBox="0 0 320 100"
             preserveAspectRatio="none"
-            fill="none"
             style={{
               position: "absolute",
-              bottom: 16,
-              left: 20,
-              width: 180,
-              height: 50,
-              opacity: 0.35,
+              bottom: 8,
+              right: 88,
+              width: 240,
+              height: 80,
               pointerEvents: "none",
-              zIndex: 0,
+              overflow: "visible",
             }}
+            fill="none"
           >
-            {[
-              30, 45, 60, 75, 85, 90, 85, 70, 55, 40, 30, 25, 40, 55, 70, 80,
-              85, 80, 70, 55, 40, 30, 25, 20,
-            ].map((h, i) => (
-              <rect
-                key={i}
-                x={i * 8 + 2}
-                y={30 - h * 0.25}
-                width={3}
-                height={h * 0.5}
-                rx={1.5}
-                style={{ fill: "var(--glide-mesh-wave)" }}
-                opacity={0.3 + h / 200}
-              />
-            ))}
+            {/* Back wave — slow, broad */}
+            <path
+              d="M 0 60 Q 40 20, 80 60 T 160 60 T 240 60 T 320 60"
+              stroke="var(--glide-mesh-wave)"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              style={{ opacity: 0.5 }}
+            />
+            {/* Mid wave — slightly faster */}
+            <path
+              d="M 0 55 Q 32 30, 64 55 T 128 55 T 192 55 T 256 55 T 320 55"
+              stroke="var(--glide-mesh-wave)"
+              strokeWidth={2}
+              strokeLinecap="round"
+              style={{ opacity: 0.75 }}
+            />
+            {/* Foreground wave — tightest, highest contrast */}
+            <path
+              d="M 0 50 Q 25 25, 50 50 T 100 50 T 150 50 T 200 50 T 250 50 T 320 50"
+              stroke="var(--glide-mesh-wave)"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              style={{ opacity: 1 }}
+            />
+            {/* Dotted underlay — adds the "particle wave" texture */}
+            <path
+              d="M 0 55 Q 32 30, 64 55 T 128 55 T 192 55 T 256 55 T 320 55"
+              stroke="var(--glide-mesh-wave)"
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeDasharray="0.5 5"
+              style={{ opacity: 0.6 }}
+            />
           </svg>
 
           <div
@@ -250,7 +267,7 @@ export default function HomePage() {
               <Link
                 href="/receive"
                 prefetch
-                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-colors"
+                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-transform active:scale-95"
                 style={{
                   width: "64px",
                   height: "64px",
@@ -269,7 +286,7 @@ export default function HomePage() {
               <Link
                 href="/scan"
                 prefetch
-                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-colors"
+                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-transform active:scale-95"
                 style={{
                   width: "64px",
                   height: "64px",
@@ -290,7 +307,7 @@ export default function HomePage() {
                 onClick={() => void refresh()}
                 disabled={refreshing}
                 aria-label="Refresh balances"
-                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-colors disabled:opacity-50"
+                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-transform active:scale-95 disabled:opacity-50"
                 style={{
                   width: "64px",
                   height: "64px",
@@ -322,7 +339,7 @@ export default function HomePage() {
               key={href}
               href={href}
               prefetch
-              className="glide-tap group flex flex-col items-center gap-2"
+              className="glide-tap group flex flex-col items-center gap-2 transition-transform active:scale-95"
             >
               <span
                 className="flex h-14 w-14 items-center justify-center rounded-full transition-colors"
@@ -373,7 +390,7 @@ export default function HomePage() {
                   key={f.id}
                   type="button"
                   onClick={() => setFilter(f.id)}
-                  className={`glide-tap shrink-0 rounded-full px-4 py-1.5 text-[12px] font-semibold transition-colors ${
+                  className={`glide-tap shrink-0 rounded-full px-4 py-1.5 text-[12px] font-semibold transition-all duration-200 active:scale-95 ${
                     isActive ? "glow-brand" : ""
                   }`}
                   style={

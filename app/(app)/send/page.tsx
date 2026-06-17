@@ -2,6 +2,7 @@
 
 import { FlowPage } from "@/components/flow-page";
 import { SendScanSheet } from "@/components/send-scan-sheet";
+import { SwipeToConfirm } from "@/components/swipe-to-confirm";
 import { UserAvatar } from "@/components/user-avatar";
 import { shortenAddress } from "@/lib/format";
 import {
@@ -372,21 +373,15 @@ export default function SendPage() {
             </div>
           ) : null}
 
-          <button
-            type="button"
-            onClick={() => void handlePay()}
-            disabled={submitting || loading}
-            className="glide-tap glow-green mt-6 w-full rounded-full px-6 text-[15px] font-bold disabled:opacity-60"
-            style={{
-              background: "#4ADE80",
-              color: "#0A0A0A",
-              height: "56px",
-              boxShadow:
-                submitting || loading ? "none" : undefined,
-            }}
-          >
-            {submitting ? "Paying…" : `Pay ${formatStableAmount(parsed, token)}`}
-          </button>
+          <div className="mt-6">
+            <SwipeToConfirm
+              label="Slide to send"
+              onConfirm={handlePay}
+              disabled={submitting || loading}
+              loading={submitting}
+              successLabel="Sent!"
+            />
+          </div>
         </div>
       </FlowPage>
     );
