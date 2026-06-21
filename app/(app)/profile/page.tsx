@@ -21,7 +21,6 @@ export default function ProfilePage() {
   const router = useRouter();
   const {
     profile,
-    updateProfile,
     saveProfile,
     wallet,
     balance,
@@ -63,7 +62,14 @@ export default function ProfilePage() {
 
   const handleAvatarPick = (dataUrl: string) => {
     setAvatarUrl(dataUrl);
-    updateProfile({ avatarUrl: dataUrl });
+    // Persist immediately so the new avatar survives a refresh — previously
+    // this only updated local state + sessionStorage, requiring the user to
+    // tap "Save changes" or lose it on reload.
+    void saveProfile({
+      displayName: name.trim() || "Guest",
+      email: email.trim(),
+      avatarUrl: dataUrl,
+    });
   };
 
   return (
@@ -71,7 +77,16 @@ export default function ProfilePage() {
       <PageHeader title="Profile" backHref="/" />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-10">
         {error ? (
-          <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200">
+          <div
+            className="mt-3 rounded-2xl border px-3 py-2 text-sm"
+            style={{
+              background:
+                "color-mix(in srgb, var(--glide-error) 12%, transparent)",
+              borderColor:
+                "color-mix(in srgb, var(--glide-error) 28%, transparent)",
+              color: "var(--glide-error)",
+            }}
+          >
             {error}
             <button type="button" onClick={clearError} className="ml-2 underline">
               Dismiss

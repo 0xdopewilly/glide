@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 
@@ -20,24 +20,40 @@ export function SwipeToConfirm({ label, onConfirm, disabled, loading, successLab
   const fillWidth = useTransform(x, (v) => `${v + 56}px`); // fills under thumb
   const labelOpacity = useTransform(x, [0, 100], [1, 0]);
 
+  async function triggerConfirm() {
+    const track = trackRef.current;
+    const max = track ? track.offsetWidth - 56 : 0;
+    if (max > 0) {
+      animate(x, max, { type: "spring", stiffness: 400, damping: 30 });
+    }
+    setCompleted(true);
+    try {
+      await onConfirm();
+    } finally {
+      setTimeout(() => {
+        setCompleted(false);
+        animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+      }, 1500);
+    }
+  }
+
   async function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
     const track = trackRef.current;
     if (!track) return;
     const max = track.offsetWidth - 56; // 56 = thumb width + insets
     const threshold = max * 0.85;
     if (info.offset.x >= threshold) {
-      animate(x, max, { type: "spring", stiffness: 400, damping: 30 });
-      setCompleted(true);
-      try {
-        await onConfirm();
-      } finally {
-        setTimeout(() => {
-          setCompleted(false);
-          animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
-        }, 1500);
-      }
+      await triggerConfirm();
     } else {
       animate(x, 0, { type: "spring", stiffness: 400, damping: 30 });
+    }
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
+    if (disabled || loading || completed) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      void triggerConfirm();
     }
   }
 
@@ -80,13 +96,22 @@ export function SwipeToConfirm({ label, onConfirm, disabled, loading, successLab
       )}
       {/* Draggable thumb */}
       <motion.button
+        type="button"
+        role="slider"
+        aria-label={label}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={completed || loading ? 100 : 0}
+        aria-disabled={disabled || loading}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
         drag={disabled || loading ? false : "x"}
         dragConstraints={trackRef}
         dragElastic={0}
         dragMomentum={false}
         onDragEnd={handleDragEnd}
         style={{ x }}
-        className="absolute left-1 top-1 flex h-12 w-12 cursor-grab items-center justify-center rounded-full active:cursor-grabbing"
+        className="absolute left-1 top-1 flex h-12 w-12 cursor-grab items-center justify-center rounded-full active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--glide-primary)]"
         whileTap={{ scale: 0.95 }}
       >
         <span

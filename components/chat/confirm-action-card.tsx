@@ -52,7 +52,7 @@ export function ConfirmActionCard({
           className="glide-tap glide-label-mono inline-flex flex-1 items-center justify-center rounded-full py-2.5 text-[12px] font-bold disabled:opacity-40"
           style={{
             background: "var(--glide-accent)",
-            color: "var(--glide-bg)",
+            color: "var(--glide-on-primary)",
           }}
         >
           {status === "pending"

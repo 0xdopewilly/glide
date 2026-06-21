@@ -18,7 +18,7 @@ import {
   isValidWalletAddress,
   normalizeUsername,
 } from "@/lib/validation";
-import { useWallet } from "@/context/wallet-context";
+import { useBalance, useWalletActions } from "@/context/wallet-context";
 import { AtSign, Check, QrCode, User, Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -49,8 +49,8 @@ const TOKENS_FULL: readonly StableToken[] = ["USDC", "EURC", "cirBTC"];
 export default function SendPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { sendMoney, wallet, loading, balance, tokens, error, clearError } =
-    useWallet();
+  const { balance, tokens } = useBalance();
+  const { sendMoney, wallet, loading, error, clearError } = useWalletActions();
   const requestCode = searchParams.get("request")?.trim() || undefined;
   const [token, setToken] = useState<StableToken>(() =>
     stableTokenFromSymbol(searchParams.get("token")),
@@ -266,13 +266,13 @@ export default function SendPage() {
             Sent
           </h1>
           <div
-            className="glide-pop glow-green mt-10 flex h-28 w-28 items-center justify-center rounded-full"
-            style={{ background: "#4ADE80" }}
+            className="glide-pop mt-10 flex h-28 w-28 items-center justify-center rounded-full"
+            style={{ background: "var(--glide-primary)" }}
           >
             <Check
               className="h-14 w-14"
               strokeWidth={2.5}
-              style={{ color: "#0A0A0A" }}
+              style={{ color: "var(--glide-on-primary)" }}
             />
           </div>
           <p className="glide-label-mono mt-10 text-[11px] font-semibold text-[var(--glide-muted)]">
@@ -301,8 +301,8 @@ export default function SendPage() {
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="glide-tap glow-green mt-auto mb-8 w-full max-w-sm rounded-full px-6 py-4 text-[15px] font-bold"
-            style={{ background: "#4ADE80", color: "#0A0A0A" }}
+            className="glide-tap mt-auto mb-8 w-full max-w-sm rounded-full px-6 py-4 text-[15px] font-bold"
+            style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
           >
             Done
           </button>
@@ -350,7 +350,7 @@ export default function SendPage() {
             onChange={(e) => setNote(e.target.value.slice(0, 140))}
             placeholder="Dinner, rent, thanks"
             maxLength={140}
-            className="mt-2 w-full rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[16px] font-medium text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none focus:ring-2 focus:ring-[#4ADE80]/40"
+            className="mt-2 w-full rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[16px] font-medium text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none focus:ring-2 focus:ring-[var(--glide-primary)]/40"
           />
 
           <div className="mt-5 flex items-center justify-between rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[color:var(--glide-on-elevated)]">
@@ -364,9 +364,9 @@ export default function SendPage() {
             <div
               className="mt-4 rounded-2xl px-4 py-3 text-center text-sm font-medium"
               style={{
-                background: "rgba(248,113,113,0.08)",
-                border: "1px solid rgba(248,113,113,0.25)",
-                color: "#F87171",
+                background: "color-mix(in srgb, var(--glide-error) 12%, transparent)",
+                border: "1px solid color-mix(in srgb, var(--glide-error) 28%, transparent)",
+                color: "var(--glide-error)",
               }}
             >
               {localError ?? error}
@@ -435,7 +435,7 @@ export default function SendPage() {
                     onClick={() => setToken(t)}
                     className={`glide-tap rounded-full px-3 py-1.5 text-[11px] font-bold tracking-tight transition-colors ${
                       active
-                        ? "glow-green bg-[#4ADE80] text-[#0A0A0A]"
+                        ? "bg-[var(--glide-primary)] text-[var(--glide-on-primary)]"
                         : "border border-[color:var(--glide-elevated-border)] bg-transparent text-[color:var(--glide-on-elevated)]"
                     }`}
                   >
@@ -466,16 +466,16 @@ export default function SendPage() {
               autoCorrect="off"
               spellCheck={false}
               aria-label="Amount"
-              className="w-full min-w-0 bg-transparent text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[color:var(--glide-on-elevated)] caret-[#4ADE80] focus:outline-none"
+              className="w-full min-w-0 bg-transparent text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[color:var(--glide-on-elevated)] caret-[var(--glide-primary)] focus:outline-none"
             />
           </div>
 
           <p
             className={`mt-3 text-[12px] font-semibold ${
               hint && (resolveState === "fail" || overBalance)
-                ? "text-[#F87171]"
+                ? "text-[var(--glide-error)]"
                 : hint && recipientOk && !overBalance
-                  ? "text-[#4ADE80]"
+                  ? "text-[var(--glide-success)]"
                   : "text-[color:var(--glide-on-elevated-variant)]"
             }`}
           >
@@ -520,8 +520,8 @@ export default function SendPage() {
             <span
               className="glide-label-mono inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold"
               style={{
-                background: "rgba(74,222,128,0.18)",
-                color: "#4ADE80",
+                background: "var(--glide-success-container)",
+                color: "var(--glide-success)",
               }}
             >
               <KindIcon className="h-3 w-3" strokeWidth={2.5} />
@@ -536,7 +536,7 @@ export default function SendPage() {
             type="button"
             onClick={() => setScanOpen(true)}
             aria-label="Scan QR"
-            className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[color:var(--glide-elevated-border)] text-[color:var(--glide-on-elevated)]"
+            className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--glide-elevated-border)] text-[color:var(--glide-on-elevated)]"
           >
             <QrCode className="h-4 w-4" strokeWidth={2.25} />
           </button>
@@ -552,7 +552,7 @@ export default function SendPage() {
           </label>
           <span
             className={`glide-label-mono text-[10px] font-semibold ${
-              note.length > 130 ? "text-[#F87171]" : "text-[color:var(--glide-on-elevated-variant)]"
+              note.length > 130 ? "text-[var(--glide-error)]" : "text-[color:var(--glide-on-elevated-variant)]"
             }`}
           >
             {note.length}/140
@@ -564,7 +564,7 @@ export default function SendPage() {
           onChange={(e) => setNote(e.target.value.slice(0, 140))}
           placeholder="Dinner, rent, thanks"
           maxLength={140}
-          className="mt-2 w-full rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[16px] font-medium text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none focus:ring-2 focus:ring-[#4ADE80]/40"
+          className="mt-2 w-full rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[16px] font-medium text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none focus:ring-2 focus:ring-[var(--glide-primary)]/40"
         />
 
         {/* SUBMIT ------------------------------------------------------- */}
@@ -573,12 +573,10 @@ export default function SendPage() {
             type="button"
             disabled={submitDisabled}
             onClick={() => setStep("review")}
-            className={`glide-tap w-full rounded-full px-6 text-[15px] font-bold transition-opacity ${
-              submitDisabled ? "" : "glow-green"
-            }`}
+            className="glide-tap w-full rounded-full px-6 text-[15px] font-bold transition-opacity"
             style={{
-              background: "#4ADE80",
-              color: "#0A0A0A",
+              background: "var(--glide-primary)",
+              color: "var(--glide-on-primary)",
               height: "56px",
               opacity: submitDisabled ? 0.45 : 1,
               boxShadow: submitDisabled ? "none" : undefined,
@@ -591,9 +589,9 @@ export default function SendPage() {
             <div
               className="mt-3 rounded-2xl px-4 py-3 text-center text-sm font-medium"
               style={{
-                background: "rgba(248,113,113,0.08)",
-                border: "1px solid rgba(248,113,113,0.25)",
-                color: "#F87171",
+                background: "color-mix(in srgb, var(--glide-error) 12%, transparent)",
+                border: "1px solid color-mix(in srgb, var(--glide-error) 28%, transparent)",
+                color: "var(--glide-error)",
               }}
             >
               {localError ?? error}
@@ -691,8 +689,8 @@ function SaveContactPrompt({
           disabled={status === "saving"}
           className="glide-tap glide-label-mono flex-1 rounded-full py-2.5 text-[11px] font-bold disabled:opacity-50"
           style={{
-            background: "#4ADE80",
-            color: "#0A0A0A",
+            background: "var(--glide-primary)",
+            color: "var(--glide-on-primary)",
           }}
         >
           {status === "saving" ? "Saving…" : "Save"}

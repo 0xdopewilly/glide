@@ -12,7 +12,7 @@ export default function SignInPage() {
       className="relative flex min-h-dvh w-full flex-col overflow-hidden"
       style={{
         fontFamily: jakarta,
-        background: "linear-gradient(180deg, #0A0F0C 0%, #050505 100%)",
+        background: "var(--glide-bg)",
       }}
     >
       <div
@@ -20,7 +20,7 @@ export default function SignInPage() {
         className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[60vh]"
         style={{
           background:
-            "radial-gradient(circle at 50% 0%, rgba(74,222,128,0.18), transparent 60%)",
+            "radial-gradient(circle at 50% 0%, rgba(91,61,245,0.18), transparent 60%)",
         }}
       />
 
@@ -45,20 +45,33 @@ export default function SignInPage() {
               priority
               className="h-11 w-auto"
             />
-            <p className="mt-4 text-center text-[15px] font-medium text-[#A1A1AA]">
+            <p
+              className="mt-4 text-center text-[15px] font-medium"
+              style={{ color: "var(--glide-muted)" }}
+            >
               Stablecoins, sent like a text.
             </p>
           </div>
 
-          <div className="mt-10 w-full rounded-3xl border border-[rgba(74,222,128,0.08)] bg-[#0F0F0F] p-6 sm:p-8">
+          <div
+            className="mt-10 w-full rounded-3xl border p-6 sm:p-8"
+            style={{
+              background: "var(--glide-surface-elevated)",
+              borderColor: "var(--glide-elevated-border)",
+            }}
+          >
             <ClerkSignInForm />
           </div>
 
-          <p className="mt-8 text-center text-[14px] text-[#A1A1AA]">
+          <p
+            className="mt-8 text-center text-[14px]"
+            style={{ color: "var(--glide-muted)" }}
+          >
             Don&apos;t have an account?{" "}
             <Link
               href="/sign-up"
-              className="font-semibold text-[#4ADE80] transition-colors hover:text-[#6EE7A2]"
+              className="font-semibold transition-colors"
+              style={{ color: "var(--glide-primary)" }}
             >
               Sign up free
             </Link>

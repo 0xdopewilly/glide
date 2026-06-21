@@ -26,7 +26,7 @@ export function GlidePillButton({
       className={`glide-tap glide-label-mono inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[12px] font-bold disabled:opacity-45 ${className}`}
       style={{
         background: "var(--glide-accent)",
-        color: "var(--glide-bg)",
+        color: "var(--glide-on-primary)",
       }}
     >
       {children}

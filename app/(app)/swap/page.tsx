@@ -13,7 +13,7 @@ import {
   formatStableAmountWithCode,
 } from "@/lib/currency-format";
 import { tokenAmountFromBalances } from "@/lib/tokens";
-import { useWallet } from "@/context/wallet-context";
+import { useBalance, useWalletActions } from "@/context/wallet-context";
 import { ArrowDownUp, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,7 +23,8 @@ type Step = "form" | "success";
 
 export default function SwapPage() {
   const router = useRouter();
-  const { swapMoney, wallet, balance, tokens, error, clearError } = useWallet();
+  const { balance, tokens } = useBalance();
+  const { swapMoney, wallet, error, clearError } = useWalletActions();
   const [fromToken, setFromToken] = useState<StableToken>("USDC");
   const [toToken, setToToken] = useState<StableToken>("EURC");
   const [fromAmount, setFromAmount] = useState("");
@@ -61,6 +62,9 @@ export default function SwapPage() {
     if (result.ok) {
       setReceivedAmount(result.receivedAmount ?? null);
       setStep("success");
+    } else {
+      // Reset transient success-state fields so the form is clean on retry.
+      setReceivedAmount(null);
     }
   };
 
@@ -165,7 +169,7 @@ export default function SwapPage() {
                 <Check
                   className="h-12 w-12"
                   strokeWidth={2.5}
-                  style={{ color: "var(--glide-bg)" }}
+                  style={{ color: "var(--glide-on-primary)" }}
                 />
               </div>
               <h1 className="glide-label-mono mt-8 text-[13px] font-bold text-[var(--glide-muted)]">
@@ -178,12 +182,28 @@ export default function SwapPage() {
                   ? formatStableAmountWithCode(receivedAmount, toToken)
                   : toToken}
               </p>
-              <GlideButton
-                onClick={() => router.push("/activity")}
-                className="mt-auto mb-8 max-w-sm"
-              >
-                View activity
-              </GlideButton>
+              <div className="mt-auto mb-8 flex w-full max-w-sm flex-col gap-2">
+                <GlideButton onClick={() => router.push("/activity")}>
+                  View activity
+                </GlideButton>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("form");
+                    setFromAmount("");
+                    setReceivedAmount(null);
+                    setQuoteAmount(null);
+                    setQuoteError(null);
+                  }}
+                  className="glide-tap glide-label-mono rounded-full border py-3 text-[12px] font-bold transition-opacity"
+                  style={{
+                    borderColor: "var(--glide-elevated-border)",
+                    color: "var(--glide-text)",
+                  }}
+                >
+                  Swap again
+                </button>
+              </div>
             </div>
           ) : (
             <div
@@ -212,7 +232,7 @@ export default function SwapPage() {
                     className="glide-tap flex h-12 w-12 items-center justify-center rounded-full ring-4"
                     style={{
                       background: "var(--glide-accent)",
-                      color: "var(--glide-bg)",
+                      color: "var(--glide-on-primary)",
                       ["--tw-ring-color" as string]: "var(--glide-bg)",
                     }}
                   >

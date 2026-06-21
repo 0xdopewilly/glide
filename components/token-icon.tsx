@@ -14,7 +14,7 @@ type TokenVisual = { bg: string; Icon: LucideIcon };
 // strips common decorative prefixes like "CIR" so cirBTC / CIRBTC / BTC all
 // resolve to the bitcoin visual.
 const TOKEN_VISUALS: Record<string, TokenVisual> = {
-  USDC: { bg: "#000000", Icon: DollarSign },
+  USDC: { bg: "#2775CA", Icon: DollarSign },
   EURC: { bg: "#3B82F6", Icon: Euro },
   CIRBTC: { bg: "#5B3DF5", Icon: Bitcoin },
   BTC: { bg: "#5B3DF5", Icon: Bitcoin },

@@ -72,7 +72,7 @@ export function ActivityToolbar({
           onClick={onRefresh}
           disabled={refreshing}
           aria-label="Refresh activity"
-          className="glide-tap flex h-9 w-9 shrink-0 items-center justify-center rounded-full border"
+          className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full border"
           style={{
             background: "var(--glide-surface-container)",
             borderColor: "var(--glide-border)",
@@ -112,15 +112,16 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`glide-tap shrink-0 rounded-full border font-semibold tracking-tight transition-colors ${
-        compact ? "px-3 py-1 text-[10px]" : "px-4 py-1.5 text-[12px]"
+        compact ? "px-3 py-2 text-[11px]" : "px-4 py-2.5 text-[13px]"
       }`}
       style={
         active
           ? {
               background: "var(--glide-accent)",
               borderColor: "var(--glide-accent)",
-              color: "var(--glide-bg)",
+              color: "var(--glide-on-primary)",
             }
           : {
               background: "var(--glide-surface-container)",

@@ -32,7 +32,7 @@ export function StableTokenSegment({
             value === token
               ? {
                   background: "var(--glide-accent)",
-                  color: "var(--glide-bg)",
+                  color: "var(--glide-on-primary)",
                 }
               : { color: "var(--glide-muted)" }
           }

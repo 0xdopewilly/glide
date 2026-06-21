@@ -354,7 +354,7 @@ export function QrScannerView({ onScanned }: { onScanned?: () => void }) {
           className="glide-tap glide-label-mono mt-3 w-full rounded-full py-3 text-[12px] font-bold disabled:opacity-40"
           style={{
             background: "var(--glide-accent)",
-            color: "var(--glide-bg)",
+            color: "var(--glide-on-primary)",
           }}
         >
           Continue

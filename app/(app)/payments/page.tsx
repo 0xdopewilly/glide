@@ -82,7 +82,7 @@ export default function PaymentsPage() {
                 className="flex h-12 w-12 items-center justify-center rounded-2xl"
                 style={{
                   background: "var(--glide-accent)",
-                  color: "var(--glide-bg)",
+                  color: "var(--glide-on-primary)",
                 }}
               >
                 <Icon className="h-5 w-5" strokeWidth={2.25} />

@@ -43,7 +43,14 @@ export function NotificationBell() {
     >
       <Bell className="h-[18px] w-[18px]" strokeWidth={2.25} />
       {badge ? (
-        <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-neutral-100 dark:ring-[var(--glide-surface-container)]">
+        <span
+          className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none ring-2"
+          style={{
+            background: "var(--glide-primary)",
+            color: "var(--glide-on-primary)",
+            ["--tw-ring-color" as string]: "var(--glide-shell)",
+          }}
+        >
           {badge}
         </span>
       ) : null}

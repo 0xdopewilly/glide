@@ -5,7 +5,7 @@ import { copyText } from "@/lib/clipboard";
 import { FlowPage } from "@/components/flow-page";
 import { ReceiveQr } from "@/components/receive-qr";
 import { UserAvatar } from "@/components/user-avatar";
-import { useWallet } from "@/context/wallet-context";
+import { useProfile, useWalletActions } from "@/context/wallet-context";
 import { motion } from "framer-motion";
 import { Share2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -35,12 +35,19 @@ const STATIC_EXTRA_TABS: { key: string; label: string }[] = [
   { key: "arbitrum", label: "Arbitrum" },
 ];
 
-const CACHE_KEY = "glide:receive-addresses";
+const CACHE_KEY_PREFIX = "glide:receive-addresses";
 
-function readCachedExtras(): ReceiveAddress[] {
+function cacheKey(scopeId: string | null): string | null {
+  if (!scopeId) return null;
+  return `${CACHE_KEY_PREFIX}:${scopeId}`;
+}
+
+function readCachedExtras(scopeId: string | null): ReceiveAddress[] {
   if (typeof window === "undefined") return [];
+  const key = cacheKey(scopeId);
+  if (!key) return [];
   try {
-    const raw = window.localStorage.getItem(CACHE_KEY);
+    const raw = window.localStorage.getItem(key);
     if (!raw) return [];
     return JSON.parse(raw) as ReceiveAddress[];
   } catch {
@@ -48,23 +55,55 @@ function readCachedExtras(): ReceiveAddress[] {
   }
 }
 
-function writeCachedExtras(addresses: ReceiveAddress[]) {
+function writeCachedExtras(scopeId: string | null, addresses: ReceiveAddress[]) {
   if (typeof window === "undefined") return;
+  const key = cacheKey(scopeId);
+  if (!key) return;
   try {
-    window.localStorage.setItem(CACHE_KEY, JSON.stringify(addresses));
+    window.localStorage.setItem(key, JSON.stringify(addresses));
   } catch {
     // quota / privacy mode — ignore
   }
 }
 
-export default function ReceivePage() {
-  const { wallet, profile } = useWallet();
-  const arcAddress = wallet?.address ?? "";
+function clearStaleExtrasCaches(currentScopeId: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    const toRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const k = window.localStorage.key(i);
+      if (!k) continue;
+      if (k.startsWith(`${CACHE_KEY_PREFIX}:`)) {
+        if (!currentScopeId || k !== `${CACHE_KEY_PREFIX}:${currentScopeId}`) {
+          toRemove.push(k);
+        }
+      } else if (k === CACHE_KEY_PREFIX) {
+        // Legacy unscoped key from previous app versions — always drop
+        toRemove.push(k);
+      }
+    }
+    for (const k of toRemove) window.localStorage.removeItem(k);
+  } catch {
+    // ignore
+  }
+}
 
-  const [extras, setExtras] = useState<ReceiveAddress[]>(() => readCachedExtras());
+export default function ReceivePage() {
+  const { profile } = useProfile();
+  const { wallet } = useWalletActions();
+  const arcAddress = wallet?.address ?? "";
+  const scopeId = wallet?.id ?? null;
+
+  const [extras, setExtras] = useState<ReceiveAddress[]>([]);
   const [selected, setSelected] = useState<string>("arc");
   const [sweeping, setSweeping] = useState(false);
   const [sweepMsg, setSweepMsg] = useState<string | null>(null);
+
+  // Hydrate cache and purge stale (other-user / legacy) entries when wallet changes.
+  useEffect(() => {
+    clearStaleExtrasCaches(scopeId);
+    setExtras(readCachedExtras(scopeId));
+  }, [scopeId]);
 
   const refreshAddresses = () => {
     if (!arcAddress) return Promise.resolve();
@@ -73,7 +112,7 @@ export default function ReceivePage() {
       .then((json: { addresses?: ReceiveAddress[] } | null) => {
         if (json?.addresses) {
           setExtras(json.addresses);
-          writeCachedExtras(json.addresses);
+          writeCachedExtras(scopeId, json.addresses);
         }
       })
       .catch(() => {});
@@ -172,7 +211,7 @@ export default function ReceivePage() {
 
   return (
     <FlowPage title="Receive" backHref="/">
-      <div className="slide-up-bouncy flex flex-col px-5 pb-8">
+      <div className="slide-up-bouncy flex flex-col px-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <div className="mt-6 flex flex-col items-center text-center">
           <UserAvatar size="lg" />
           <p className="mt-4 text-[20px] font-semibold tracking-tight text-[var(--glide-text)]">
@@ -199,10 +238,11 @@ export default function ReceivePage() {
                   key={t.key}
                   type="button"
                   onClick={() => setSelected(t.key)}
-                  className="glide-tap glide-label-mono relative shrink-0 px-4 py-1.5 text-[11px] font-bold"
+                  aria-pressed={isActive}
+                  className="glide-tap glide-label-mono relative shrink-0 px-4 py-2.5 text-[12px] font-bold"
                   style={{
                     color: isActive
-                      ? "var(--glide-bg)"
+                      ? "var(--glide-on-primary)"
                       : "var(--glide-muted)",
                     transition: "color 220ms var(--glide-ease-out)",
                   }}
@@ -296,7 +336,7 @@ export default function ReceivePage() {
                   className="glide-tap glide-label-mono rounded-full px-4 py-2 text-[11px] font-bold transition-opacity disabled:opacity-40"
                   style={{
                     background: "var(--glide-accent)",
-                    color: "var(--glide-bg)",
+                    color: "var(--glide-on-primary)",
                   }}
                 >
                   {sweeping ? "Sweeping…" : "Sweep to Arc"}
@@ -326,7 +366,7 @@ export default function ReceivePage() {
             className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-[11px] font-semibold transition-opacity disabled:opacity-40"
             style={{
               background: "var(--glide-accent)",
-              color: "var(--glide-bg)",
+              color: "var(--glide-on-primary)",
               borderColor: "var(--glide-accent)",
             }}
           >

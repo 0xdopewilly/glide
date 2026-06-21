@@ -95,7 +95,7 @@ export function ChatMessageBubble({
               className="glide-tap inline-flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold disabled:opacity-40"
               style={{
                 background: "var(--glide-accent)",
-                color: "var(--glide-bg)",
+                color: "var(--glide-on-primary)",
               }}
             >
               <UserPlus className="h-4 w-4" />
@@ -151,7 +151,7 @@ export function ChatMessageBubble({
           isUser
             ? {
                 background: "var(--glide-accent)",
-                color: "var(--glide-bg)",
+                color: "var(--glide-on-primary)",
               }
             : {
                 background: "var(--glide-surface-elevated)",

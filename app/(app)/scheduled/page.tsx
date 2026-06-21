@@ -20,7 +20,7 @@ export default function ScheduledPage() {
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
             style={{
               background: "var(--glide-accent)",
-              color: "var(--glide-bg)",
+              color: "var(--glide-on-primary)",
             }}
           >
             <CalendarClock className="h-5 w-5" strokeWidth={2.25} />

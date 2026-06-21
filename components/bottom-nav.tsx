@@ -34,7 +34,7 @@ export function BottomNav() {
               key={href}
               href={href}
               aria-label={label}
-              className="group relative flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 transition-transform active:scale-95"
+              className="group relative flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 transition-transform active:scale-95"
             >
               {active && (
                 <span

@@ -24,6 +24,15 @@ import { useMemo, useState } from "react";
 
 type Filter = "all" | "send" | "receive" | "swap" | "bridge";
 
+// Hoisted: Intl.NumberFormat construction is the expensive part. Reused
+// across renders instead of re-allocated every time.
+const USD_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 const FILTERS: { id: Filter; label: string }[] = [
   { id: "all", label: "All" },
   { id: "send", label: "Sent" },
@@ -79,12 +88,7 @@ export default function HomePage() {
 
   // Pre-format BEFORE JSX so the number always renders even when totalUsd is
   // 0 or undefined (fixes invisible-balance bug where number went missing).
-  const formattedTotalUsd = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(
+  const formattedTotalUsd = USD_FORMATTER.format(
     typeof totalUsd === "number" && Number.isFinite(totalUsd) ? totalUsd : 0,
   );
 
@@ -233,25 +237,29 @@ export default function HomePage() {
                 className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1"
                 style={{
                   background: portfolioChangePositive
-                    ? "rgba(22, 199, 132, 0.12)"
-                    : "rgba(239, 68, 68, 0.12)",
+                    ? "var(--glide-success-container)"
+                    : "color-mix(in srgb, var(--glide-error) 12%, transparent)",
                 }}
               >
                 {portfolioChangePositive ? (
                   <ArrowUp
-                    className="h-3 w-3 text-[#16C784]"
+                    className="h-3 w-3"
                     strokeWidth={2.5}
+                    style={{ color: "var(--glide-success)" }}
                   />
                 ) : (
                   <ArrowDown
-                    className="h-3 w-3 text-[#EF4444]"
+                    className="h-3 w-3"
                     strokeWidth={2.5}
+                    style={{ color: "var(--glide-error)" }}
                   />
                 )}
                 <span
                   className="text-xs font-semibold tabular-nums"
                   style={{
-                    color: portfolioChangePositive ? "#16C784" : "#EF4444",
+                    color: portfolioChangePositive
+                      ? "var(--glide-success)"
+                      : "var(--glide-error)",
                   }}
                 >
                   {Math.abs(portfolioChange).toFixed(2)}% today
@@ -284,7 +292,7 @@ export default function HomePage() {
                 </span>
               </Link>
               <Link
-                href="/scan"
+                href="/send?scan=1"
                 prefetch
                 className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-transform active:scale-95"
                 style={{
@@ -390,7 +398,8 @@ export default function HomePage() {
                   key={f.id}
                   type="button"
                   onClick={() => setFilter(f.id)}
-                  className={`glide-tap shrink-0 rounded-full px-4 py-1.5 text-[12px] font-semibold transition-all duration-200 active:scale-95 ${
+                  aria-pressed={isActive}
+                  className={`glide-tap shrink-0 rounded-full px-4 py-2.5 text-[13px] font-semibold transition-all duration-200 active:scale-95 ${
                     isActive ? "glow-brand" : ""
                   }`}
                   style={

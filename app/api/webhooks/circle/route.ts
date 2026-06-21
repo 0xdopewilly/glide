@@ -110,7 +110,9 @@ export async function POST(request: NextRequest) {
       amount,
       chainLabel: claim.chainLabel,
     });
-    console.log("[Glide webhook] sweep result:", result);
+    if (result?.status !== "swept") {
+      console.error("[Glide webhook] sweep failed:", result);
+    }
   });
 
   return NextResponse.json({ ok: true, status: "claimed" });

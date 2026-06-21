@@ -58,10 +58,20 @@ export function ProcessingBubble({ action }: { action: ProcessingAction }) {
         aria-busy="true"
         aria-live="polite"
       >
-        <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#4ADE80]/15 text-[#16A34A] dark:text-[#4ADE80]">
+        <span
+          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+          style={{
+            background: "var(--glide-primary-container)",
+            color: "var(--glide-primary)",
+          }}
+        >
           <Icon className="h-5 w-5" strokeWidth={2.25} />
           <span
-            className="glide-processing-pulse absolute inset-0 rounded-xl ring-2 ring-[#4ADE80]/50"
+            className="glide-processing-pulse absolute inset-0 rounded-xl ring-2"
+            style={{
+              ["--tw-ring-color" as string]:
+                "color-mix(in srgb, var(--glide-primary) 50%, transparent)",
+            }}
             aria-hidden
           />
         </span>
@@ -74,7 +84,13 @@ export function ProcessingBubble({ action }: { action: ProcessingAction }) {
             className="relative mt-2 h-0.5 overflow-hidden rounded-full bg-neutral-200 dark:bg-white/10"
             aria-hidden
           >
-            <span className="glide-processing-bar-indeterminate absolute inset-y-0 left-0 w-1/2 rounded-full bg-gradient-to-r from-[#4ADE80] to-[#16A34A]" />
+            <span
+              className="glide-processing-bar-indeterminate absolute inset-y-0 left-0 w-1/2 rounded-full"
+              style={{
+                background:
+                  "linear-gradient(to right, var(--glide-primary), var(--glide-primary-hover))",
+              }}
+            />
           </div>
         </div>
       </div>

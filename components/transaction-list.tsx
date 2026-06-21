@@ -11,18 +11,18 @@ const KIND_VISUALS: Record<
 > = {
   send: {
     Icon: ArrowUp,
-    iconBg: "rgba(239,68,68,0.12)",
-    iconColor: "#EF4444",
+    iconBg: "color-mix(in srgb, var(--glide-error) 12%, transparent)",
+    iconColor: "var(--glide-error)",
   },
   receive: {
     Icon: ArrowDown,
-    iconBg: "rgba(22,199,132,0.12)",
-    iconColor: "#16C784",
+    iconBg: "var(--glide-success-container)",
+    iconColor: "var(--glide-success)",
   },
   swap: {
     Icon: ArrowLeftRight,
-    iconBg: "rgba(91,61,245,0.12)",
-    iconColor: "#5B3DF5",
+    iconBg: "var(--glide-primary-container)",
+    iconColor: "var(--glide-primary)",
   },
   bridge: {
     Icon: Link2,
@@ -155,7 +155,7 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
       ? "var(--glide-success)"
       : tx.variant === "debit"
         ? "var(--glide-error)"
-        : "#5B3DF5";
+        : "var(--glide-primary)";
 
   const title = buildTitle(tx);
   const subtitle = buildSubtitle(tx);

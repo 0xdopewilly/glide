@@ -74,7 +74,7 @@ export function FlowProcessingOverlay({
                 className="glide-arrow-pulse flex h-9 w-9 items-center justify-center rounded-full"
                 style={{
                   background: "var(--glide-accent)",
-                  color: "var(--glide-bg)",
+                  color: "var(--glide-on-primary)",
                 }}
                 aria-hidden
               >
@@ -93,7 +93,7 @@ export function FlowProcessingOverlay({
                 className="glide-arrow-pulse flex h-9 w-9 items-center justify-center rounded-full"
                 style={{
                   background: "var(--glide-accent)",
-                  color: "var(--glide-bg)",
+                  color: "var(--glide-on-primary)",
                 }}
                 aria-hidden
               >

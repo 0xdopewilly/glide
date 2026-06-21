@@ -12,7 +12,7 @@ import {
   formatStableAmountWithCode,
   type StableToken,
 } from "@/lib/currency-format";
-import { useWallet } from "@/context/wallet-context";
+import { useProfile } from "@/context/wallet-context";
 import { Copy, Mail, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -36,7 +36,7 @@ function formatAmount(raw: string) {
 }
 
 export default function RequestPage() {
-  const { profile } = useWallet();
+  const { profile } = useProfile();
   const [mode, setMode] = useState<Mode>("person");
   const [token, setToken] = useState<StableToken>("USDC");
   const [amount, setAmount] = useState("0");
@@ -151,7 +151,7 @@ export default function RequestPage() {
                   mode === "person"
                     ? {
                         background: "var(--glide-accent)",
-                        color: "var(--glide-bg)",
+                        color: "var(--glide-on-primary)",
                       }
                     : { color: "var(--glide-muted)" }
                 }
@@ -166,7 +166,7 @@ export default function RequestPage() {
                   mode === "link"
                     ? {
                         background: "var(--glide-accent)",
-                        color: "var(--glide-bg)",
+                        color: "var(--glide-on-primary)",
                       }
                     : { color: "var(--glide-muted)" }
                 }
@@ -322,7 +322,7 @@ export default function RequestPage() {
                 className="glide-tap glide-label-mono flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[11px] font-semibold"
                 style={{
                   background: "var(--glide-accent)",
-                  color: "var(--glide-bg)",
+                  color: "var(--glide-on-primary)",
                 }}
               >
                 <Share2 className="h-4 w-4" />

@@ -113,7 +113,7 @@ export function ReceiveQr({ address }: { address: string }) {
           className="glide-tap glide-label-mono flex items-center justify-center gap-1.5 rounded-2xl py-2.5 text-[11px] font-bold disabled:opacity-50"
           style={{
             background: "var(--glide-accent)",
-            color: "var(--glide-bg)",
+            color: "var(--glide-on-primary)",
           }}
         >
           <Share2 className="h-3.5 w-3.5" strokeWidth={2.5} />

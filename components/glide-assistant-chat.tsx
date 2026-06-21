@@ -124,12 +124,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     };
   }, [userId]);
 
-  useEffect(() => {
-    const q = searchParams.get("q")?.trim();
-    if (!q || !hydrated) return;
-    setMessage(q);
-    inputRef.current?.focus();
-  }, [searchParams, hydrated]);
+  const autoSubmittedQRef = useRef<string | null>(null);
 
   const pendingSyncRef = useRef<AbortController | null>(null);
   const pendingTimerRef = useRef<number | null>(null);
@@ -748,6 +743,20 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     scrollToEnd();
   }, [messages, processingAction, scrollToEnd]);
 
+  // Auto-submit a deep-linked prompt (?q=…) so e.g. the Payments tile's
+  // "Split a bill" call actually fires Billy instead of leaving the user
+  // staring at a prefilled input. Clear the URL param so refresh doesn't
+  // re-fire the prompt.
+  useEffect(() => {
+    const q = searchParams.get("q")?.trim();
+    if (!q || !hydrated) return;
+    if (autoSubmittedQRef.current === q) return;
+    autoSubmittedQRef.current = q;
+    setMessage("");
+    router.replace("/ask");
+    void sendToAgent(q);
+  }, [searchParams, hydrated, router, sendToAgent]);
+
   return (
     <div
       className={
@@ -763,7 +772,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
               className="flex h-10 w-10 items-center justify-center rounded-2xl"
               style={{
                 background: "var(--glide-accent)",
-                color: "var(--glide-bg)",
+                color: "var(--glide-on-primary)",
               }}
             >
               <Sparkles className="h-[18px] w-[18px]" />
@@ -864,7 +873,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
             style={{
               background: "var(--glide-accent)",
-              color: "var(--glide-bg)",
+              color: "var(--glide-on-primary)",
             }}
             aria-label="Send"
           >

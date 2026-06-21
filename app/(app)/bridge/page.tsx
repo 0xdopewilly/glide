@@ -8,7 +8,7 @@ import { GlideButton } from "@/components/glide-button";
 import { KitSetupBanner, useCircleReady } from "@/components/kit-setup-banner";
 import { SwipeToConfirm } from "@/components/swipe-to-confirm";
 import { TokenIcon } from "@/components/token-icon";
-import { useWallet } from "@/context/wallet-context";
+import { useBalance, useWalletActions } from "@/context/wallet-context";
 import { BRIDGE_KEY_TO_CHAIN } from "@/lib/chain-meta";
 import type { BridgeNetworkKey } from "@/lib/app-kit";
 import { ArrowDown, Check, ChevronDown } from "lucide-react";
@@ -26,7 +26,8 @@ type Step = "form" | "success";
 
 export default function BridgePage() {
   const router = useRouter();
-  const { bridgeMoney, balance, error, clearError } = useWallet();
+  const { balance } = useBalance();
+  const { bridgeMoney, error, clearError, wallet } = useWalletActions();
   const [network, setNetwork] = useState<BridgeNetworkKey>("base");
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,7 +40,9 @@ export default function BridgePage() {
   const parsed = parseFloat(amount) || 0;
   const { ready: circleReady } = useCircleReady("bridge");
   const overBalance = parsed > balance;
-  const canSubmit = parsed > 0 && !overBalance && !submitting && circleReady;
+  const walletReady = wallet != null;
+  const canSubmit =
+    parsed > 0 && !overBalance && !submitting && circleReady && walletReady;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -73,7 +76,7 @@ export default function BridgePage() {
                 <Check
                   className="h-12 w-12"
                   strokeWidth={2.5}
-                  style={{ color: "var(--glide-bg)" }}
+                  style={{ color: "var(--glide-on-primary)" }}
                 />
               </div>
               <h1 className="glide-label-mono mt-8 text-[13px] font-bold text-[var(--glide-muted)]">
@@ -85,12 +88,25 @@ export default function BridgePage() {
               <p className="glide-label-mono mt-2 text-[11px] font-semibold text-[var(--glide-muted)]">
                 USDC → {networkLabel}
               </p>
-              <GlideButton
-                onClick={() => router.push("/activity")}
-                className="mt-auto mb-8 max-w-sm"
-              >
-                View activity
-              </GlideButton>
+              <div className="mt-auto mb-8 flex w-full max-w-sm flex-col gap-2">
+                <GlideButton onClick={() => router.push("/activity")}>
+                  View activity
+                </GlideButton>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("form");
+                    setAmount("");
+                  }}
+                  className="glide-tap glide-label-mono rounded-full border py-3 text-[12px] font-bold transition-opacity"
+                  style={{
+                    borderColor: "var(--glide-elevated-border)",
+                    color: "var(--glide-text)",
+                  }}
+                >
+                  Bridge again
+                </button>
+              </div>
             </div>
           ) : (
             <div
@@ -160,7 +176,7 @@ export default function BridgePage() {
                     className="flex h-12 w-12 items-center justify-center rounded-full ring-4"
                     style={{
                       background: "var(--glide-accent)",
-                      color: "var(--glide-bg)",
+                      color: "var(--glide-on-primary)",
                       ["--tw-ring-color" as string]: "var(--glide-bg)",
                     }}
                   >
@@ -259,7 +275,9 @@ export default function BridgePage() {
 
                 <div className="mt-8">
                   <SwipeToConfirm
-                    label="Slide to bridge"
+                    label={
+                      !walletReady ? "Setting up wallet…" : "Slide to bridge"
+                    }
                     onConfirm={handleSubmit}
                     disabled={!canSubmit}
                     loading={submitting}
