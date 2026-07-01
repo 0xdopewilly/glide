@@ -31,7 +31,7 @@ const baseElements = {
 
 const lightAppearance = {
   variables: {
-    colorBackground: "transparent",
+    colorBackground: "#FFFFFF",
     colorInputBackground: "#FFFFFF",
     colorInputText: "#062448",
     colorText: "#062448",
@@ -71,7 +71,7 @@ const lightAppearance = {
 
 const darkAppearance = {
   variables: {
-    colorBackground: "transparent",
+    colorBackground: "#0D3568",
     colorInputBackground: "#0A2F5C",
     colorInputText: "#FFFFFF",
     colorText: "#FFFFFF",

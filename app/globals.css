@@ -1149,7 +1149,43 @@ body {
     background: var(--glide-shell);
   }
 
-  /* Clerk auth - theme-safe text/inputs (OTP, labels, social buttons) */
+  /* Clerk auth — global overrides. Rules apply to both `.clerk-auth`
+     (component wrapper) and `.clerk-auth-root` (rootBox element set via
+     appearance.elements.rootBox). The Clerk widget renders many internal
+     containers (card, main, form, footer, footerAction, footerPages,
+     scrollBox, internal-* random hashes) that ship with opaque
+     background defaults from clerk-js CDN CSS. When our page wraps the
+     widget in a card with `var(--glide-surface-elevated)`, those opaque
+     defaults either hide the form (sign-in: content on a dark box) or
+     paint a black rectangle over the footer (sign-up). Force every
+     internal container transparent so the wrapper's surface shows
+     through, then re-assert text/input/button colors. */
+
+  .clerk-auth,
+  .clerk-auth-root,
+  .clerk-auth [class*="cl-rootBox"],
+  .clerk-auth [class*="cl-cardBox"],
+  .clerk-auth [class*="cl-card"]:not([class*="cl-cardBox"]),
+  .clerk-auth [class*="cl-main"],
+  .clerk-auth [class*="cl-form"]:not([class*="cl-formField"]):not([class*="cl-formButton"]):not([class*="cl-formResend"]),
+  .clerk-auth [class*="cl-footer"],
+  .clerk-auth [class*="cl-footerAction"],
+  .clerk-auth [class*="cl-footerPages"],
+  .clerk-auth [class*="cl-header"]:not([class*="cl-headerTitle"]):not([class*="cl-headerSubtitle"]),
+  .clerk-auth [class*="cl-scrollBox"],
+  .clerk-auth [class*="cl-pageScrollBox"],
+  .clerk-auth [class*="cl-socialButtons"]:not([class*="cl-socialButtonsBlockButton"]),
+  .clerk-auth [class*="cl-internal-"] {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure the widget container itself contributes no border/shadow. */
+  .clerk-auth [class*="cl-cardBox"],
+  .clerk-auth [class*="cl-card"]:not([class*="cl-cardBox"]) {
+    border: 0 !important;
+  }
+
   .clerk-auth [class*="cl-headerTitle"] {
     color: var(--glide-text) !important;
   }
@@ -1157,7 +1193,11 @@ body {
   .clerk-auth [class*="cl-headerSubtitle"],
   .clerk-auth [class*="cl-footerActionText"],
   .clerk-auth [class*="cl-dividerText"],
-  .clerk-auth [class*="cl-formFieldLabel"] {
+  .clerk-auth [class*="cl-formFieldLabel"],
+  .clerk-auth [class*="cl-formFieldHintText"],
+  .clerk-auth [class*="cl-identityPreviewText"],
+  .clerk-auth [class*="cl-formHeaderTitle"],
+  .clerk-auth [class*="cl-formHeaderSubtitle"] {
     color: var(--glide-muted) !important;
   }
 
@@ -1175,11 +1215,54 @@ body {
     border-color: var(--glide-border) !important;
   }
 
+  .clerk-auth [class*="cl-socialButtonsBlockButtonText"] {
+    color: var(--glide-text) !important;
+  }
+
+  .clerk-auth [class*="cl-formButtonPrimary"] {
+    background: var(--glide-primary) !important;
+    color: var(--glide-on-primary) !important;
+  }
+
+  .clerk-auth [class*="cl-formButtonPrimary"]:hover {
+    background: var(--glide-primary-hover) !important;
+  }
+
+  .clerk-auth [class*="cl-dividerLine"] {
+    background: var(--glide-border) !important;
+  }
+
   .clerk-auth [class*="cl-footerActionLink"],
   .clerk-auth [class*="cl-formResendCodeLink"],
   .clerk-auth [class*="cl-alternativeMethodsBlockButton"],
   .clerk-auth [class*="cl-identityPreviewEditButton"] {
     color: var(--glide-accent) !important;
+    background: transparent !important;
+  }
+
+  /* Clerk dev-mode + "Secured by" badge at the very bottom of the
+     rendered widget. These sit in `cl-badge`, `cl-logoBox`, or generic
+     `cl-internal-*` boxes and default to an opaque dark chip that
+     shows as a black rectangle on our lifted card. */
+  .clerk-auth [class*="cl-badge"],
+  .clerk-auth [class*="cl-logoBox"],
+  .clerk-auth [class*="cl-poweredByClerk"],
+  .clerk-auth [class*="cl-developmentModeNotice"],
+  .clerk-auth [class*="cl-navbar"],
+  .clerk-auth [class*="cl-page"],
+  .clerk-auth [class*="cl-signInFactorOne"],
+  .clerk-auth [class*="cl-signInStart"],
+  .clerk-auth [class*="cl-signUpStart"] {
+    background: transparent !important;
+    color: var(--glide-muted) !important;
+  }
+
+  /* Nuclear fallback: any Clerk internal container we didn't name above
+     should not paint its own opaque background over our lifted card. Only
+     inputs / primary CTA / social buttons keep their fills (defined above,
+     each with an explicit `background: ...` rule earlier). */
+  .clerk-auth [class^="cl-"]:not([class*="cl-formFieldInput"]):not([class*="cl-otpCodeFieldInput"]):not([class*="cl-formButtonPrimary"]):not([class*="cl-socialButtonsBlockButton"]):not([class*="cl-dividerLine"]) {
+    background-color: transparent !important;
   }
 
   /* Touch / low-end devices - lighter GPU work */
