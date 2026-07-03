@@ -1180,6 +1180,15 @@ body {
     box-shadow: none !important;
   }
 
+  /* Hide Clerk's built-in "Don't have an account? / Already have an account?"
+     switch. Both auth pages render their own branded footer link below the
+     card, so Clerk's is a duplicate. `[class*="cl-footerAction"]` matches the
+     hashed variants (cl-footerAction, __signIn, __signUp) and its text/link
+     children; "Secured by Clerk" lives in cl-logoBox so it stays. */
+  .clerk-auth [class*="cl-footerAction"] {
+    display: none !important;
+  }
+
   /* Ensure the widget container itself contributes no border/shadow. */
   .clerk-auth [class*="cl-cardBox"],
   .clerk-auth [class*="cl-card"]:not([class*="cl-cardBox"]) {
