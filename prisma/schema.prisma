@@ -20,6 +20,10 @@ model User {
   avatarUrl            String?
   circleWalletId       String?       @unique
   circleWalletAddress  String?
+  /// Dedicated "Savings" Circle wallet, provisioned lazily the first time the
+  /// user creates an auto-save automation. Separate from the spending wallet.
+  savingsWalletId      String?       @unique
+  savingsWalletAddress String?
   /// Billy's chat history, last ~80 messages. Synced across devices.
   chatHistory          Json?
   createdAt            DateTime      @default(now())
@@ -31,6 +35,7 @@ model User {
   scheduledTransfers   ScheduledTransfer[]
   notifications        Notification[]
   walletAddresses      WalletAddress[]
+  automationRules      AutomationRule[]
 }
 
 /// Per-chain Circle wallet for Universal Receive (CCTP V2 sweep into Arc).
@@ -164,4 +169,55 @@ model Transaction {
   @@index([userId, createdAt(sort: Desc)])
   @@index([txHash])
   @@index([circleTransactionId])
+}
+
+/// A user-defined automation rule — the Rules Engine. MVP: event-triggered
+/// auto-save ("save N% of every payment received"). Designed to generalize to
+/// schedule- and threshold-triggered rules later (trigger/action are strings).
+model AutomationRule {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Human-readable label, e.g. "Auto-save 10% of income".
+  name      String
+  /// What fires the rule. MVP: "payment_received". Future: "schedule", "threshold".
+  trigger   String
+  /// What the rule does. MVP: "save".
+  action    String
+  /// Percentage 1–100 for percent-based actions (save N%). Null for future
+  /// fixed-amount rules.
+  percent   Int?
+  /// Token the rule operates on.
+  token     String   @default("USDC")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  runs      AutomationRun[]
+
+  @@index([userId, active])
+  @@index([userId, trigger, active])
+}
+
+/// One execution of an AutomationRule — the Automation Dashboard's history.
+/// `sourceRef` is the triggering transaction id; the unique (ruleId, sourceRef)
+/// makes execution idempotent so webhook retries can't double-save.
+model AutomationRun {
+  id          String   @id @default(cuid())
+  ruleId      String
+  rule        AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  userId      String
+  /// "completed" | "failed".
+  status      String
+  /// Plain-language summary, e.g. "Saved $10.00 (10%) from a $100.00 payment".
+  summary     String
+  amountLabel String?
+  /// Triggering source (e.g. the incoming Circle tx id) — idempotency key.
+  sourceRef   String?
+  /// Resulting save-transfer's Circle tx id.
+  resultTxId  String?
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@unique([ruleId, sourceRef])
+  @@index([userId, createdAt(sort: Desc)])
 }
