@@ -7,6 +7,7 @@ import {
   HandCoins,
   QrCode,
   Send,
+  Sparkles,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -49,6 +50,12 @@ const TILES: Tile[] = [
     title: "Schedule",
     description: "Rent, allowances, subs",
     icon: CalendarClock,
+  },
+  {
+    href: "/automations",
+    title: "Automations",
+    description: "Auto-save, rules that run for you",
+    icon: Sparkles,
   },
   {
     href: "/ask?q=Split a bill with my friends",
