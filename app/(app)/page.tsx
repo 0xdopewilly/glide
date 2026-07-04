@@ -14,9 +14,6 @@ import {
   ArrowUp,
   Eye,
   EyeOff,
-  Plus,
-  QrCode,
-  RefreshCw,
   Workflow,
 } from "lucide-react";
 import Link from "next/link";
@@ -60,12 +57,10 @@ export default function HomePage() {
     totalUsd,
     tokens,
     loading,
-    refreshing,
     transactions,
     transactionsLoading,
     error,
     clearError,
-    refresh,
   } = useWallet();
   const { profile } = useProfile();
   const { hideBalance, setHideBalance } = usePrivacy();
@@ -126,86 +121,17 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {/* HERO PORTFOLIO CARD — "Total Portfolio" design.
-            Left: privacy-toggleable portfolio total + 24h change pill.
-            Right: stacked 64x64 square buttons (Add Funds, Scan, Refresh).
-            Sound-wave decoration in the lower area for depth.
-
-            LAYOUT GUARANTEES (do not change without testing):
-            - Section has explicit minHeight so it cannot collapse.
-            - Inner layout uses CSS GRID (1fr auto), not nested flex,
-              so the right column's width is auto-computed from its
-              fixed-width children and never squashes the left side.
-            - Each button is explicit 64x64 inline. */}
+        {/* HERO PORTFOLIO CARD — "Total Portfolio": privacy-toggleable
+            portfolio total + 24h change pill. */}
         <section
           className="relative mt-4 overflow-hidden rounded-3xl border p-5 sm:p-6"
           style={{
             background: "var(--glide-surface-elevated)",
             borderColor: "var(--glide-elevated-border)",
-            minHeight: "220px",
             flexShrink: 0,
           }}
         >
-          {/* Layered curved-wave decoration — bottom-right of card,
-              behind content, fixed-size so it never grows to fill. */}
-          <svg
-            aria-hidden
-            viewBox="0 0 320 100"
-            preserveAspectRatio="none"
-            style={{
-              position: "absolute",
-              bottom: 8,
-              right: 88,
-              width: 240,
-              height: 80,
-              pointerEvents: "none",
-              overflow: "visible",
-            }}
-            fill="none"
-          >
-            {/* Back wave — slow, broad */}
-            <path
-              d="M 0 60 Q 40 20, 80 60 T 160 60 T 240 60 T 320 60"
-              stroke="var(--glide-mesh-wave)"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              style={{ opacity: 0.5 }}
-            />
-            {/* Mid wave — slightly faster */}
-            <path
-              d="M 0 55 Q 32 30, 64 55 T 128 55 T 192 55 T 256 55 T 320 55"
-              stroke="var(--glide-mesh-wave)"
-              strokeWidth={2}
-              strokeLinecap="round"
-              style={{ opacity: 0.75 }}
-            />
-            {/* Foreground wave — tightest, highest contrast */}
-            <path
-              d="M 0 50 Q 25 25, 50 50 T 100 50 T 150 50 T 200 50 T 250 50 T 320 50"
-              stroke="var(--glide-mesh-wave)"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-              style={{ opacity: 1 }}
-            />
-            {/* Dotted underlay — adds the "particle wave" texture */}
-            <path
-              d="M 0 55 Q 32 30, 64 55 T 128 55 T 192 55 T 256 55 T 320 55"
-              stroke="var(--glide-mesh-wave)"
-              strokeWidth={3}
-              strokeLinecap="round"
-              strokeDasharray="0.5 5"
-              style={{ opacity: 0.6 }}
-            />
-          </svg>
-
-          <div
-            className="relative grid gap-4"
-            style={{
-              gridTemplateColumns: "1fr auto",
-              zIndex: 1,
-            }}
-          >
-            {/* LEFT: label, balance, change chip */}
+          <div className="relative">
             <div className="flex min-w-0 flex-col gap-3">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-[color:var(--glide-on-surface-variant)]">
@@ -265,74 +191,6 @@ export default function HomePage() {
                   {Math.abs(portfolioChange).toFixed(2)}% today
                 </span>
               </div>
-            </div>
-
-            {/* RIGHT: 3 stacked 64x64 buttons (explicit width column) */}
-            <div
-              className="flex flex-col gap-2"
-              style={{ width: "64px" }}
-            >
-              <Link
-                href="/receive"
-                prefetch
-                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-transform active:scale-95"
-                style={{
-                  width: "64px",
-                  height: "64px",
-                  background: "var(--glide-surface-elevated)",
-                  borderColor: "var(--glide-elevated-border)",
-                }}
-              >
-                <Plus
-                  className="h-5 w-5 text-[color:var(--glide-primary)]"
-                  strokeWidth={2.25}
-                />
-                <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
-                  Add Funds
-                </span>
-              </Link>
-              <Link
-                href="/send?scan=1"
-                prefetch
-                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-transform active:scale-95"
-                style={{
-                  width: "64px",
-                  height: "64px",
-                  background: "var(--glide-surface-elevated)",
-                  borderColor: "var(--glide-elevated-border)",
-                }}
-              >
-                <QrCode
-                  className="h-5 w-5 text-[color:var(--glide-primary)]"
-                  strokeWidth={2.25}
-                />
-                <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
-                  Scan
-                </span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => void refresh()}
-                disabled={refreshing}
-                aria-label="Refresh balances"
-                className="glide-tap group flex flex-col items-center justify-center rounded-2xl border transition-transform active:scale-95 disabled:opacity-50"
-                style={{
-                  width: "64px",
-                  height: "64px",
-                  background: "var(--glide-surface-elevated)",
-                  borderColor: "var(--glide-elevated-border)",
-                }}
-              >
-                <RefreshCw
-                  className={`h-5 w-5 text-[color:var(--glide-primary)] ${
-                    refreshing ? "animate-spin" : ""
-                  }`}
-                  strokeWidth={2.25}
-                />
-                <span className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
-                  Refresh
-                </span>
-              </button>
             </div>
           </div>
         </section>
