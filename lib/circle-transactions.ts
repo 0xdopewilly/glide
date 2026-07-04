@@ -1,3 +1,4 @@
+import { runSaveRulesForReceive } from "@/lib/automations";
 import { createCircleClient } from "@/lib/circle";
 import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
@@ -212,6 +213,26 @@ export async function syncCircleTransactionsToDb(
         );
       } catch (err) {
         console.error("[Glide] push notify:", err);
+      }
+    }
+
+    // Run auto-save rules on a new incoming payment. Safe on the spending
+    // wallet only, idempotent per (rule, tx), and never throws — wrapped so a
+    // rule failure can't break transaction sync.
+    if (isNew && mapped.kind === "receive" && mapped.variant === "credit") {
+      try {
+        const receivedAmount = Math.abs(
+          parseFloat(mapped.amount.replace(/[^0-9.]/g, "")),
+        );
+        await runSaveRulesForReceive({
+          userId,
+          walletId,
+          receivedAmount,
+          token,
+          sourceRef: row.id,
+        });
+      } catch (err) {
+        console.error("[Glide] auto-save trigger:", err);
       }
     }
   }

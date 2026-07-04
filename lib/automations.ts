@@ -1,4 +1,7 @@
+import { createCircleClient, GLIDE_BLOCKCHAIN } from "@/lib/circle";
+import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
+import { arcTokenAddressForSymbol } from "@/lib/tokens";
 import { createGlideWallet, fetchWalletById } from "@/lib/wallet-service";
 import type { AutomationRule, AutomationRun } from "@prisma/client";
 
@@ -130,4 +133,117 @@ export async function setRuleActive(
     data: { active },
   });
   return result.count > 0;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+/** Fire the user's active save-on-receive rules for one incoming payment.
+ * Called from the receive/credit path.
+ *
+ * Safety:
+ * - Idempotent per (rule, sourceRef) via the AutomationRun unique index, so
+ *   webhook/poll retries never double-save.
+ * - Only the MAIN spending wallet's receives trigger a save. The save transfer
+ *   is main -> savings; the savings wallet's own credit is never synced through
+ *   this path (userOwnsWallet checks circleWalletId), so there is no loop.
+ * - Never throws — per-rule failures are recorded as failed runs for the
+ *   dashboard. The caller wraps this defensively regardless. */
+export async function runSaveRulesForReceive(input: {
+  userId: string;
+  walletId: string;
+  receivedAmount: number;
+  token: string;
+  sourceRef: string;
+}): Promise<void> {
+  const token = input.token.toUpperCase();
+  if (token !== "USDC" && token !== "EURC") return;
+  if (!Number.isFinite(input.receivedAmount) || input.receivedAmount <= 0) {
+    return;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: input.userId },
+    select: { circleWalletId: true, circleWalletAddress: true },
+  });
+  // Loop guard: only the spending wallet's receives count.
+  if (
+    !user?.circleWalletId ||
+    !user.circleWalletAddress ||
+    user.circleWalletId !== input.walletId
+  ) {
+    return;
+  }
+  const mainWalletAddress = user.circleWalletAddress;
+
+  const rules = await prisma.automationRule.findMany({
+    where: {
+      userId: input.userId,
+      trigger: SAVE_TRIGGER,
+      action: SAVE_ACTION,
+      token,
+      active: true,
+    },
+  });
+
+  for (const rule of rules) {
+    if (!rule.percent || rule.percent < 1) continue;
+    const amount = round2((input.receivedAmount * rule.percent) / 100);
+    if (amount <= 0) continue;
+
+    // Claim idempotency first: one run per (rule, sourceRef).
+    let runId: string;
+    try {
+      const run = await prisma.automationRun.create({
+        data: {
+          ruleId: rule.id,
+          userId: input.userId,
+          status: "pending",
+          summary: `Auto-saving ${formatStableAmount(amount, token)}…`,
+          amountLabel: `+${formatStableAmount(amount, token)}`,
+          sourceRef: input.sourceRef,
+        },
+      });
+      runId = run.id;
+    } catch (e) {
+      if ((e as { code?: string }).code === "P2002") continue; // already saved
+      console.error("[Glide] auto-save run claim:", e);
+      continue;
+    }
+
+    try {
+      const savings = await getOrCreateSavingsWallet(input.userId);
+      const initialized = createCircleClient();
+      if ("error" in initialized) throw new Error(initialized.error);
+
+      const res = await initialized.client.createTransaction({
+        walletAddress: mainWalletAddress,
+        blockchain: GLIDE_BLOCKCHAIN,
+        tokenAddress: arcTokenAddressForSymbol(token),
+        destinationAddress: savings.address,
+        amount: [amount.toFixed(2)],
+        fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+      });
+
+      await prisma.automationRun.update({
+        where: { id: runId },
+        data: {
+          status: "completed",
+          summary: `Saved ${formatStableAmount(amount, token)} (${rule.percent}%) from a ${formatStableAmount(input.receivedAmount, token)} payment`,
+          resultTxId: res.data?.id ?? null,
+        },
+      });
+    } catch (err) {
+      await prisma.automationRun.update({
+        where: { id: runId },
+        data: {
+          status: "failed",
+          summary: `Couldn't auto-save from a ${formatStableAmount(input.receivedAmount, token)} payment`,
+          error:
+            err instanceof Error ? err.message.slice(0, 500) : "unknown error",
+        },
+      });
+    }
+  }
 }
