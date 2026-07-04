@@ -478,6 +478,42 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         }
         return;
       }
+      if (intent.action === "rule") {
+        try {
+          const res = await fetch("/api/automations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              percent: intent.percent,
+              token: intent.token ?? "USDC",
+            }),
+          });
+          const data = (await res.json()) as { error?: string };
+          if (res.ok) {
+            pushMessage({
+              id: `rule-${Date.now()}`,
+              role: "assistant",
+              kind: "text",
+              text: `Done — auto-save is on. I'll move ${intent.percent}% of every ${intent.token ?? "USDC"} payment you receive into your Savings, hands-free. Manage it anytime in Automations.`,
+            });
+          } else {
+            pushMessage({
+              id: `rule-err-${Date.now()}`,
+              role: "assistant",
+              kind: "text",
+              text: data.error ?? "Couldn't set up that automation.",
+            });
+          }
+        } catch {
+          pushMessage({
+            id: `rule-err-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: "Couldn't set up that automation. Try again.",
+          });
+        }
+        return;
+      }
       if (intent.action === "split") {
         const total = parseFloat(intent.total);
         const token = intent.token ?? "USDC";

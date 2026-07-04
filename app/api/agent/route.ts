@@ -102,6 +102,13 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
       },
     };
   }
+  if (intent.action === "rule") {
+    const token = intent.token ?? "USDC";
+    return {
+      reply: `Setting up auto-save — I'll move ${intent.percent}% of every ${token} payment you receive into your Savings…`,
+      intent,
+    };
+  }
   if (intent.action === "split") {
     const total = parseMoneyAmount(intent.total);
     if (total === null || total <= 0) {
