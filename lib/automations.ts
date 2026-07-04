@@ -1,6 +1,7 @@
 import { createCircleClient, GLIDE_BLOCKCHAIN } from "@/lib/circle";
 import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
+import { notifyAutoSave } from "@/lib/push";
 import { arcTokenAddressForSymbol } from "@/lib/tokens";
 import { createGlideWallet, fetchWalletById } from "@/lib/wallet-service";
 import type { AutomationRule, AutomationRun } from "@prisma/client";
@@ -234,6 +235,17 @@ export async function runSaveRulesForReceive(input: {
           resultTxId: res.data?.id ?? null,
         },
       });
+
+      try {
+        await notifyAutoSave(
+          input.userId,
+          formatStableAmount(amount, token),
+          formatStableAmount(input.receivedAmount, token),
+          rule.percent,
+        );
+      } catch (err) {
+        console.error("[Glide] auto-save notify:", err);
+      }
     } catch (err) {
       await prisma.automationRun.update({
         where: { id: runId },

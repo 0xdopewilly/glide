@@ -6,7 +6,8 @@ export type NotificationType =
   | "payment_request"
   | "request_paid"
   | "swap_complete"
-  | "bridge_complete";
+  | "bridge_complete"
+  | "automation_saved";
 
 export type GlideNotification = {
   id: string;

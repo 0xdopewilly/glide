@@ -110,6 +110,22 @@ export async function notifySwapComplete(userId: string, amount: string) {
   });
 }
 
+/** Notify a user that an auto-save rule ran — push + in-app inbox. Amount
+ * labels are already formatted (e.g. "$10.00"). */
+export async function notifyAutoSave(
+  userId: string,
+  savedAmountLabel: string,
+  fromAmountLabel: string,
+  percent: number,
+) {
+  await notifyUser(userId, {
+    type: "automation_saved",
+    title: "Auto-saved to Savings",
+    body: `Saved ${savedAmountLabel} (${percent}%) from a ${fromAmountLabel} payment.`,
+    url: "/automations",
+  });
+}
+
 export async function notifyPaymentRequest(
   targetUserId: string,
   amount: string,

@@ -6,6 +6,7 @@ import {
   Bell,
   Globe2,
   HandCoins,
+  Sparkles,
 } from "lucide-react";
 
 const DEFAULT_UI = {
@@ -36,6 +37,10 @@ export const NOTIFICATION_UI: Record<
   bridge_complete: {
     Icon: Globe2,
     accent: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  },
+  automation_saved: {
+    Icon: Sparkles,
+    accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   },
 };
 
