@@ -1,11 +1,13 @@
 import type { NotificationType } from "@/lib/notifications";
 import type { LucideIcon } from "lucide-react";
 import {
+  AlertTriangle,
   ArrowDownLeft,
   ArrowLeftRight,
   Bell,
   Globe2,
   HandCoins,
+  ShieldAlert,
   Sparkles,
 } from "lucide-react";
 
@@ -41,6 +43,14 @@ export const NOTIFICATION_UI: Record<
   automation_saved: {
     Icon: Sparkles,
     accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  },
+  approval_required: {
+    Icon: ShieldAlert,
+    accent: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  },
+  automation_failed: {
+    Icon: AlertTriangle,
+    accent: "bg-red-500/15 text-red-600 dark:text-red-400",
   },
 };
 

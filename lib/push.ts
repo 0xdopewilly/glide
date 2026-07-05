@@ -126,6 +126,34 @@ export async function notifyAutoSave(
   });
 }
 
+/** An automation is waiting for the user's approval before it executes. */
+export async function notifyApprovalRequest(
+  userId: string,
+  amountLabel: string,
+  toLabel: string,
+  reason: string,
+) {
+  await notifyUser(userId, {
+    type: "approval_required",
+    title: "Approval needed",
+    body: `An automation wants to send ${amountLabel} to ${toLabel}. ${reason}. Tap to review.`,
+    url: "/automations",
+  });
+}
+
+/** An automation tried to run but failed. */
+export async function notifyAutomationFailed(
+  userId: string,
+  what: string,
+) {
+  await notifyUser(userId, {
+    type: "automation_failed",
+    title: "Automation didn't run",
+    body: `${what} Check your Automations for details.`,
+    url: "/automations",
+  });
+}
+
 export async function notifyPaymentRequest(
   targetUserId: string,
   amount: string,

@@ -2,6 +2,7 @@ import { createCircleClient, GLIDE_BLOCKCHAIN } from "@/lib/circle";
 import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
 import { notifyAutoSave } from "@/lib/push";
+import { resolveRecipient } from "@/lib/resolve-recipient";
 import { arcTokenAddressForSymbol } from "@/lib/tokens";
 import { createGlideWallet, fetchWalletById } from "@/lib/wallet-service";
 import type { AutomationRule, AutomationRun } from "@prisma/client";
@@ -48,6 +49,22 @@ export async function getOrCreateSavingsWallet(
     },
   });
   return { id: wallet.id, address: wallet.address };
+}
+
+/** Resolve an automation `destination` to an on-chain address + display label.
+ * "savings" -> the user's Savings wallet; otherwise a 0x address, @username, or
+ * saved contact via resolveRecipient. */
+export async function resolveAutomationDestination(
+  userId: string,
+  destination: string,
+): Promise<{ address: string; label: string } | null> {
+  if (destination === "savings") {
+    const savings = await getOrCreateSavingsWallet(userId);
+    return { address: savings.address, label: "Savings" };
+  }
+  const resolved = await resolveRecipient(userId, destination);
+  if (!resolved) return null;
+  return { address: resolved.address, label: resolved.label ?? destination };
 }
 
 /** Create (or replace) the user's "save N% of every payment" rule. Provisions
