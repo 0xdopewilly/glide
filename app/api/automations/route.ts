@@ -1,5 +1,10 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
-import { createSaveOnReceiveRule, listAutomations } from "@/lib/automations";
+import {
+  createSaveOnReceiveRule,
+  createScheduleRule,
+  createThresholdRule,
+  listAutomations,
+} from "@/lib/automations";
 import { NextResponse } from "next/server";
 
 /** GET - the user's automation rules + recent run history (dashboard). */
@@ -25,17 +30,45 @@ export async function POST(req: Request) {
   }
 
   const b = (body ?? {}) as Record<string, unknown>;
-  const percent =
-    typeof b.percent === "number" ? b.percent : Number(b.percent);
+  const type = typeof b.type === "string" ? b.type : "save_on_receive";
   const token = typeof b.token === "string" ? b.token : undefined;
+  const str = (v: unknown) =>
+    typeof v === "string" ? v : typeof v === "number" ? String(v) : undefined;
 
   try {
-    const { rule, savings } = await createSaveOnReceiveRule({
-      userId: session.userId,
-      percent,
-      token,
-    });
-    return NextResponse.json({ rule, savingsWalletAddress: savings.address });
+    if (type === "save_on_receive") {
+      const percent =
+        typeof b.percent === "number" ? b.percent : Number(b.percent);
+      const { rule, savings } = await createSaveOnReceiveRule({
+        userId: session.userId,
+        percent,
+        token,
+      });
+      return NextResponse.json({ rule, savingsWalletAddress: savings.address });
+    }
+    if (type === "scheduled_send") {
+      const rule = await createScheduleRule({
+        userId: session.userId,
+        amount: str(b.amount) ?? "",
+        destination: str(b.destination) ?? "",
+        recipientLabel: str(b.recipientLabel),
+        frequency: str(b.frequency) ?? "",
+        token,
+      });
+      return NextResponse.json({ rule });
+    }
+    if (type === "threshold_save") {
+      const rule = await createThresholdRule({
+        userId: session.userId,
+        thresholdAmount: str(b.thresholdAmount) ?? "",
+        token,
+      });
+      return NextResponse.json({ rule });
+    }
+    return NextResponse.json(
+      { error: `Unknown automation type "${type}"` },
+      { status: 400 },
+    );
   } catch (err) {
     return NextResponse.json(
       {

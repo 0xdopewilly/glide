@@ -3,6 +3,11 @@ import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
 import { notifyAutoSave } from "@/lib/push";
 import { resolveRecipient } from "@/lib/resolve-recipient";
+import {
+  isScheduleFrequency,
+  nextRunFromNow,
+  scheduleFrequencyLabel,
+} from "@/lib/scheduled-transfers";
 import { arcTokenAddressForSymbol } from "@/lib/tokens";
 import { createGlideWallet, fetchWalletById } from "@/lib/wallet-service";
 import type { AutomationRule, AutomationRun } from "@prisma/client";
@@ -13,6 +18,13 @@ export type SavingsWallet = { id: string; address: string };
  * strings so the engine can grow to schedule/threshold triggers later. */
 export const SAVE_TRIGGER = "payment_received";
 export const SAVE_ACTION = "save";
+export const SCHEDULE_TRIGGER = "schedule";
+export const THRESHOLD_TRIGGER = "threshold";
+export const SEND_ACTION = "send";
+
+function narrowToken(token?: string): "USDC" | "EURC" {
+  return (token ?? "USDC").toUpperCase() === "EURC" ? "EURC" : "USDC";
+}
 
 /** Lazily provision the user's dedicated Savings Circle wallet (an Arc SCA,
  * same as the spending wallet). Idempotent — returns the existing one, and
@@ -110,6 +122,83 @@ export async function createSaveOnReceiveRule(input: {
   });
 
   return { rule, savings };
+}
+
+/** Schedule rule: pay a fixed amount to a destination on a cadence (rent,
+ * payroll, subscriptions). Executed by the cron runner. */
+export async function createScheduleRule(input: {
+  userId: string;
+  amount: string;
+  destination: string;
+  recipientLabel?: string;
+  frequency: string;
+  token?: string;
+}): Promise<AutomationRule> {
+  const amountNum = Number(input.amount);
+  if (!Number.isFinite(amountNum) || amountNum <= 0) {
+    throw new Error("Amount must be greater than 0.");
+  }
+  if (!isScheduleFrequency(input.frequency)) {
+    throw new Error("Frequency must be daily, weekly, or monthly.");
+  }
+  const destination = input.destination.trim();
+  if (!destination) throw new Error("A destination is required.");
+  const token = narrowToken(input.token);
+  const label = input.recipientLabel?.trim() || destination;
+  return prisma.automationRule.create({
+    data: {
+      userId: input.userId,
+      name: `Pay ${formatStableAmount(amountNum, token)} to ${label} ${scheduleFrequencyLabel(input.frequency).toLowerCase()}`,
+      trigger: SCHEDULE_TRIGGER,
+      action: SEND_ACTION,
+      amount: amountNum.toFixed(2),
+      destination,
+      recipientLabel: label,
+      frequency: input.frequency,
+      nextRunAt: nextRunFromNow(input.frequency),
+      token,
+      active: true,
+    },
+  });
+}
+
+/** Threshold rule: keep the spending balance at/under a ceiling and sweep the
+ * excess into Savings. Evaluated by the cron runner. One active rule per
+ * (user, token). */
+export async function createThresholdRule(input: {
+  userId: string;
+  thresholdAmount: string;
+  token?: string;
+}): Promise<AutomationRule> {
+  const threshold = Number(input.thresholdAmount);
+  if (!Number.isFinite(threshold) || threshold < 0) {
+    throw new Error("Threshold must be 0 or more.");
+  }
+  const token = narrowToken(input.token);
+  await getOrCreateSavingsWallet(input.userId);
+  await prisma.automationRule.updateMany({
+    where: {
+      userId: input.userId,
+      trigger: THRESHOLD_TRIGGER,
+      action: SAVE_ACTION,
+      token,
+      active: true,
+    },
+    data: { active: false },
+  });
+  return prisma.automationRule.create({
+    data: {
+      userId: input.userId,
+      name: `Keep ${token} balance under ${formatStableAmount(threshold, token)} — sweep extra to Savings`,
+      trigger: THRESHOLD_TRIGGER,
+      action: SAVE_ACTION,
+      thresholdAmount: threshold.toFixed(2),
+      destination: "savings",
+      recipientLabel: "Savings",
+      token,
+      active: true,
+    },
+  });
 }
 
 export type AutomationsView = {

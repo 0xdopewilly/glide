@@ -1,3 +1,4 @@
+import { runDueScheduleRules, runThresholdSweeps } from "@/lib/automation-cron";
 import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
 import { ARC_USDC_TOKEN_ADDRESS } from "@/lib/tokens";
 import { resolveRecipient } from "@/lib/resolve-recipient";
@@ -96,5 +97,25 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ processed: results.length, results });
+  // Automation Rules Engine: schedule sends + threshold sweeps. Wrapped so a
+  // failure here can't break the legacy scheduled-transfer processing above.
+  let scheduleRules: unknown = [];
+  let thresholdSweeps: unknown = [];
+  try {
+    scheduleRules = await runDueScheduleRules();
+  } catch (err) {
+    console.error("[Glide] schedule-rules cron:", err);
+  }
+  try {
+    thresholdSweeps = await runThresholdSweeps();
+  } catch (err) {
+    console.error("[Glide] threshold-sweeps cron:", err);
+  }
+
+  return NextResponse.json({
+    processed: results.length,
+    results,
+    scheduleRules,
+    thresholdSweeps,
+  });
 }
