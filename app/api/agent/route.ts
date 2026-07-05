@@ -104,10 +104,29 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
   }
   if (intent.action === "rule") {
     const token = intent.token ?? "USDC";
-    return {
-      reply: `Setting up auto-save — I'll move ${intent.percent}% of every ${token} payment you receive into your Savings…`,
-      intent,
-    };
+    if (intent.ruleType === "save_on_receive") {
+      return {
+        reply: `Setting up auto-save — ${intent.percent}% of every ${token} payment into your Savings…`,
+        intent,
+      };
+    }
+    if (intent.ruleType === "scheduled_send") {
+      const who =
+        intent.recipientName ??
+        (intent.destination.startsWith("0x")
+          ? `${intent.destination.slice(0, 8)}…`
+          : `@${intent.destination}`);
+      return {
+        reply: `Scheduling ${token} $${intent.amount} to ${who}, ${intent.frequency}…`,
+        intent,
+      };
+    }
+    if (intent.ruleType === "threshold_save") {
+      return {
+        reply: `Setting a rule to keep your ${token} balance under $${intent.thresholdAmount} and sweep the extra into Savings…`,
+        intent,
+      };
+    }
   }
   if (intent.action === "split") {
     const total = parseMoneyAmount(intent.total);

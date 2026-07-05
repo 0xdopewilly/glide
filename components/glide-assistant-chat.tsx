@@ -479,14 +479,40 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         return;
       }
       if (intent.action === "rule") {
+        const token = intent.token ?? "USDC";
+        let body: Record<string, unknown>;
+        let successText: string;
+        if (intent.ruleType === "scheduled_send") {
+          const who = intent.recipientName
+            ? intent.recipientName
+            : intent.destination.startsWith("0x")
+              ? intent.destination
+              : `@${intent.destination}`;
+          body = {
+            type: "scheduled_send",
+            amount: intent.amount,
+            destination: intent.destination,
+            recipientLabel: intent.recipientName,
+            frequency: intent.frequency,
+            token,
+          };
+          successText = `Done — I'll send ${token} $${intent.amount} to ${who} ${intent.frequency}. Manage it in Automations.`;
+        } else if (intent.ruleType === "threshold_save") {
+          body = {
+            type: "threshold_save",
+            thresholdAmount: intent.thresholdAmount,
+            token,
+          };
+          successText = `Done — I'll keep your ${token} balance under $${intent.thresholdAmount} and sweep the extra into Savings. Manage it in Automations.`;
+        } else {
+          body = { type: "save_on_receive", percent: intent.percent, token };
+          successText = `Done — auto-save is on. I'll move ${intent.percent}% of every ${token} payment you receive into your Savings, hands-free. Manage it in Automations.`;
+        }
         try {
           const res = await fetch("/api/automations", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              percent: intent.percent,
-              token: intent.token ?? "USDC",
-            }),
+            body: JSON.stringify(body),
           });
           const data = (await res.json()) as { error?: string };
           if (res.ok) {
@@ -494,7 +520,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
               id: `rule-${Date.now()}`,
               role: "assistant",
               kind: "text",
-              text: `Done — auto-save is on. I'll move ${intent.percent}% of every ${intent.token ?? "USDC"} payment you receive into your Savings, hands-free. Manage it anytime in Automations.`,
+              text: successText,
             });
           } else {
             pushMessage({
