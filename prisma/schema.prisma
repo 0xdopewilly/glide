@@ -36,6 +36,8 @@ model User {
   notifications        Notification[]
   walletAddresses      WalletAddress[]
   automationRules      AutomationRule[]
+  approvalPolicy       ApprovalPolicy?
+  pendingApprovals     PendingApproval[]
 }
 
 /// Per-chain Circle wallet for Universal Receive (CCTP V2 sweep into Arc).
@@ -184,9 +186,24 @@ model AutomationRule {
   trigger   String
   /// What the rule does. MVP: "save".
   action    String
-  /// Percentage 1–100 for percent-based actions (save N%). Null for future
-  /// fixed-amount rules.
+  /// Percentage 1–100 for percent-based actions (save N%). Null otherwise.
   percent   Int?
+  /// Fixed amount for schedule send actions (e.g. rent "1200.00").
+  amount          String?
+  /// Destination for send/threshold actions: 0x address, @username, or the
+  /// sentinel "savings".
+  destination     String?
+  /// Display label for the destination (e.g. "@landlord", "Savings").
+  recipientLabel  String?
+  /// Schedule cadence for trigger "schedule": "daily" | "weekly" | "monthly".
+  frequency       String?
+  /// Next fire time for schedule rules (cron picks these up).
+  nextRunAt       DateTime?
+  /// Last execution time (bookkeeping / dashboard).
+  lastRunAt       DateTime?
+  /// Threshold ceiling for trigger "threshold": keep balance at/under this and
+  /// sweep the excess to savings.
+  thresholdAmount String?
   /// Token the rule operates on.
   token     String   @default("USDC")
   active    Boolean  @default(true)
@@ -196,6 +213,7 @@ model AutomationRule {
 
   @@index([userId, active])
   @@index([userId, trigger, active])
+  @@index([trigger, active, nextRunAt])
 }
 
 /// One execution of an AutomationRule — the Automation Dashboard's history.
@@ -220,4 +238,46 @@ model AutomationRun {
 
   @@unique([ruleId, sourceRef])
   @@index([userId, createdAt(sort: Desc)])
+}
+
+/// Per-user permissions for automated actions (Approval & Permissions Engine).
+/// Automations at/under autoApproveUnder execute automatically; larger ones (or
+/// new-recipient payments when required) create a PendingApproval instead.
+model ApprovalPolicy {
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// USD amount; automated actions at/under this auto-approve. Null = approve all.
+  autoApproveUnder       String?
+  /// Require approval when an automation pays a recipient not in the user's contacts.
+  requireForNewRecipient Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+/// An automated action held for the user's explicit approval (F3).
+model PendingApproval {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Originating rule, if any.
+  ruleId         String?
+  /// The action awaiting approval: "send" | "save".
+  action         String
+  amount         String
+  token          String   @default("USDC")
+  destination    String
+  recipientLabel String?
+  /// Why approval is required, e.g. "Above your $500 auto-approve limit".
+  reason         String
+  /// pending | approved | rejected | executed | failed
+  status         String   @default("pending")
+  /// Idempotency key for the triggering event.
+  sourceRef      String?
+  resultTxId     String?
+  error          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId, status, createdAt(sort: Desc)])
 }
