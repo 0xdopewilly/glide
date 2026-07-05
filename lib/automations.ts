@@ -201,16 +201,60 @@ export async function createThresholdRule(input: {
   });
 }
 
+export type AutomationInsights = {
+  /** Automations that have run successfully = manual tasks eliminated. */
+  completed: number;
+  activeRules: number;
+  recurringPayments: number;
+  /** Approx total moved into Savings by save/threshold rules (numeric). */
+  totalSaved: number;
+};
+
+/** Value automation has created for the user (F7). Sums are approximate for
+ * mixed-currency histories (labelled in the dashboard as an estimate). */
+export async function computeInsights(
+  userId: string,
+): Promise<AutomationInsights> {
+  const [runs, activeRules] = await Promise.all([
+    prisma.automationRun.findMany({
+      where: { userId, status: "completed" },
+      select: {
+        amountLabel: true,
+        rule: { select: { action: true, trigger: true } },
+      },
+    }),
+    prisma.automationRule.count({ where: { userId, active: true } }),
+  ]);
+
+  let totalSaved = 0;
+  let recurringPayments = 0;
+  for (const r of runs) {
+    if (r.rule?.action === SAVE_ACTION) {
+      const n = parseFloat((r.amountLabel ?? "").replace(/[^0-9.]/g, ""));
+      if (Number.isFinite(n)) totalSaved += n;
+    }
+    if (r.rule?.trigger === SCHEDULE_TRIGGER) recurringPayments++;
+  }
+
+  return {
+    completed: runs.length,
+    activeRules,
+    recurringPayments,
+    totalSaved: Math.round(totalSaved * 100) / 100,
+  };
+}
+
 export type AutomationsView = {
   rules: AutomationRule[];
   runs: AutomationRun[];
   savingsWalletAddress: string | null;
+  insights: AutomationInsights;
 };
 
 /** Everything the Automation Dashboard needs: rules (active first) + recent
- * run history + the Savings wallet address. */
+ * run history + Savings address + insights. */
 export async function listAutomations(userId: string): Promise<AutomationsView> {
-  const [rules, runs, user] = await Promise.all([
+  const [rules, runs, user, insights] = await Promise.all([
     prisma.automationRule.findMany({
       where: { userId },
       orderBy: [{ active: "desc" }, { createdAt: "desc" }],
@@ -224,8 +268,14 @@ export async function listAutomations(userId: string): Promise<AutomationsView> 
       where: { id: userId },
       select: { savingsWalletAddress: true },
     }),
+    computeInsights(userId),
   ]);
-  return { rules, runs, savingsWalletAddress: user?.savingsWalletAddress ?? null };
+  return {
+    rules,
+    runs,
+    savingsWalletAddress: user?.savingsWalletAddress ?? null,
+    insights,
+  };
 }
 
 /** Ownership-scoped activate/deactivate. Returns false if the rule isn't the
