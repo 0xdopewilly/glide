@@ -1,5 +1,6 @@
 "use client";
 
+import { inputClassName } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
 import { AUTOMATION_TEMPLATES } from "@/lib/automation-templates";
 import { Sparkles } from "lucide-react";
@@ -62,12 +63,16 @@ export default function AutomationsPage() {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [limit, setLimit] = useState("");
+  const [requireNewRecipient, setRequireNewRecipient] = useState(false);
+  const [savingPolicy, setSavingPolicy] = useState(false);
 
   const load = async () => {
     try {
-      const [aRes, pRes] = await Promise.all([
+      const [aRes, pRes, polRes] = await Promise.all([
         fetch("/api/automations"),
         fetch("/api/approvals"),
+        fetch("/api/approvals/policy"),
       ]);
       const a = (await aRes.json()) as {
         rules?: Rule[];
@@ -75,12 +80,37 @@ export default function AutomationsPage() {
         insights?: Insights;
       };
       const p = (await pRes.json()) as { pending?: Approval[] };
+      const pol = (await polRes.json()) as {
+        policy?: {
+          autoApproveUnder?: string | null;
+          requireForNewRecipient?: boolean;
+        } | null;
+      };
       setRules(a.rules ?? []);
       setRuns(a.runs ?? []);
       setInsights(a.insights ?? null);
       setApprovals(p.pending ?? []);
+      setLimit(pol.policy?.autoApproveUnder ?? "");
+      setRequireNewRecipient(pol.policy?.requireForNewRecipient ?? false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const savePolicy = async () => {
+    setSavingPolicy(true);
+    try {
+      await fetch("/api/approvals/policy", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          autoApproveUnder: limit.trim() === "" ? null : limit.trim(),
+          requireForNewRecipient: requireNewRecipient,
+        }),
+      });
+      await load();
+    } finally {
+      setSavingPolicy(false);
     }
   };
 
@@ -319,6 +349,54 @@ export default function AutomationsPage() {
             </ul>
           </>
         ) : null}
+
+        {/* Permissions & approvals policy */}
+        <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+          Permissions
+        </p>
+        <div className="mt-3 rounded-2xl border p-4" style={cardStyle}>
+          <label
+            htmlFor="auto-approve-limit"
+            className="block text-[13px] font-semibold text-[var(--glide-text)]"
+          >
+            Auto-approve automations under
+          </label>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-[var(--glide-muted)]">$</span>
+            <input
+              id="auto-approve-limit"
+              inputMode="decimal"
+              value={limit}
+              onChange={(e) => setLimit(e.target.value)}
+              placeholder="No limit"
+              className={inputClassName}
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-[var(--glide-muted)]">
+            Automated payments above this ask for your approval first. Leave blank
+            to auto-approve everything.
+          </p>
+          <label className="mt-4 flex items-center justify-between gap-3">
+            <span className="text-[13px] font-medium text-[var(--glide-text)]">
+              Approve payments to new recipients
+            </span>
+            <input
+              type="checkbox"
+              checked={requireNewRecipient}
+              onChange={(e) => setRequireNewRecipient(e.target.checked)}
+              className="h-5 w-5 accent-[var(--glide-primary)]"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => void savePolicy()}
+            disabled={savingPolicy}
+            className="glide-tap mt-4 w-full rounded-full py-2.5 text-[13px] font-bold disabled:opacity-50"
+            style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
+          >
+            {savingPolicy ? "Saving…" : "Save permissions"}
+          </button>
+        </div>
 
         {/* Run history */}
         <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
