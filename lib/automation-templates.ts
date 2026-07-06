@@ -50,7 +50,7 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
     description: "Pay your team on a recurring schedule.",
     emoji: "🏢",
     mode: "assisted",
-    prompt: "Set up weekly payroll: send $",
+    prompt: "Set up weekly payroll",
   },
   {
     id: "family-allowance",
@@ -58,7 +58,7 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
     description: "Send an allowance on a schedule.",
     emoji: "👨‍👩‍👧",
     mode: "assisted",
-    prompt: "Send a weekly allowance of $20 to @",
+    prompt: "Set up a weekly allowance",
   },
   {
     id: "subscription",
@@ -66,6 +66,6 @@ export const AUTOMATION_TEMPLATES: AutomationTemplate[] = [
     description: "Schedule a recurring subscription payment.",
     emoji: "🔁",
     mode: "assisted",
-    prompt: "Pay $ every month to @",
+    prompt: "Set up a monthly subscription payment",
   },
 ];

@@ -117,60 +117,74 @@ export async function executeGatedAutomation(input: {
     }
   }
 
-  const dest = await resolveAutomationDestination(input.userId, input.destination);
-  if (!dest) {
-    if (runId) {
-      await prisma.automationRun.update({
-        where: { id: runId },
-        data: {
-          status: "failed",
-          summary: `Couldn't resolve "${input.destination}"`,
-          error: "unresolved destination",
-        },
-      });
-    }
-    return { status: "failed", error: "unresolved destination" };
-  }
-
-  const reason = await approvalReason(input.userId, {
-    amount: input.amount,
-    destinationAddress: dest.address,
-    isSavings: input.destination === "savings",
-  });
-
-  if (reason) {
-    const approval = await prisma.pendingApproval.create({
-      data: {
-        userId: input.userId,
-        ruleId: input.ruleId ?? null,
-        action: input.action,
-        amount: input.amount.toFixed(precision(token)),
-        token,
-        destination: dest.address,
-        recipientLabel: dest.label,
-        reason,
-        sourceRef: input.sourceRef,
-        status: "pending",
-      },
-    });
-    if (runId) {
-      await prisma.automationRun.update({
-        where: { id: runId },
-        data: {
-          status: "held",
-          summary: `Awaiting approval — send ${amountLabel} to ${dest.label}`,
-        },
-      });
-    }
-    try {
-      await notifyApprovalRequest(input.userId, amountLabel, dest.label, reason);
-    } catch (e) {
-      console.error("[Glide] approval notify:", e);
-    }
-    return { status: "pending_approval", approvalId: approval.id };
-  }
-
+  // Everything after the idempotency claim is wrapped so this function truly
+  // never throws — a DB/Circle/resolver error becomes a recorded failure + a
+  // notification, and can never abort the cron batch mid-loop.
   try {
+    const dest = await resolveAutomationDestination(
+      input.userId,
+      input.destination,
+    );
+    if (!dest) {
+      if (runId) {
+        await prisma.automationRun.update({
+          where: { id: runId },
+          data: {
+            status: "failed",
+            summary: `Couldn't resolve "${input.destination}"`,
+            error: "unresolved destination",
+          },
+        });
+      }
+      try {
+        await notifyAutomationFailed(
+          input.userId,
+          `An automation couldn't find where to send ${amountLabel}.`,
+        );
+      } catch (e) {
+        console.error("[Glide] fail notify:", e);
+      }
+      return { status: "failed", error: "unresolved destination" };
+    }
+
+    const reason = await approvalReason(input.userId, {
+      amount: input.amount,
+      destinationAddress: dest.address,
+      isSavings: input.destination === "savings",
+    });
+
+    if (reason) {
+      const approval = await prisma.pendingApproval.create({
+        data: {
+          userId: input.userId,
+          ruleId: input.ruleId ?? null,
+          action: input.action,
+          amount: input.amount.toFixed(precision(token)),
+          token,
+          destination: dest.address,
+          recipientLabel: dest.label,
+          reason,
+          sourceRef: input.sourceRef,
+          status: "pending",
+        },
+      });
+      if (runId) {
+        await prisma.automationRun.update({
+          where: { id: runId },
+          data: {
+            status: "held",
+            summary: `Awaiting approval — send ${amountLabel} to ${dest.label}`,
+          },
+        });
+      }
+      try {
+        await notifyApprovalRequest(input.userId, amountLabel, dest.label, reason);
+      } catch (e) {
+        console.error("[Glide] approval notify:", e);
+      }
+      return { status: "pending_approval", approvalId: approval.id };
+    }
+
     const txId = await transferOnArc({
       fromAddress: input.mainWalletAddress,
       toAddress: dest.address,
@@ -189,21 +203,23 @@ export async function executeGatedAutomation(input: {
     }
     return { status: "completed", txId };
   } catch (err) {
-    const msg = err instanceof Error ? err.message.slice(0, 500) : "transfer failed";
+    const msg = err instanceof Error ? err.message.slice(0, 500) : "automation failed";
     if (runId) {
-      await prisma.automationRun.update({
-        where: { id: runId },
-        data: {
-          status: "failed",
-          summary: `Couldn't send ${amountLabel} to ${dest.label}`,
-          error: msg,
-        },
-      });
+      await prisma.automationRun
+        .update({
+          where: { id: runId },
+          data: {
+            status: "failed",
+            summary: `Couldn't complete automation (${amountLabel})`,
+            error: msg,
+          },
+        })
+        .catch(() => {});
     }
     try {
       await notifyAutomationFailed(
         input.userId,
-        `Couldn't send ${amountLabel} to ${dest.label}.`,
+        `An automation for ${amountLabel} didn't go through.`,
       );
     } catch (e) {
       console.error("[Glide] fail notify:", e);

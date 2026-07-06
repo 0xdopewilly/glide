@@ -401,17 +401,20 @@ export function parseScheduleRuleFromMessage(
   const t = text.trim();
   if (RULE_QUESTION_RE.test(t) || t.endsWith("?")) return null;
   if (!/\b(pay|send|transfer)\b/i.test(t)) return null;
+  // Order matters: check monthly BEFORE weekly. The weekday alternation must
+  // use full-or-abbreviated names with a trailing \b so "every month" is not
+  // mis-read as "every mon(day)".
   const frequency: "daily" | "weekly" | "monthly" | null =
     /\bevery\s+day\b|\bdaily\b/i.test(t)
       ? "daily"
-      : /\bevery\s+week\b|\bweekly\b|\bevery\s+(mon|tue|wed|thu|fri|sat|sun)/i.test(
+      : /\bevery\s+month\b|\bmonthly\b|\b(?:on|by)\s+the\s+(?:1st|first|\d{1,2}(?:st|nd|rd|th)?)\b/i.test(
             t,
           )
-        ? "weekly"
-        : /\bevery\s+month\b|\bmonthly\b|\b(?:on|by)\s+the\s+(?:1st|first|\d{1,2}(?:st|nd|rd|th)?)\b/i.test(
+        ? "monthly"
+        : /\bevery\s+week\b|\bweekly\b|\bevery\s+(?:mon(?:day)?|tue(?:sday)?|wed(?:nesday)?|thu(?:rsday)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)\b/i.test(
               t,
             )
-          ? "monthly"
+          ? "weekly"
           : null;
   if (!frequency) return null;
   const amountM = t.match(/\$\s*([\d,]+(?:\.\d+)?)/);

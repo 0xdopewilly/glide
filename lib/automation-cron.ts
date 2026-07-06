@@ -56,9 +56,16 @@ export async function runDueScheduleRules(
       rule.frequency && isScheduleFrequency(rule.frequency)
         ? rule.frequency
         : "monthly";
+    // Advance to the next FUTURE occurrence. If the cron was delayed and missed
+    // periods, skip them rather than firing a burst of catch-up sends — we sent
+    // once above; the rest are intentionally not back-paid.
+    let next = advanceNextRun(rule.nextRunAt ?? now, freq);
+    for (let i = 0; i < 10000 && next.getTime() <= now.getTime(); i++) {
+      next = advanceNextRun(next, freq);
+    }
     await prisma.automationRule.update({
       where: { id: rule.id },
-      data: { nextRunAt: advanceNextRun(rule.nextRunAt ?? now, freq), lastRunAt: now },
+      data: { nextRunAt: next, lastRunAt: now },
     });
     results.push({ id: rule.id, status: res.status });
   }

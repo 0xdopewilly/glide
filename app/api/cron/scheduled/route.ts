@@ -19,9 +19,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 /** GET - run due scheduled sends (protect with CRON_SECRET) */
 export async function GET(request: NextRequest) {
+  // Fail closed: require CRON_SECRET to be set AND to match. If it's unset we
+  // reject rather than let this route (now public to Clerk middleware) run for
+  // anyone. Vercel Cron sends `Authorization: Bearer $CRON_SECRET`.
   const secret = process.env.CRON_SECRET?.trim();
   const auth = request.headers.get("authorization");
-  if (secret && auth !== `Bearer ${secret}`) {
+  if (!secret || auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

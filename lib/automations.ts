@@ -334,6 +334,9 @@ export async function runSaveRulesForReceive(input: {
   }
   const mainWalletAddress = user.circleWalletAddress;
 
+  // Only the newest active save rule per token fires. Even if a create race
+  // left two active rules, this guarantees a payment is never saved at 2x the
+  // intended percent.
   const rules = await prisma.automationRule.findMany({
     where: {
       userId: input.userId,
@@ -342,6 +345,8 @@ export async function runSaveRulesForReceive(input: {
       token,
       active: true,
     },
+    orderBy: { createdAt: "desc" },
+    take: 1,
   });
 
   for (const rule of rules) {
