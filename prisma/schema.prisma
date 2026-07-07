@@ -24,6 +24,15 @@ model User {
   /// user creates an auto-save automation. Separate from the spending wallet.
   savingsWalletId      String?       @unique
   savingsWalletAddress String?
+  /// 6-digit transaction PIN, hashed as "scrypt$salt$key" — never plaintext,
+  /// never sent to the client. Gates money-out actions.
+  pinHash              String?
+  pinSetAt             DateTime?
+  pinFailedAttempts    Int           @default(0)
+  pinLockedUntil       DateTime?
+  /// Money-out is allowed until this time after a correct PIN entry (~5 min
+  /// verified-session cache). Cleared on PIN change.
+  pinVerifiedUntil     DateTime?
   /// Billy's chat history, last ~80 messages. Synced across devices.
   chatHistory          Json?
   createdAt            DateTime      @default(now())
