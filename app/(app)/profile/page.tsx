@@ -86,7 +86,7 @@ export default function ProfilePage() {
 
         {/* Branded hero */}
         <section
-          className="mt-4 overflow-hidden rounded-3xl px-6 py-7 text-center"
+          className="mt-4 shrink-0 overflow-hidden rounded-3xl px-6 py-7 text-center"
           style={{
             background:
               "linear-gradient(150deg, #7C5CFF 0%, #5B3DF5 48%, #4A2EE0 100%)",
@@ -305,7 +305,9 @@ function Caption({ children }: { children: ReactNode }) {
 
 function GroupCard({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-2xl glide-surface-card">{children}</div>
+    <div className="shrink-0 overflow-hidden rounded-2xl glide-surface-card">
+      {children}
+    </div>
   );
 }
 
