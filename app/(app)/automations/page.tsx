@@ -67,13 +67,23 @@ export default function AutomationsPage() {
   const [limit, setLimit] = useState("");
   const [requireNewRecipient, setRequireNewRecipient] = useState(false);
   const [savingPolicy, setSavingPolicy] = useState(false);
+  const [savings, setSavings] = useState<{
+    address: string | null;
+    usdc: number;
+    eurc: number;
+  } | null>(null);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawBusy, setWithdrawBusy] = useState(false);
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   const load = async () => {
     try {
-      const [aRes, pRes, polRes] = await Promise.all([
+      const [aRes, pRes, polRes, sRes] = await Promise.all([
         fetch("/api/automations"),
         fetch("/api/approvals"),
         fetch("/api/approvals/policy"),
+        fetch("/api/savings"),
       ]);
       const a = (await aRes.json()) as {
         rules?: Rule[];
@@ -87,14 +97,46 @@ export default function AutomationsPage() {
           requireForNewRecipient?: boolean;
         } | null;
       };
+      const s = (await sRes.json()) as {
+        address?: string | null;
+        usdc?: number;
+        eurc?: number;
+      };
       setRules(a.rules ?? []);
       setRuns(a.runs ?? []);
       setInsights(a.insights ?? null);
       setApprovals(p.pending ?? []);
       setLimit(pol.policy?.autoApproveUnder ?? "");
       setRequireNewRecipient(pol.policy?.requireForNewRecipient ?? false);
+      setSavings({
+        address: s.address ?? null,
+        usdc: s.usdc ?? 0,
+        eurc: s.eurc ?? 0,
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const withdraw = async () => {
+    setWithdrawBusy(true);
+    setWithdrawError(null);
+    try {
+      const res = await fetch("/api/savings/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: withdrawAmount, token: "USDC" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setWithdrawError(data.error ?? "Withdrawal failed.");
+        return;
+      }
+      setWithdrawOpen(false);
+      setWithdrawAmount("");
+      await load();
+    } finally {
+      setWithdrawBusy(false);
     }
   };
 
@@ -200,6 +242,79 @@ export default function AutomationsPage() {
             </p>
           </div>
         </div>
+
+        {/* Savings balance + withdraw */}
+        {savings?.address ? (
+          <div
+            className="mt-4 rounded-3xl border p-5"
+            style={{
+              background:
+                "linear-gradient(150deg, #7C5CFF 0%, #5B3DF5 55%, #4A2EE0 100%)",
+              borderColor: "transparent",
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[12px] font-medium text-white/75">Savings</p>
+                <p className="mt-0.5 text-[28px] font-bold tabular-nums text-white">
+                  ${savings.usdc.toFixed(2)}
+                </p>
+                {savings.eurc > 0 ? (
+                  <p className="text-[12px] font-medium text-white/70">
+                    + €{savings.eurc.toFixed(2)} EURC
+                  </p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setWithdrawOpen((v) => !v);
+                  setWithdrawError(null);
+                }}
+                className="glide-tap shrink-0 rounded-full bg-white/15 px-4 py-2 text-[13px] font-bold text-white"
+              >
+                Move to Spending
+              </button>
+            </div>
+            {withdrawOpen ? (
+              <div className="mt-4 rounded-2xl bg-white/10 p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-white/80">$</span>
+                  <input
+                    inputMode="decimal"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="min-w-0 flex-1 bg-transparent text-[16px] font-semibold text-white outline-none placeholder:text-white/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setWithdrawAmount(String(savings?.usdc ?? 0))
+                    }
+                    className="glide-label-mono rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white"
+                  >
+                    MAX
+                  </button>
+                </div>
+                {withdrawError ? (
+                  <p className="mt-2 text-[12px] font-semibold text-red-200">
+                    {withdrawError}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => void withdraw()}
+                  disabled={withdrawBusy || !withdrawAmount.trim()}
+                  className="glide-tap mt-3 w-full rounded-full bg-white py-2.5 text-[13px] font-bold disabled:opacity-50"
+                  style={{ color: "var(--glide-primary)" }}
+                >
+                  {withdrawBusy ? "Moving…" : "Withdraw to Spending"}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Insights */}
         {insights && (insights.completed > 0 || insights.activeRules > 0) ? (

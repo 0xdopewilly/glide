@@ -313,6 +313,8 @@ export async function runSaveRulesForReceive(input: {
   receivedAmount: number;
   token: string;
   sourceRef: string;
+  /** Sender of the incoming credit; used to skip internal Savings withdrawals. */
+  fromAddress?: string;
 }): Promise<void> {
   const token = input.token.toUpperCase();
   if (token !== "USDC" && token !== "EURC") return;
@@ -322,13 +324,26 @@ export async function runSaveRulesForReceive(input: {
 
   const user = await prisma.user.findUnique({
     where: { id: input.userId },
-    select: { circleWalletId: true, circleWalletAddress: true },
+    select: {
+      circleWalletId: true,
+      circleWalletAddress: true,
+      savingsWalletAddress: true,
+    },
   });
   // Loop guard: only the spending wallet's receives count.
   if (
     !user?.circleWalletId ||
     !user.circleWalletAddress ||
     user.circleWalletId !== input.walletId
+  ) {
+    return;
+  }
+  // Don't auto-save a Savings→Spending withdrawal — that would claw part of the
+  // withdrawal straight back into Savings.
+  if (
+    input.fromAddress &&
+    user.savingsWalletAddress &&
+    input.fromAddress.toLowerCase() === user.savingsWalletAddress.toLowerCase()
   ) {
     return;
   }

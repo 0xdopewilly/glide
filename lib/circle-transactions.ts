@@ -230,6 +230,7 @@ export async function syncCircleTransactionsToDb(
           receivedAmount,
           token,
           sourceRef: row.id,
+          fromAddress: tx.sourceAddress ?? undefined,
         });
       } catch (err) {
         console.error("[Glide] auto-save trigger:", err);
