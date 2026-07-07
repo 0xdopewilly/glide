@@ -1,6 +1,8 @@
 "use client";
 
+import { AutomationShowcase } from "@/components/automation-showcase";
 import { NotificationBell } from "@/components/notification-bell";
+import { SavingsCard } from "@/components/savings-card";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TokenBalances } from "@/components/token-balances";
 import { TransactionList } from "@/components/transaction-list";
@@ -61,6 +63,7 @@ export default function HomePage() {
     transactionsLoading,
     error,
     clearError,
+    refresh,
   } = useWallet();
   const { profile } = useProfile();
   const { hideBalance, setHideBalance } = usePrivacy();
@@ -135,7 +138,7 @@ export default function HomePage() {
             <div className="flex min-w-0 flex-col gap-3">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-[color:var(--glide-on-surface-variant)]">
-                  Total Portfolio
+                  Spendable
                 </p>
                 <button
                   type="button"
@@ -194,6 +197,12 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
+        <SavingsCard className="mt-4" onChange={() => void refresh()} />
+
+        {/* AUTOMATION FLAGSHIP */}
+        <AutomationShowcase />
 
         {/* QUICK ACTIONS */}
         <nav

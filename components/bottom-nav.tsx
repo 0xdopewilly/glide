@@ -8,11 +8,13 @@ import {
   Sparkles,
   UserCircle2,
   Wallet,
+  Zap,
 } from "lucide-react";
 
 const SLOTS = [
   { href: "/", icon: Home, label: "Home" },
   { href: "/payments", icon: Wallet, label: "Wallet" },
+  { href: "/automations", icon: Zap, label: "Automate" },
   { href: "/ask", icon: Sparkles, label: "Discover" },
   { href: "/activity", icon: ArrowLeftRight, label: "Activity" },
   { href: "/profile", icon: UserCircle2, label: "Profile" },
@@ -34,12 +36,12 @@ export function BottomNav() {
               key={href}
               href={href}
               aria-label={label}
-              className="group relative flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 transition-transform active:scale-95"
+              className="group relative flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 transition-transform active:scale-95"
             >
               {active && (
                 <span
                   aria-hidden
-                  className="absolute inset-x-1.5 inset-y-0.5 -z-10 rounded-2xl"
+                  className="absolute inset-x-1 inset-y-0.5 -z-10 rounded-2xl"
                   style={{ backgroundColor: "var(--glide-primary-container)" }}
                 />
               )}
@@ -53,7 +55,7 @@ export function BottomNav() {
                 strokeWidth={active ? 2.5 : 2}
               />
               <span
-                className="text-[10px] font-semibold tracking-wide"
+                className="whitespace-nowrap text-[10px] font-semibold tracking-wide"
                 style={{
                   color: active
                     ? "var(--glide-primary)"
