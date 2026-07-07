@@ -8,6 +8,7 @@ import { GlideButton } from "@/components/glide-button";
 import { PageHeader } from "@/components/page-header";
 import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
 import { PushNotificationsToggle } from "@/components/push-notifications";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { shortenAddress } from "@/lib/format";
 import { useAuth } from "@/context/auth-context";
 import { usePrivacy } from "@/context/privacy-context";
@@ -24,8 +25,6 @@ export default function ProfilePage() {
     saveProfile,
     wallet,
     balance,
-    createNewWallet,
-    loading,
     error,
     clearError,
   } = useWallet();
@@ -183,6 +182,18 @@ export default function ProfilePage() {
           <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--glide-border)" }}>
             <PushNotificationsToggle className="!rounded-xl" />
           </div>
+          <div
+            className="mt-4 flex items-center justify-between border-t pt-4"
+            style={{ borderColor: "var(--glide-border)" }}
+          >
+            <div>
+              <p className="text-sm font-semibold tracking-tight text-[var(--glide-text)]">
+                Appearance
+              </p>
+              <p className="mt-0.5 text-xs glide-muted">Light or dark theme.</p>
+            </div>
+            <ThemeToggle />
+          </div>
         </section>
 
         {/* Quick links */}
@@ -220,23 +231,11 @@ export default function ProfilePage() {
           <p className="mt-3 break-all font-mono text-xs leading-relaxed text-[var(--glide-muted)]">
             {wallet?.address ?? "Setting up your smart account…"}
           </p>
-          <div className="mt-4 flex flex-col gap-2">
-            {wallet?.address ? (
+          {wallet?.address ? (
+            <div className="mt-4">
               <CopyButton value={wallet.address} className="w-full" />
-            ) : null}
-            <button
-              type="button"
-              onClick={() => void createNewWallet()}
-              disabled={loading}
-              className="glide-tap w-full rounded-2xl border py-3 text-sm font-medium tracking-tight disabled:opacity-50"
-              style={{
-                borderColor: "var(--glide-border)",
-                color: "var(--glide-text)",
-              }}
-            >
-              {loading ? "Refreshing…" : "Refresh wallet"}
-            </button>
-          </div>
+            </div>
+          ) : null}
         </section>
 
         <AccountSecurityCard />

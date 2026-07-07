@@ -45,13 +45,6 @@ export function AccountSecurityCard() {
           Your public address is yours to share. Anyone can send USDC to it on
           Arc testnet.
         </li>
-        <li>
-          <strong className="font-medium" style={{ color: "var(--glide-text)" }}>
-            New account:
-          </strong>{" "}
-          Creates a fresh smart account. Your old address still exists on-chain
-          but won&apos;t show in this app unless you switch back manually.
-        </li>
       </ul>
     </section>
   );
