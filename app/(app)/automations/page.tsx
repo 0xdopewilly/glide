@@ -3,6 +3,7 @@
 import { inputClassName } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
 import { AUTOMATION_TEMPLATES } from "@/lib/automation-templates";
+import { requirePin } from "@/lib/pin-gate";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -135,11 +136,22 @@ export default function AutomationsPage() {
   const decide = async (id: string, decision: "approve" | "reject") => {
     setBusyId(id);
     try {
-      await fetch(`/api/approvals/${id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ decision }),
-      });
+      const post = () =>
+        fetch(`/api/approvals/${id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ decision }),
+        });
+      let res = await post();
+      if (res.status === 401 && decision === "approve") {
+        const data = (await res.json().catch(() => ({}))) as { code?: string };
+        if (data.code === "pin_required" || data.code === "pin_setup_required") {
+          const ok = await requirePin(
+            data.code === "pin_setup_required" ? "setup" : "verify",
+          );
+          if (ok) res = await post();
+        }
+      }
       await load();
     } finally {
       setBusyId(null);

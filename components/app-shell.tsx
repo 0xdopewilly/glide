@@ -2,6 +2,7 @@
 
 import { BottomNav } from "@/components/bottom-nav";
 import { GlideGradient } from "@/components/glide-gradient";
+import { PinGate } from "@/components/pin-gate";
 import { usePathname } from "next/navigation";
 
 const FULL_BLEED_ROUTES = ["/send", "/receive", "/swap", "/bridge", "/request", "/pay"];
@@ -37,6 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <BottomNav />
           </div>
         ) : null}
+        <PinGate />
       </div>
     </div>
   );

@@ -25,6 +25,7 @@ import {
 } from "@/lib/wallet-balance-cache";
 import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import { playSuccessChime } from "@/lib/success-chime";
+import { requirePin } from "@/lib/pin-gate";
 
 /**
  * Parse a fetch response that we expect to be JSON, but tolerate the case
@@ -49,6 +50,35 @@ async function safeJson<T>(res: Response): Promise<T> {
       ? "Server hit an error. Try again in a moment."
       : "Network error. Check your connection and try again.",
   );
+}
+
+/** POST a money-out request; if the server requires PIN verification, prompt
+ * for it via the global PIN modal and retry once on success. */
+async function postMoneyOut<T>(
+  url: string,
+  body: unknown,
+): Promise<{ res: Response; data: T & { error?: string; code?: string } }> {
+  const doPost = () =>
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  let res = await doPost();
+  let data = await safeJson<T & { error?: string; code?: string }>(res);
+  if (
+    res.status === 401 &&
+    (data.code === "pin_required" || data.code === "pin_setup_required")
+  ) {
+    const ok = await requirePin(
+      data.code === "pin_setup_required" ? "setup" : "verify",
+    );
+    if (ok) {
+      res = await doPost();
+      data = await safeJson<T & { error?: string; code?: string }>(res);
+    }
+  }
+  return { res, data };
 }
 import {
   createContext,
@@ -430,19 +460,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       if (!wallet) return { ok: false as const, error: "Wallet not ready" };
       setError(null);
       try {
-        const res = await fetch("/api/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        const { res, data } = await postMoneyOut<{ balance?: number }>(
+          "/api/send",
+          {
             walletId: wallet.id,
             destinationAddress,
             amount,
             token: options?.token,
             note: options?.note,
             requestCode: options?.requestCode,
-          }),
-        });
-        const data = await safeJson<{ balance?: number; error?: string }>(res);
+          },
+        );
         if (!res.ok) {
           throw new Error(data.error ?? "Transfer failed");
         }
@@ -467,20 +495,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       if (!wallet) return { ok: false as const, error: "Wallet not ready" };
       setError(null);
       try {
-        const res = await fetch("/api/swap", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        const { res, data } = await postMoneyOut<{ receivedAmount?: string }>(
+          "/api/swap",
+          {
             walletId: wallet.id,
             amount,
             tokenIn: options?.tokenIn,
             tokenOut: options?.tokenOut,
-          }),
-        });
-        const data = await safeJson<{
-          receivedAmount?: string;
-          error?: string;
-        }>(res);
+          },
+        );
         if (!res.ok) throw new Error(data.error ?? "Swap failed");
         playSuccessChime();
         void refresh();
@@ -502,15 +525,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       if (!wallet) return { ok: false as const, error: "Wallet not ready" };
       setError(null);
       try {
-        const res = await fetch("/api/bridge", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ walletId: wallet.id, amount, network }),
-        });
-        const data = await safeJson<{
-          balance?: number;
-          error?: string;
-        }>(res);
+        const { res, data } = await postMoneyOut<{ balance?: number }>(
+          "/api/bridge",
+          { walletId: wallet.id, amount, network },
+        );
         if (!res.ok) throw new Error(data.error ?? "Bridge failed");
         if (typeof data.balance === "number") setBalance(data.balance);
         playSuccessChime();

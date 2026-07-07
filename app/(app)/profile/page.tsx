@@ -6,6 +6,7 @@ import { CopyButton } from "@/components/copy-button";
 import { GlideButton } from "@/components/glide-button";
 import { PageHeader } from "@/components/page-header";
 import { ProfileAvatarUpload } from "@/components/profile-avatar-upload";
+import { PinSettings } from "@/components/pin-settings";
 import { PushNotificationsToggle } from "@/components/push-notifications";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/context/auth-context";
@@ -225,6 +226,12 @@ export default function ProfilePage() {
             </span>
             <ThemeToggle />
           </div>
+        </GroupCard>
+
+        {/* Security */}
+        <Caption>Security</Caption>
+        <GroupCard>
+          <PinSettings />
         </GroupCard>
 
         {/* Wallet */}
