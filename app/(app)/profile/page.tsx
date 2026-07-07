@@ -141,6 +141,7 @@ export default function ProfilePage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
+              autoComplete="name"
               className="mt-0.5 w-full bg-transparent text-[15px] font-medium text-[var(--glide-text)] outline-none placeholder:text-[var(--glide-muted)]"
             />
           </div>
@@ -158,6 +159,7 @@ export default function ProfilePage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
+              autoComplete="email"
               className="mt-0.5 w-full bg-transparent text-[15px] font-medium text-[var(--glide-text)] outline-none placeholder:text-[var(--glide-muted)]"
             />
           </div>
