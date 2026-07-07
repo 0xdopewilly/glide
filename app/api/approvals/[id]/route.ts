@@ -1,5 +1,6 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { approvePending, rejectPending } from "@/lib/approvals";
+import { assertPinVerified } from "@/lib/pin";
 import { NextResponse } from "next/server";
 
 /** POST { decision: "approve" | "reject" } - act on a pending approval. */
@@ -20,6 +21,13 @@ export async function POST(
 
   const decision = (body as Record<string, unknown>).decision;
   if (decision === "approve") {
+    const gate = await assertPinVerified(session.userId);
+    if (!gate.ok) {
+      return NextResponse.json(
+        { error: "Confirm with your PIN to continue.", code: gate.code },
+        { status: 401 },
+      );
+    }
     const ok = await approvePending(session.userId, id);
     if (!ok) {
       return NextResponse.json(

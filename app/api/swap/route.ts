@@ -1,4 +1,5 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
+import { assertPinVerified } from "@/lib/pin";
 import { executeArcSwap } from "@/lib/app-kit";
 import { safeApiError } from "@/lib/circle";
 import { notifySwapComplete } from "@/lib/push";
@@ -35,6 +36,14 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireSessionUser();
     if (isAuthError(session)) return session;
+
+    const gate = await assertPinVerified(session.userId);
+    if (!gate.ok) {
+      return NextResponse.json(
+        { error: "Confirm with your PIN to continue.", code: gate.code },
+        { status: 401 },
+      );
+    }
 
     const body = (await request.json()) as {
       walletId?: string;
