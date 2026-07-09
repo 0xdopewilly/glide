@@ -3,6 +3,7 @@
 import { useRef, useState, type KeyboardEvent } from "react";
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from "framer-motion";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { haptics } from "@/lib/haptics";
 
 type Props = {
   label: string;
@@ -27,6 +28,7 @@ export function SwipeToConfirm({ label, onConfirm, disabled, loading, successLab
       animate(x, max, { type: "spring", stiffness: 400, damping: 30 });
     }
     setCompleted(true);
+    haptics.medium();
     try {
       await onConfirm();
     } finally {

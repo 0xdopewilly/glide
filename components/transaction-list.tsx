@@ -160,14 +160,19 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
   const title = buildTitle(tx);
   const subtitle = buildSubtitle(tx);
   const relativeTime = formatRelativeTime(tx.createdAt);
+  const isPending = tx.status === "pending";
 
   return (
     <article
-      className="flex items-center gap-3 rounded-2xl border bg-[color:var(--glide-surface-elevated)] p-3.5"
+      className={`flex items-center gap-3 rounded-2xl border bg-[color:var(--glide-surface-elevated)] p-3.5 ${
+        isPending ? "opacity-80" : ""
+      }`}
       style={{ borderColor: "var(--glide-elevated-border)" }}
     >
       <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+          isPending ? "animate-pulse" : ""
+        }`}
         style={{ backgroundColor: v.iconBg }}
       >
         <Icon
@@ -195,7 +200,14 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
         >
           {blurAmounts ? "•••" : tx.amount}
         </p>
-        {relativeTime ? (
+        {isPending ? (
+          <p
+            className="mt-0.5 text-xs font-semibold"
+            style={{ color: "var(--glide-accent)" }}
+          >
+            Pending
+          </p>
+        ) : relativeTime ? (
           <p className="mt-0.5 text-xs text-[color:var(--glide-on-elevated-variant)]">
             {relativeTime}
           </p>

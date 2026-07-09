@@ -1,5 +1,6 @@
 "use client";
 
+import { haptics } from "@/lib/haptics";
 import { registerPinHandler, type PinMode } from "@/lib/pin-gate";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -66,6 +67,7 @@ export function PinGate() {
           remaining?: number;
         };
         if (res.ok) {
+          haptics.light();
           finish(true);
           return;
         }
@@ -73,6 +75,7 @@ export function PinGate() {
         if (typeof data.remaining === "number" && data.remaining > 0) {
           parts.push(`${data.remaining} tries left.`);
         }
+        haptics.error();
         setError(parts.join(" "));
         setEntry("");
       } finally {
@@ -94,9 +97,11 @@ export function PinGate() {
         });
         const data = (await res.json().catch(() => ({}))) as { error?: string };
         if (res.ok) {
+          haptics.success();
           finish(true);
           return;
         }
+        haptics.error();
         setError(data.error ?? "Couldn't set PIN.");
         setStage("create");
         setFirstPin("");
@@ -121,6 +126,7 @@ export function PinGate() {
         return;
       }
       if (pin !== firstPin) {
+        haptics.error();
         setError("PINs didn't match. Start over.");
         setFirstPin("");
         setEntry("");
@@ -135,6 +141,7 @@ export function PinGate() {
   const onChange = (raw: string) => {
     if (busy) return;
     const digits = raw.replace(/\D/g, "").slice(0, PIN_LENGTH);
+    if (digits.length > entry.length) haptics.light();
     setEntry(digits);
     if (digits.length === PIN_LENGTH) handleComplete(digits);
   };

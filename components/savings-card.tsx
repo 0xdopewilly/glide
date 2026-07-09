@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { haptics } from "@/lib/haptics";
+import { readUiCache, writeUiCache } from "@/lib/ui-cache";
+import { useCallback, useEffect, useState } from "react";
 
 type Summary = { address: string | null; usdc: number; eurc: number };
 
+const CACHE_KEY = "savings";
+const CACHE_MAX_AGE_MS = 1000 * 60 * 30;
+
 /** Branded Savings balance card with an inline "Move to Spending" withdraw.
- * Shared by the home screen and the Automations dashboard. Renders nothing
- * until the user actually has a Savings wallet. */
+ * Shared by the home screen and the Automations dashboard. Seeds from a
+ * user-scoped cache so it paints instantly on repeat visits (no pop-in), and
+ * keeps showing the last-known balance if a refresh fails rather than hiding
+ * the user's savings behind a transient error. Renders nothing only when the
+ * user genuinely has no Savings wallet. */
 export function SavingsCard({
   className = "",
   onChange,
@@ -14,31 +23,56 @@ export function SavingsCard({
   className?: string;
   onChange?: () => void;
 }) {
-  const [savings, setSavings] = useState<Summary | null>(null);
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
+  const [savings, setSavings] = useState<Summary | null>(() =>
+    readUiCache<Summary>(CACHE_KEY, userId, CACHE_MAX_AGE_MS),
+  );
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const res = await fetch("/api/savings");
-      const data = (await res.json().catch(() => ({}))) as Summary;
-      setSavings({
+      if (!res.ok) return; // keep last-known values; don't blank the card
+      const data = (await res.json().catch(() => null)) as Summary | null;
+      if (!data) return;
+      const next: Summary = {
         address: data.address ?? null,
         usdc: data.usdc ?? 0,
         eurc: data.eurc ?? 0,
-      });
+      };
+      setSavings(next);
+      writeUiCache(CACHE_KEY, userId, next);
     } catch {
-      setSavings({ address: null, usdc: 0, eurc: 0 });
+      // Network error — keep whatever we already have rather than hiding the
+      // user's savings behind a transient failure.
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
+    const cached = readUiCache<Summary>(CACHE_KEY, userId, CACHE_MAX_AGE_MS);
+    if (cached) setSavings((prev) => prev ?? cached);
     void load();
-  }, []);
+  }, [userId, load]);
+
+  const available = savings?.usdc ?? 0;
 
   const withdraw = async () => {
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) {
+      setError("Enter an amount greater than 0.");
+      haptics.error();
+      return;
+    }
+    if (value > available + 1e-9) {
+      setError("That's more than your savings balance.");
+      haptics.error();
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -50,12 +84,17 @@ export function SavingsCard({
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
         setError(data.error ?? "Withdrawal failed.");
+        haptics.error();
         return;
       }
+      haptics.success();
       setOpen(false);
       setAmount("");
       await load();
       onChange?.();
+    } catch {
+      setError("Network error. Check your connection and try again.");
+      haptics.error();
     } finally {
       setBusy(false);
     }
@@ -78,7 +117,7 @@ export function SavingsCard({
             Savings · auto-growing ↑
           </p>
           <p className="mt-0.5 text-[28px] font-bold tabular-nums text-white">
-            ${savings.usdc.toFixed(2)}
+            ${available.toFixed(2)}
           </p>
           {savings.eurc > 0 ? (
             <p className="text-[12px] font-medium text-white/70">
@@ -110,7 +149,7 @@ export function SavingsCard({
             />
             <button
               type="button"
-              onClick={() => setAmount(String(savings?.usdc ?? 0))}
+              onClick={() => setAmount(String(available))}
               className="glide-label-mono rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white"
             >
               MAX

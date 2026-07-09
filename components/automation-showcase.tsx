@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/context/auth-context";
+import { readUiCache, writeUiCache } from "@/lib/ui-cache";
 import { ChevronRight, Zap } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -12,32 +14,60 @@ type Insights = {
   totalSaved: number;
 };
 
+type ShowcaseSummary = {
+  activeCount: number;
+  topName: string | null;
+  totalSaved: number;
+};
+
+const CACHE_KEY = "automation-showcase";
+const CACHE_MAX_AGE_MS = 1000 * 60 * 30;
+
 /** Home-screen flagship: surfaces the automation engine. Shows active rules +
  * total auto-saved when the user has automations, or a magnetic prompt to set
- * one up. Taps through to the Automations dashboard. */
+ * one up. Seeds from a user-scoped cache so the right state paints instantly on
+ * repeat visits instead of swapping in after the fetch. Taps through to the
+ * Automations dashboard. */
 export function AutomationShowcase() {
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [insights, setInsights] = useState<Insights | null>(null);
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
+  const [summary, setSummary] = useState<ShowcaseSummary | null>(() =>
+    readUiCache<ShowcaseSummary>(CACHE_KEY, userId, CACHE_MAX_AGE_MS),
+  );
 
   useEffect(() => {
+    const cached = readUiCache<ShowcaseSummary>(
+      CACHE_KEY,
+      userId,
+      CACHE_MAX_AGE_MS,
+    );
+    if (cached) setSummary((prev) => prev ?? cached);
+
     void (async () => {
       try {
         const res = await fetch("/api/automations");
+        if (!res.ok) return;
         const data = (await res.json().catch(() => ({}))) as {
           rules?: Rule[];
           insights?: Insights;
         };
-        setRules(data.rules ?? []);
-        setInsights(data.insights ?? null);
+        const active = (data.rules ?? []).filter((r) => r.active);
+        const next: ShowcaseSummary = {
+          activeCount: active.length,
+          topName: active[0]?.name ?? null,
+          totalSaved: data.insights?.totalSaved ?? 0,
+        };
+        setSummary(next);
+        writeUiCache(CACHE_KEY, userId, next);
       } catch {
-        /* leave empty */
+        /* keep cached/empty state */
       }
     })();
-  }, []);
+  }, [userId]);
 
-  const active = rules.filter((r) => r.active);
-  const hasAny = active.length > 0;
-  const saved = insights?.totalSaved ?? 0;
+  const hasAny = (summary?.activeCount ?? 0) > 0;
+  const saved = summary?.totalSaved ?? 0;
 
   return (
     <Link
@@ -51,7 +81,10 @@ export function AutomationShowcase() {
     >
       <span
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
-        style={{ background: "var(--glide-accent)", color: "var(--glide-on-primary)" }}
+        style={{
+          background: "var(--glide-accent)",
+          color: "var(--glide-on-primary)",
+        }}
       >
         <Zap className="h-5 w-5" strokeWidth={2.25} />
       </span>
@@ -61,9 +94,9 @@ export function AutomationShowcase() {
         </p>
         {hasAny ? (
           <p className="mt-0.5 truncate text-xs text-[var(--glide-muted)]">
-            {active.length} active
-            {saved > 0 ? ` · $${saved.toFixed(2)} auto-saved` : ""} ·{" "}
-            {active[0]?.name}
+            {summary?.activeCount} active
+            {saved > 0 ? ` · $${saved.toFixed(2)} auto-saved` : ""}
+            {summary?.topName ? ` · ${summary.topName}` : ""}
           </p>
         ) : (
           <p className="mt-0.5 text-xs text-[var(--glide-muted)]">

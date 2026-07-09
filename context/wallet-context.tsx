@@ -25,6 +25,8 @@ import {
 } from "@/lib/wallet-balance-cache";
 import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import { playSuccessChime } from "@/lib/success-chime";
+import { haptics } from "@/lib/haptics";
+import { formatStableAmount } from "@/lib/currency-format";
 import { requirePin } from "@/lib/pin-gate";
 
 /**
@@ -264,9 +266,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [tokens, setTokens] = useState<GlideTokenBalance[]>([]);
   const [transactions, setTransactions] = useState<GlideTransaction[]>([]);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
+  const [pendingSends, setPendingSends] = useState<GlideTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [profileHydrated, setProfileHydrated] = useState(false);
   const userIdRef = useRef<string | null>(null);
+  const pendingIdRef = useRef(0);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -459,6 +463,32 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     ) => {
       if (!wallet) return { ok: false as const, error: "Wallet not ready" };
       setError(null);
+
+      // Optimistic pending row: surface the send in Activity immediately. It's
+      // cleared once the post-send refresh completes — /api/send persists the
+      // real row before responding and refresh reads it back, so the swap is
+      // seamless (no flicker, no duplicate). The timeout is a belt-and-braces
+      // fallback so a failed refresh can never strand a "Sending…" row.
+      const token = options?.token ?? "USDC";
+      const value = Number(amount);
+      const pendingId = `pending-${(pendingIdRef.current += 1)}`;
+      if (Number.isFinite(value) && value > 0) {
+        const optimistic: GlideTransaction = {
+          id: pendingId,
+          title: "Sending…",
+          amount: `−${formatStableAmount(value, token)}`,
+          variant: "debit",
+          meta: "",
+          kind: "send",
+          status: "pending",
+          counterparty: destinationAddress,
+          createdAt: new Date().toISOString(),
+        };
+        setPendingSends((prev) => [optimistic, ...prev]);
+      }
+      const clearPending = () =>
+        setPendingSends((prev) => prev.filter((t) => t.id !== pendingId));
+
       try {
         const { res, data } = await postMoneyOut<{ balance?: number }>(
           "/api/send",
@@ -475,12 +505,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           throw new Error(data.error ?? "Transfer failed");
         }
         if (typeof data.balance === "number") setBalance(data.balance);
-        void refresh();
+        void refresh().finally(clearPending);
+        window.setTimeout(clearPending, 15_000);
         playSuccessChime();
+        haptics.success();
         return { ok: true as const };
       } catch (e) {
+        clearPending();
         const message = e instanceof Error ? e.message : "Transfer failed";
         setError(message);
+        haptics.error();
         return { ok: false as const, error: message };
       }
     },
@@ -506,6 +540,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         );
         if (!res.ok) throw new Error(data.error ?? "Swap failed");
         playSuccessChime();
+        haptics.success();
         void refresh();
         return {
           ok: true as const,
@@ -514,6 +549,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {
         const message = e instanceof Error ? e.message : "Swap failed";
         setError(message);
+        haptics.error();
         return { ok: false as const, error: message };
       }
     },
@@ -532,11 +568,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (!res.ok) throw new Error(data.error ?? "Bridge failed");
         if (typeof data.balance === "number") setBalance(data.balance);
         playSuccessChime();
+        haptics.success();
         void refresh();
         return { ok: true as const };
       } catch (e) {
         const message = e instanceof Error ? e.message : "Bridge failed";
         setError(message);
+        haptics.error();
         return { ok: false as const, error: message };
       }
     },
@@ -713,8 +751,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   );
 
   const transactionsValue = useMemo<TransactionsContextValue>(
-    () => ({ transactions, transactionsLoading }),
-    [transactions, transactionsLoading],
+    () => ({
+      transactions:
+        pendingSends.length > 0
+          ? [...pendingSends, ...transactions]
+          : transactions,
+      transactionsLoading,
+    }),
+    [pendingSends, transactions, transactionsLoading],
   );
 
   const actionsValue = useMemo<WalletActionsContextValue>(
