@@ -1,6 +1,7 @@
 "use client";
 
 import { GlidePillButton } from "@/components/glide-pill-button";
+import { reportClientError } from "@/lib/report-error";
 import { AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -19,6 +20,12 @@ export default function AppError({
 
   useEffect(() => {
     console.error("[Glide] app error", error?.digest ?? error?.message ?? "");
+    reportClientError({
+      source: "app-error-boundary",
+      message: error?.message ?? "app error",
+      digest: error?.digest,
+      stack: error?.stack,
+    });
   }, [error]);
 
   return (

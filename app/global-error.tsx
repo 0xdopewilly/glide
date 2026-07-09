@@ -1,5 +1,6 @@
 "use client";
 
+import { reportClientError } from "@/lib/report-error";
 import { useEffect } from "react";
 
 /** Last-resort boundary: catches errors thrown in the root layout itself.
@@ -14,6 +15,12 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("[Glide] global error", error?.digest ?? error?.message ?? "");
+    reportClientError({
+      source: "global-error-boundary",
+      message: error?.message ?? "global error",
+      digest: error?.digest,
+      stack: error?.stack,
+    });
   }, [error]);
 
   return (
