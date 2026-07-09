@@ -1,4 +1,5 @@
 import { runDueScheduleRules, runThresholdSweeps } from "@/lib/automation-cron";
+import { stableIdempotencyKey } from "@/lib/automation-execute";
 import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
 import { ARC_USDC_TOKEN_ADDRESS } from "@/lib/tokens";
 import { resolveRecipient } from "@/lib/resolve-recipient";
@@ -64,6 +65,12 @@ export async function GET(request: NextRequest) {
         destinationAddress: resolved.address,
         amount: [amount.toFixed(2)],
         fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+        // Dedupe this occurrence at Circle: if the send succeeds but the
+        // follow-up record/advance fails, the next cron pass re-attempts with
+        // the same key and Circle won't send twice.
+        idempotencyKey: stableIdempotencyKey(
+          `legacy:${job.id}:${new Date(job.nextRunAt).toISOString()}`,
+        ),
       });
 
       const circleId = res.data?.id;

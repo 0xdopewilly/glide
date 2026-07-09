@@ -1,4 +1,4 @@
-import { transferOnArc } from "@/lib/automation-execute";
+import { stableIdempotencyKey, transferOnArc } from "@/lib/automation-execute";
 import { resolveAutomationDestination } from "@/lib/automations";
 import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
@@ -126,6 +126,12 @@ export async function executeGatedAutomation(input: {
       input.destination,
     );
     if (!dest) {
+      console.error("[Glide] automation failed: unresolved destination", {
+        userId: input.userId,
+        ruleId: input.ruleId ?? null,
+        sourceRef: input.sourceRef,
+        destination: input.destination,
+      });
       if (runId) {
         await prisma.automationRun.update({
           where: { id: runId },
@@ -190,6 +196,7 @@ export async function executeGatedAutomation(input: {
       toAddress: dest.address,
       amount: input.amount.toFixed(precision(token)),
       token,
+      idempotencyKey: stableIdempotencyKey(input.sourceRef),
     });
     if (runId) {
       await prisma.automationRun.update({
@@ -204,6 +211,14 @@ export async function executeGatedAutomation(input: {
     return { status: "completed", txId };
   } catch (err) {
     const msg = err instanceof Error ? err.message.slice(0, 500) : "automation failed";
+    console.error("[Glide] automation failed", {
+      userId: input.userId,
+      ruleId: input.ruleId ?? null,
+      sourceRef: input.sourceRef,
+      action: input.action,
+      amountLabel,
+      error: msg,
+    });
     if (runId) {
       await prisma.automationRun
         .update({
@@ -273,6 +288,7 @@ export async function approvePending(
       toAddress: ap.destination,
       amount: ap.amount,
       token: ap.token,
+      idempotencyKey: stableIdempotencyKey(`approval:${ap.id}`),
     });
     await prisma.pendingApproval.update({
       where: { id: ap.id },
