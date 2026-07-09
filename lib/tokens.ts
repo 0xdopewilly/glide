@@ -96,6 +96,30 @@ function parseSignedUsdAmount(amount: string): number | null {
   return n;
 }
 
+/** Signed net USD flow (received − sent) over transactions created within the
+ * last `windowMs` (default 24h). Used for the home "today" delta. Direction
+ * comes from `variant` (debit labels use a U+2212 minus, not an ASCII sign),
+ * so we take the magnitude and apply the sign from the variant. Swaps/bridges
+ * (neutral) don't change the total and are ignored. */
+export function netFlowUsd(
+  transactions: { variant?: string; amount: string; createdAt?: string }[],
+  windowMs = 24 * 60 * 60 * 1000,
+): number {
+  const since = Date.now() - windowMs;
+  let net = 0;
+  for (const tx of transactions) {
+    if (!tx.createdAt) continue;
+    const t = new Date(tx.createdAt).getTime();
+    if (Number.isNaN(t) || t < since) continue;
+    const n = parseSignedUsdAmount(tx.amount);
+    if (n === null) continue;
+    const mag = Math.abs(n);
+    if (tx.variant === "credit") net += mag;
+    else if (tx.variant === "debit") net -= mag;
+  }
+  return net;
+}
+
 /** Prefer on-chain totals; fall back to USDC balance, then recent activity. */
 export function resolveWalletTotalUsd(
   tokens: { usdValue: number; amount: number }[],

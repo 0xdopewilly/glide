@@ -10,6 +10,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { usePrivacy } from "@/context/privacy-context";
 import { useProfile, useWallet } from "@/context/wallet-context";
 import type { TransactionKind } from "@/lib/types";
+import { netFlowUsd } from "@/lib/tokens";
 import {
   ArrowDown,
   ArrowLeftRight,
@@ -69,10 +70,12 @@ export default function HomePage() {
   const { hideBalance, setHideBalance } = usePrivacy();
   const [filter, setFilter] = useState<Filter>("all");
 
-  // TODO: replace with a real 24h portfolio change calc from wallet-context.
-  // Hardcoded placeholder for now so the UI has the green pill.
-  const portfolioChange = 2.48;
-  const portfolioChangePositive = portfolioChange >= 0;
+  // Real signed net flow today (received − sent) from activity — green when
+  // up, red when down, muted when there's been no movement. No more fake %.
+  const netToday = useMemo(() => netFlowUsd(transactions), [transactions]);
+  const netTodayZero = Math.abs(netToday) < 0.005;
+  const netTodayPositive = netToday > 0;
+  const showDelta = !hideBalance && !netTodayZero;
 
   const greeting = useMemo(() => greetingFor(new Date()), []);
   const firstName = (profile.displayName ?? "").trim().split(" ")[0] || "there";
@@ -165,33 +168,43 @@ export default function HomePage() {
               <div
                 className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1"
                 style={{
-                  background: portfolioChangePositive
-                    ? "var(--glide-success-container)"
-                    : "color-mix(in srgb, var(--glide-error) 12%, transparent)",
+                  background: !showDelta
+                    ? "color-mix(in srgb, var(--glide-on-surface) 8%, transparent)"
+                    : netTodayPositive
+                      ? "var(--glide-success-container)"
+                      : "color-mix(in srgb, var(--glide-error) 12%, transparent)",
                 }}
               >
-                {portfolioChangePositive ? (
-                  <ArrowUp
-                    className="h-3 w-3"
-                    strokeWidth={2.5}
-                    style={{ color: "var(--glide-success)" }}
-                  />
-                ) : (
-                  <ArrowDown
-                    className="h-3 w-3"
-                    strokeWidth={2.5}
-                    style={{ color: "var(--glide-error)" }}
-                  />
-                )}
+                {showDelta ? (
+                  netTodayPositive ? (
+                    <ArrowUp
+                      className="h-3 w-3"
+                      strokeWidth={2.5}
+                      style={{ color: "var(--glide-success)" }}
+                    />
+                  ) : (
+                    <ArrowDown
+                      className="h-3 w-3"
+                      strokeWidth={2.5}
+                      style={{ color: "var(--glide-error)" }}
+                    />
+                  )
+                ) : null}
                 <span
                   className="text-xs font-semibold tabular-nums"
                   style={{
-                    color: portfolioChangePositive
-                      ? "var(--glide-success)"
-                      : "var(--glide-error)",
+                    color: !showDelta
+                      ? "var(--glide-on-surface-variant)"
+                      : netTodayPositive
+                        ? "var(--glide-success)"
+                        : "var(--glide-error)",
                   }}
                 >
-                  {Math.abs(portfolioChange).toFixed(2)}% today
+                  {hideBalance
+                    ? "••• today"
+                    : netTodayZero
+                      ? "No change today"
+                      : `${USD_FORMATTER.format(Math.abs(netToday))} today`}
                 </span>
               </div>
             </div>
