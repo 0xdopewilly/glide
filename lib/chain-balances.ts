@@ -1,5 +1,16 @@
 import { BRIDGE_KEY_TO_CHAIN, CHAIN_META, type GlideChainKey } from "@/lib/chain-meta";
+import { IS_MAINNET, type ExternalChainKey } from "@/lib/network";
 import type { GlideTokenBalance } from "@/lib/types";
+import {
+  Arbitrum as KitArbitrum,
+  ArbitrumSepolia as KitArbitrumSepolia,
+  Base as KitBase,
+  BaseSepolia as KitBaseSepolia,
+  Ethereum as KitEthereum,
+  EthereumSepolia as KitEthereumSepolia,
+  Polygon as KitPolygon,
+  PolygonAmoy as KitPolygonAmoy,
+} from "@circle-fin/app-kit/chains";
 import {
   createPublicClient,
   erc20Abi,
@@ -9,18 +20,32 @@ import {
   type Chain,
 } from "viem";
 import {
+  arbitrum,
   arbitrumSepolia,
+  base,
   baseSepolia,
+  mainnet,
+  polygon,
   polygonAmoy,
   sepolia,
 } from "viem/chains";
 
 const MIN_DISPLAY = 0.000_001;
 
-const SEPOLIA_USDC = "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238" as Address;
-const BASE_SEPOLIA_USDC = "0x036CbD53842c542663c92897219773B176dbeBd7" as Address;
-const ARBITRUM_SEPOLIA_USDC = "0x75faf114eafb1BDbe2F631b3Ed6285af582bd807" as Address;
-const POLYGON_AMOY_USDC = "0x41E94Eb017C8aF78c5aC8a01bCbe1F3226D56C35" as Address;
+/** Circle's App Kit chain definitions for each external chain on the active
+ * network — the source of truth for USDC contract addresses, so they can't
+ * drift from what the bridge uses. */
+const KIT_CHAIN: Record<ExternalChainKey, { usdcAddress: string }> = {
+  ethereum: IS_MAINNET ? KitEthereum : KitEthereumSepolia,
+  base: IS_MAINNET ? KitBase : KitBaseSepolia,
+  polygon: IS_MAINNET ? KitPolygon : KitPolygonAmoy,
+  arbitrum: IS_MAINNET ? KitArbitrum : KitArbitrumSepolia,
+};
+
+/** USDC contract on an external chain (active network). */
+export function externalUsdcAddress(key: ExternalChainKey): string {
+  return KIT_CHAIN[key].usdcAddress;
+}
 
 const OFF_ARC: {
   chainId: GlideChainKey;
@@ -29,23 +54,23 @@ const OFF_ARC: {
 }[] = [
   {
     chainId: BRIDGE_KEY_TO_CHAIN.ethereum,
-    chain: sepolia,
-    usdc: SEPOLIA_USDC,
+    chain: IS_MAINNET ? mainnet : sepolia,
+    usdc: externalUsdcAddress("ethereum") as Address,
   },
   {
     chainId: BRIDGE_KEY_TO_CHAIN.base,
-    chain: baseSepolia,
-    usdc: BASE_SEPOLIA_USDC,
+    chain: IS_MAINNET ? base : baseSepolia,
+    usdc: externalUsdcAddress("base") as Address,
   },
   {
     chainId: BRIDGE_KEY_TO_CHAIN.polygon,
-    chain: polygonAmoy,
-    usdc: POLYGON_AMOY_USDC,
+    chain: IS_MAINNET ? polygon : polygonAmoy,
+    usdc: externalUsdcAddress("polygon") as Address,
   },
   {
     chainId: BRIDGE_KEY_TO_CHAIN.arbitrum,
-    chain: arbitrumSepolia,
-    usdc: ARBITRUM_SEPOLIA_USDC,
+    chain: IS_MAINNET ? arbitrum : arbitrumSepolia,
+    usdc: externalUsdcAddress("arbitrum") as Address,
   },
 ];
 

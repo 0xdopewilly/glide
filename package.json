@@ -2,6 +2,9 @@
   "name": "glide",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
@@ -33,10 +36,10 @@
     "@capacitor/push-notifications": "^8.1.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
-    "@circle-fin/adapter-circle-wallets": "^1.3.0",
-    "@circle-fin/adapter-viem-v2": "^1.11.0",
-    "@circle-fin/app-kit": "^1.5.1",
-    "@circle-fin/developer-controlled-wallets": "^10.3.1",
+    "@circle-fin/adapter-circle-wallets": "^1.8.0",
+    "@circle-fin/adapter-viem-v2": "^1.18.0",
+    "@circle-fin/app-kit": "^1.15.2",
+    "@circle-fin/developer-controlled-wallets": "^10.8.1",
     "@clerk/nextjs": "^7.3.7",
     "@prisma/client": "^6.19.3",
     "framer-motion": "^12.40.0",

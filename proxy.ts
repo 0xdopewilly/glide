@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { IS_MAINNET } from "@/lib/network";
 
 const isPublicRoute = createRouteMatcher([
   "/onboarding",
@@ -17,6 +18,14 @@ const isPublicRoute = createRouteMatcher([
   "/partners/(.*)",
 ]);
 
+/** Testnet-only debugging tools (faucet, stack-trace diagnostics, gas drain).
+ * Never served on mainnet. */
+const isTestnetOnlyRoute = createRouteMatcher([
+  "/api/debug/(.*)",
+  "/api/admin/drain-receive-gas",
+  "/api/wallet/fund",
+]);
+
 /** Dev instance on Vercel - no custom domain in Clerk; allow these origins explicitly. */
 const authorizedParties = [
   "http://localhost:3000",
@@ -31,6 +40,10 @@ const authorizedParties = [
 
 export default clerkMiddleware(
   async (auth, request) => {
+    if (IS_MAINNET && isTestnetOnlyRoute(request)) {
+      return new NextResponse(null, { status: 404 });
+    }
+
     const { userId } = await auth();
     const { pathname } = request.nextUrl;
 

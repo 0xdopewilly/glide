@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
 import { formatRelativeDate } from "@/lib/format";
+import { arcExplorerTxUrl } from "@/lib/network";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
 
 export type RecordTransactionInput = {
@@ -191,5 +192,5 @@ export async function listUserTransactions(userId: string, limit = 50) {
 }
 
 export function arcExplorerUrl(txHash: string) {
-  return `https://testnet.arcscan.app/tx/${txHash}`;
+  return arcExplorerTxUrl(txHash);
 }

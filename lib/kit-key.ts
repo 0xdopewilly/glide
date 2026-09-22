@@ -55,13 +55,17 @@ export function kitKeyStatus(): KitKeyStatus {
 
   const raw = readRawKitKey();
   if (!raw) {
+    // Optional since App Kit 1.15: swaps authenticate without a Kit Key.
+    // Still honored when set, in case Circle rejects keyless swaps.
+    const ok = circleApiKeySet && circleEntitySecretSet;
     return {
-      ok: false,
+      ok,
       source: "none",
       circleApiKeySet,
       circleEntitySecretSet,
-      hint:
-        "Missing CIRCLE_KIT_KEY. Add it in .env.local (local) or Vercel Production env vars, then redeploy.",
+      hint: ok
+        ? "No CIRCLE_KIT_KEY set (optional). If swaps are rejected, add one from Circle Console and redeploy."
+        : "Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET. Add them in .env.local (local) or Vercel env vars, then redeploy.",
     };
   }
 

@@ -1,13 +1,32 @@
-/** Arc testnet USDC - Circle native token uses empty address on transfers. */
+import { ARC_NETWORK } from "@/lib/network";
+
+/** Arc USDC - Circle native token uses empty address on transfers. */
 export const ARC_USDC_TOKEN_ADDRESS = "";
 
-/** Arc testnet EURC (Circle / Arc docs). */
-export const ARC_EURC_TOKEN_ADDRESS =
-  "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a";
+/** Arc EURC on the active network (Circle / Arc docs). */
+export const ARC_EURC_TOKEN_ADDRESS = ARC_NETWORK.eurcAddress;
 
-/** Arc testnet cirBTC (Circle Bitcoin). */
-export const ARC_CIRBTC_TOKEN_ADDRESS =
-  "0xf0C4a4CE82A5746AbAAd9425360Ab04fbBA432BF";
+/** Arc cirBTC (Circle Bitcoin) on the active network. */
+export const ARC_CIRBTC_TOKEN_ADDRESS = ARC_NETWORK.cirBtcAddress;
+
+/** Arc USDC's ERC-20 interface (same on mainnet and testnet). Circle also
+ * reports USDC as the chain's native token with no address. */
+export const ARC_USDC_ERC20_ADDRESS = "0x3600000000000000000000000000000000000000";
+
+/** Identify an Arc token by contract address — never by symbol or name,
+ * which anyone can spoof (airdropped "USDC" spam is routine on mainnet).
+ * Returns null for anything that isn't one of the tokens glidepay supports. */
+export function classifyArcToken(token: {
+  tokenAddress?: string | null;
+  isNative?: boolean | null;
+}): "USDC" | "EURC" | "cirBTC" | null {
+  const address = token.tokenAddress?.trim();
+  if (!address) return token.isNative ? "USDC" : null;
+  if (addressesEqual(address, ARC_USDC_ERC20_ADDRESS)) return "USDC";
+  if (addressesEqual(address, ARC_EURC_TOKEN_ADDRESS)) return "EURC";
+  if (addressesEqual(address, ARC_CIRBTC_TOKEN_ADDRESS)) return "cirBTC";
+  return null;
+}
 
 export function arcTokenAddressForSymbol(symbol?: string | null): string {
   if (isEurcToken(symbol)) return ARC_EURC_TOKEN_ADDRESS;

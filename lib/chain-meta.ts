@@ -1,5 +1,8 @@
 import type { BridgeNetworkKey } from "@/lib/app-kit";
+import { ARC_NETWORK, EXTERNAL_CHAINS } from "@/lib/network";
 
+/** Internal chain keys. The ids keep their original testnet-era names because
+ * cached balances reference them; labels follow the active network. */
 export type GlideChainKey =
   | "arc-testnet"
   | "ethereum-sepolia"
@@ -24,7 +27,7 @@ export type ChainMeta = {
 export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
   "arc-testnet": {
     id: "arc-testnet",
-    label: "Arc Testnet",
+    label: ARC_NETWORK.label,
     shortLabel: "Arc",
     badgeClass: "from-[#1a4a7a] to-[#001030]",
     color: "#1a4a7a",
@@ -32,7 +35,7 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
   },
   "ethereum-sepolia": {
     id: "ethereum-sepolia",
-    label: "Ethereum Sepolia",
+    label: EXTERNAL_CHAINS.ethereum.networkLabel,
     shortLabel: "ETH",
     badgeClass: "from-[#627EEA] to-[#3C5BD8]",
     color: "#627EEA",
@@ -40,14 +43,14 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
   },
   "base-sepolia": {
     id: "base-sepolia",
-    label: "Base Sepolia",
+    label: EXTERNAL_CHAINS.base.networkLabel,
     shortLabel: "Base",
     badgeClass: "from-[#0052FF] to-[#0038B8]",
     color: "#0052FF",
   },
   "polygon-amoy": {
     id: "polygon-amoy",
-    label: "Polygon Amoy",
+    label: EXTERNAL_CHAINS.polygon.networkLabel,
     shortLabel: "POL",
     badgeClass: "from-[#8247E5] to-[#6C3BB8]",
     color: "#8247E5",
@@ -55,7 +58,7 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
   },
   "arbitrum-sepolia": {
     id: "arbitrum-sepolia",
-    label: "Arbitrum Sepolia",
+    label: EXTERNAL_CHAINS.arbitrum.networkLabel,
     shortLabel: "ARB",
     badgeClass: "from-[#28A0F0] to-[#1B7ACC]",
     color: "#28A0F0",

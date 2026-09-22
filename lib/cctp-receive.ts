@@ -2,17 +2,21 @@ import type { BridgeNetworkKey } from "@/lib/app-kit";
 import { BRIDGE_TO_CIRCLE_BLOCKCHAIN, sweepIncomingToArc } from "@/lib/app-kit";
 import {
   getReceiveChainByCircleBlockchain,
+  GLIDE_BLOCKCHAIN,
   RECEIVE_CHAINS,
+  resolveCircleToken,
   type ReceiveChainKey,
 } from "@/lib/circle";
 import { prisma } from "@/lib/db";
 import { notifyIncomingFromChain } from "@/lib/push";
+import { addressesEqual } from "@/lib/tokens";
 import { ensureSourceGas } from "@/lib/gas-refill";
 import {
   findUserByReceiveAddress,
   getOrCreateReceiveAddress,
   getUserById,
 } from "@/lib/users";
+import { externalUsdcAddress } from "@/lib/chain-balances";
 import { fetchUsdcBalanceAnyChain } from "@/lib/wallet-service";
 
 const RECEIVE_TO_BRIDGE: Record<ReceiveChainKey, BridgeNetworkKey> = {
@@ -38,6 +42,23 @@ type ClaimResult =
   | { status: "duplicate" }
   | { status: "unknown_address"; detail?: string }
   | { status: "no_arc_wallet" };
+
+/** Is this inbound Circle notification the chain's real USDC contract?
+ * Identified by contract address via the notification's tokenId — symbols
+ * and names are spoofable. Throws if the Circle token lookup fails. */
+export async function isInboundUsdc(
+  tokenId: string | undefined,
+  circleBlockchain: string,
+): Promise<boolean> {
+  if (!tokenId) return false;
+  const receiveKey = getReceiveChainByCircleBlockchain(circleBlockchain);
+  if (!receiveKey) return false;
+  const info = await resolveCircleToken(tokenId);
+  return (
+    info?.blockchain === circleBlockchain &&
+    addressesEqual(info.tokenAddress, externalUsdcAddress(receiveKey))
+  );
+}
 
 /** Atomic dedup claim: inserts a pending Transaction row with the source
  * txHash. The DB's unique constraint on bridgeSourceTxHash blocks duplicate
@@ -69,7 +90,7 @@ export async function claimIncoming(event: IncomingTransfer): Promise<ClaimResul
         amountLabel: `+$${event.amount}`,
         variant: "credit",
         status: "pending",
-        chain: "arc-testnet",
+        chain: GLIDE_BLOCKCHAIN,
         originChain: chainLabel,
         bridgeSourceTxHash: event.sourceTxHash,
         metadata: {
@@ -129,7 +150,10 @@ export async function sweepStuckBalance(input: {
   });
   if (inFlight) return { status: "in_progress" };
 
-  const balance = await fetchUsdcBalanceAnyChain(receive.walletId);
+  const balance = await fetchUsdcBalanceAnyChain(
+    receive.walletId,
+    externalUsdcAddress(input.chain),
+  );
   if (balance <= 0) return { status: "nothing_to_sweep" };
 
   const amount = balance.toFixed(2);
@@ -155,7 +179,10 @@ export async function sweepStuckBalance(input: {
 
   // Final safety net: re-check the source-chain balance just before issuing
   // the bridge. If it dropped (someone else already swept), abort cleanly.
-  const recheck = await fetchUsdcBalanceAnyChain(receive.walletId);
+  const recheck = await fetchUsdcBalanceAnyChain(
+    receive.walletId,
+    externalUsdcAddress(input.chain),
+  );
   if (recheck < balance) {
     await prisma.transaction.update({
       where: { id: claim.transactionId },
@@ -180,6 +207,7 @@ export async function sweepStuckBalance(input: {
   if (result.status === "swept") {
     return { status: "swept", amount, transactionId: claim.transactionId };
   }
+  if (result.status === "pending") return { status: "in_progress" };
   return { status: "failed", detail: result.detail };
 }
 
@@ -223,14 +251,26 @@ export async function completeSweep(input: {
       amount: input.amount,
     });
 
+    // App Kit reports failures on the result (state "error") rather than
+    // throwing. Only a "success" sweep is complete and worth a push.
+    if (result.state === "error") {
+      throw new Error("bridge returned state=error");
+    }
+    const settled = result.state === "success";
+
     await prisma.transaction.update({
       where: { id: input.transactionId },
       data: {
-        status: result.state ?? "confirmed",
+        status: settled ? "complete" : "pending",
         txHash: result.txHash ?? null,
         explorerUrl: result.explorerUrl ?? null,
       },
     });
+
+    if (!settled) {
+      console.warn("[Glide] sweep still pending:", input.transactionId);
+      return { status: "pending" as const };
+    }
 
     await notifyIncomingFromChain(input.userId, {
       amount: input.amount,

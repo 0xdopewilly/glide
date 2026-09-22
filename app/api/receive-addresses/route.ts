@@ -1,4 +1,5 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
+import { externalUsdcAddress } from "@/lib/chain-balances";
 import { safeApiError } from "@/lib/circle";
 import { getReceiveAddresses } from "@/lib/users";
 import { fetchUsdcBalanceAnyChain } from "@/lib/wallet-service";
@@ -18,9 +19,10 @@ export async function GET() {
     const addresses = await getReceiveAddresses(session.userId);
     const enriched = await Promise.all(
       addresses.map(async (a) => {
-        const usdcBalance = await fetchUsdcBalanceAnyChain(a.walletId).catch(
-          () => 0,
-        );
+        const usdcBalance = await fetchUsdcBalanceAnyChain(
+          a.walletId,
+          externalUsdcAddress(a.chain),
+        ).catch(() => 0);
         return { ...a, usdcBalance };
       }),
     );

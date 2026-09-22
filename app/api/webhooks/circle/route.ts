@@ -1,5 +1,5 @@
-import { claimIncoming, completeSweep } from "@/lib/cctp-receive";
-import crypto from "node:crypto";
+import { claimIncoming, completeSweep, isInboundUsdc } from "@/lib/cctp-receive";
+import { verifyCircleWebhook } from "@/lib/webhook-signature";
 import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -17,25 +17,18 @@ export const dynamic = "force-dynamic";
  * duplicate sweeps impossible (DB rejects parallel claims atomically).
  */
 export async function POST(request: NextRequest) {
-  const signingKey = process.env.CIRCLE_NOTIFICATION_SIGNING_KEY?.trim();
   const rawBody = await request.text();
 
-  if (signingKey) {
-    const provided =
-      request.headers.get("x-circle-signature") ??
-      request.headers.get("circle-signature") ??
-      "";
-    const expected = crypto
-      .createHmac("sha256", signingKey)
-      .update(rawBody)
-      .digest("hex");
-
-    const ok =
-      provided.length === expected.length &&
-      crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
-    if (!ok) {
-      return NextResponse.json({ error: "invalid signature" }, { status: 401 });
-    }
+  // Every request must carry a valid Circle signature. Without this anyone
+  // could POST fake "inbound" events, creating phantom receipts and spending
+  // gas-wallet funds on sweeps that can't succeed.
+  const signed = await verifyCircleWebhook(
+    rawBody,
+    request.headers.get("x-circle-signature"),
+    request.headers.get("x-circle-key-id"),
+  );
+  if (!signed) {
+    return NextResponse.json({ error: "invalid signature" }, { status: 401 });
   }
 
   type NotificationBody = {
@@ -48,6 +41,7 @@ export async function POST(request: NextRequest) {
       amount?: string;
       txHash?: string;
       state?: string;
+      tokenId?: string;
     };
   };
 
@@ -85,6 +79,21 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  // Universal Receive sweeps USDC only. Circle notifies for any token that
+  // lands on a receive address — on mainnet that includes airdropped spam
+  // posing as "USDC" — so require the chain's real USDC contract.
+  let isUsdc: boolean;
+  try {
+    isUsdc = await isInboundUsdc(n.tokenId, chain);
+  } catch (err) {
+    // Token lookup failed (Circle API hiccup): ask Circle to retry later.
+    console.error("[Glide webhook] token lookup:", err);
+    return NextResponse.json({ error: "token lookup failed" }, { status: 503 });
+  }
+  if (!isUsdc) {
+    return NextResponse.json({ ok: true, ignored: "not USDC" });
+  }
+
   // Phase 1 (sync): atomic claim. If another retry already claimed this
   // sourceTxHash, the DB unique constraint trips and we short-circuit.
   const claim = await claimIncoming({
@@ -110,7 +119,7 @@ export async function POST(request: NextRequest) {
       amount,
       chainLabel: claim.chainLabel,
     });
-    if (result?.status !== "swept") {
+    if (result?.status === "failed") {
       console.error("[Glide webhook] sweep failed:", result);
     }
   });

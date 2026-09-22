@@ -1,40 +1,49 @@
 import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
-import { AppKit } from "@circle-fin/app-kit";
-import { createGlideBridgeAdapter } from "@/lib/glide-bridge-adapter";
+import { AppKit, type BridgeResult } from "@circle-fin/app-kit";
 import { ensureSourceGas } from "@/lib/gas-refill";
 import { kitKeyStatus, resolveKitKey } from "@/lib/kit-key";
+import { EXTERNAL_CHAINS, IS_MAINNET, type ExternalChainKey } from "@/lib/network";
 import {
+  Arc,
   ArcTestnet,
+  Arbitrum,
   ArbitrumSepolia,
+  Base,
   BaseSepolia,
+  Ethereum,
   EthereumSepolia,
+  Polygon,
   PolygonAmoy,
 } from "@circle-fin/app-kit/chains";
-import type { BridgeResult } from "@circle-fin/bridge-kit";
+
+/** App Kit chain definition for Arc on the active network. */
+export const ARC_KIT_CHAIN = IS_MAINNET ? Arc : ArcTestnet;
 
 export const BRIDGE_NETWORKS = {
-  ethereum: { chain: EthereumSepolia, label: "Ethereum" },
-  base: { chain: BaseSepolia, label: "Base" },
-  polygon: { chain: PolygonAmoy, label: "Polygon" },
-  arbitrum: { chain: ArbitrumSepolia, label: "Arbitrum" },
+  ethereum: { chain: IS_MAINNET ? Ethereum : EthereumSepolia, label: "Ethereum" },
+  base: { chain: IS_MAINNET ? Base : BaseSepolia, label: "Base" },
+  polygon: { chain: IS_MAINNET ? Polygon : PolygonAmoy, label: "Polygon" },
+  arbitrum: { chain: IS_MAINNET ? Arbitrum : ArbitrumSepolia, label: "Arbitrum" },
 } as const;
 
-export type BridgeNetworkKey = keyof typeof BRIDGE_NETWORKS;
+export type BridgeNetworkKey = ExternalChainKey;
 
 /** Maps Glide's BridgeNetworkKey to Circle's blockchain identifier. Shared by
  * both inbound sweeps (cctp-receive) and outbound bridges (executeArcBridge)
  * so gas-refill targets stay in sync across directions. */
 export const BRIDGE_TO_CIRCLE_BLOCKCHAIN: Record<BridgeNetworkKey, string> = {
-  base: "BASE-SEPOLIA",
-  ethereum: "ETH-SEPOLIA",
-  polygon: "MATIC-AMOY",
-  arbitrum: "ARB-SEPOLIA",
+  base: EXTERNAL_CHAINS.base.circleBlockchain,
+  ethereum: EXTERNAL_CHAINS.ethereum.circleBlockchain,
+  polygon: EXTERNAL_CHAINS.polygon.circleBlockchain,
+  arbitrum: EXTERNAL_CHAINS.arbitrum.circleBlockchain,
 };
 
 type GlideAppKit = {
   kit: AppKit;
   adapter: ReturnType<typeof createCircleWalletsAdapter>;
-  kitKey: string;
+  /** Optional since App Kit 1.15 — swaps accept the Circle API key. Passed
+   * through when CIRCLE_KIT_KEY is set so existing deployments keep using it. */
+  kitKey?: string;
 };
 
 let cached: GlideAppKit | null = null;
@@ -44,12 +53,14 @@ export function getGlideAppKit(): GlideAppKit {
 
   const apiKey = process.env.CIRCLE_API_KEY?.trim();
   const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();
-  const kitKey = resolveKitKey();
+  const kitKey = kitKeyStatus().source !== "none" ? resolveKitKey() : undefined;
 
   if (!apiKey || !entitySecret) {
     throw new Error("Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET");
   }
 
+  // One Circle Wallets adapter serves swaps and both sides of every bridge
+  // (developer-controlled SCAs, signed server-side).
   const adapter = createCircleWalletsAdapter({ apiKey, entitySecret });
   cached = { kit: new AppKit(), adapter, kitKey };
   return cached;
@@ -78,7 +89,7 @@ export async function estimateArcSwap(input: {
   const tokenOut = input.tokenOut ?? "EURC";
 
   const estimate = await kit.estimateSwap({
-    from: { adapter, chain: ArcTestnet, address: input.walletAddress },
+    from: { adapter, chain: ARC_KIT_CHAIN, address: input.walletAddress },
     tokenIn,
     tokenOut,
     amountIn: input.amountIn,
@@ -99,16 +110,9 @@ export async function estimateArcBridge(input: {
   const dest = BRIDGE_NETWORKS[input.network];
   if (!dest) throw new Error("Unsupported destination network");
 
-  const apiKey = process.env.CIRCLE_API_KEY?.trim();
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();
-  if (!apiKey || !entitySecret) {
-    throw new Error("Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET");
-  }
-
-  const { kit } = getGlideAppKit();
-  const bridgeAdapter = createGlideBridgeAdapter({ apiKey, entitySecret });
+  const { kit, adapter: bridgeAdapter } = getGlideAppKit();
   const estimate = await kit.estimateBridge({
-    from: { adapter: bridgeAdapter, chain: ArcTestnet, address: input.walletAddress },
+    from: { adapter: bridgeAdapter, chain: ARC_KIT_CHAIN, address: input.walletAddress },
     to: { adapter: bridgeAdapter, chain: dest.chain, address: input.walletAddress },
     amount: input.amount,
     token: "USDC",
@@ -132,7 +136,7 @@ export async function executeArcSwap(input: {
 
   try {
     const result = await kit.swap({
-      from: { adapter, chain: ArcTestnet, address: input.walletAddress },
+      from: { adapter, chain: ARC_KIT_CHAIN, address: input.walletAddress },
       tokenIn,
       tokenOut,
       amountIn: input.amountIn,
@@ -159,7 +163,7 @@ export async function executeArcSwap(input: {
     };
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : "Swap failed on Arc testnet";
+      err instanceof Error ? err.message : "Swap failed on Arc";
     if (message.includes("CIRCLE_KIT_KEY") || message.includes("Missing")) {
       throw err;
     }
@@ -204,14 +208,7 @@ export async function sweepIncomingToArc(input: {
   const source = BRIDGE_NETWORKS[input.sourceNetwork];
   if (!source) throw new Error("Unsupported source network");
 
-  const { kit } = getGlideAppKit();
-  const apiKey = process.env.CIRCLE_API_KEY?.trim();
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();
-  if (!apiKey || !entitySecret) {
-    throw new Error("Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET");
-  }
-
-  const bridgeAdapter = createGlideBridgeAdapter({ apiKey, entitySecret });
+  const { kit, adapter: bridgeAdapter } = getGlideAppKit();
 
   const result = await kit.bridge({
     from: {
@@ -221,7 +218,7 @@ export async function sweepIncomingToArc(input: {
     },
     to: {
       adapter: bridgeAdapter,
-      chain: ArcTestnet,
+      chain: ARC_KIT_CHAIN,
       address: input.destinationAddress,
     },
     amount: input.amount,
@@ -245,14 +242,7 @@ export async function executeArcBridge(input: {
     throw new Error("Unsupported destination network");
   }
 
-  const { kit } = getGlideAppKit();
-  const apiKey = process.env.CIRCLE_API_KEY?.trim();
-  const entitySecret = process.env.CIRCLE_ENTITY_SECRET?.trim();
-  if (!apiKey || !entitySecret) {
-    throw new Error("Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET");
-  }
-
-  const bridgeAdapter = createGlideBridgeAdapter({ apiKey, entitySecret });
+  const { kit, adapter: bridgeAdapter } = getGlideAppKit();
 
   // Outbound mirror of cctp-receive's inbound refill: Circle's bridge SDK
   // pre-flights native balance on BOTH chains. Source (Arc) is fine - USDC
@@ -280,7 +270,7 @@ export async function executeArcBridge(input: {
     const result = await kit.bridge({
       from: {
         adapter: bridgeAdapter,
-        chain: ArcTestnet,
+        chain: ARC_KIT_CHAIN,
         address: input.walletAddress,
       },
       to: {
@@ -301,7 +291,7 @@ export async function executeArcBridge(input: {
     };
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : "Bridge failed on Arc testnet";
+      err instanceof Error ? err.message : "Bridge failed on Arc";
     if (message.includes("CIRCLE_KIT_KEY") || message.includes("Missing")) {
       throw err;
     }

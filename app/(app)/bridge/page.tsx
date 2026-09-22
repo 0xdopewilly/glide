@@ -14,6 +14,7 @@ import type { BridgeNetworkKey } from "@/lib/app-kit";
 import { ArrowDown, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ARC_NETWORK } from "@/lib/network";
 
 const NETWORKS: { value: BridgeNetworkKey; label: string }[] = [
   { value: "base", label: "Base" },
@@ -130,7 +131,7 @@ export default function BridgePage() {
                           USDC
                         </span>
                         <span className="glide-label-mono text-[10px] font-semibold text-[var(--glide-muted)]">
-                          Arc testnet
+                          {ARC_NETWORK.label}
                         </span>
                       </div>
                     </div>

@@ -1,49 +1,86 @@
 import { createCircleClient } from "@/lib/circle";
+import {
+  EXTERNAL_CHAINS,
+  GLIDE_NETWORK,
+  type ExternalChainKey,
+  type GlideNetwork,
+} from "@/lib/network";
 import { createPublicClient, http, parseEther, type Address, type Chain } from "viem";
-import { arbitrumSepolia, baseSepolia, polygonAmoy, sepolia } from "viem/chains";
+import {
+  arbitrum,
+  arbitrumSepolia,
+  base,
+  baseSepolia,
+  mainnet,
+  polygon,
+  polygonAmoy,
+  sepolia,
+} from "viem/chains";
 
-/** Chain-specific gas refill config. Add new chains alongside RECEIVE_CHAINS.
- * `minEth` / `refillEth` are misnomers - the unit is the chain's native token
- * (MATIC on Polygon, ETH everywhere else), all with 18 decimals so parseEther
- * works uniformly. */
-const REFILL_CONFIG = {
-  "BASE-SEPOLIA": {
-    chain: baseSepolia,
-    /** Glide-operated SCA wallet on this chain, holds native ETH for refills.
-     * Provision once via Circle Console + fund via faucet. */
-    serviceWalletIdEnv: "GLIDE_GAS_WALLET_BASE_SEPOLIA",
-    /** Min ETH a user wallet must hold to attempt a sweep. Below this we
-     * top up from the service wallet before letting the bridge fire. */
-    minEth: "0.00005",
-    /** How much ETH we send per refill. Sized for several sweeps. */
-    refillEth: "0.0005",
+type RefillChainConfig = {
+  chain: Chain;
+  /** Min native balance a user wallet must hold to attempt a sweep. Below
+   * this we top up from the service wallet before letting the bridge fire.
+   * `minEth` / `refillEth` are misnomers - the unit is the chain's native
+   * token (POL on Polygon, ETH everywhere else), all with 18 decimals so
+   * parseEther works uniformly. */
+  minEth: string;
+  /** How much native token we send per refill. Sized for several sweeps. */
+  refillEth: string;
+};
+
+/** Per-chain gas refill config. Mainnet values are starting points — tune
+ * them from real sweep costs once the service wallets are live. */
+const REFILL_BY_CHAIN: Record<
+  ExternalChainKey,
+  Record<GlideNetwork, RefillChainConfig>
+> = {
+  base: {
+    testnet: { chain: baseSepolia, minEth: "0.00005", refillEth: "0.0005" },
+    mainnet: { chain: base, minEth: "0.00005", refillEth: "0.0005" },
   },
-  "ETH-SEPOLIA": {
-    chain: sepolia,
-    serviceWalletIdEnv: "GLIDE_GAS_WALLET_ETH_SEPOLIA",
+  ethereum: {
     /** Ethereum L1 is ~10-50x more expensive than L2s, so larger thresholds. */
-    minEth: "0.0008",
-    refillEth: "0.005",
+    testnet: { chain: sepolia, minEth: "0.0008", refillEth: "0.005" },
+    mainnet: { chain: mainnet, minEth: "0.002", refillEth: "0.005" },
   },
-  "MATIC-AMOY": {
-    chain: polygonAmoy,
-    serviceWalletIdEnv: "GLIDE_GAS_WALLET_MATIC_AMOY",
-    /** Native is MATIC on Polygon - cheaper per unit, faucet drops are bigger. */
-    minEth: "0.01",
-    refillEth: "0.05",
+  polygon: {
+    testnet: { chain: polygonAmoy, minEth: "0.01", refillEth: "0.05" },
+    mainnet: { chain: polygon, minEth: "0.05", refillEth: "0.2" },
   },
-  "ARB-SEPOLIA": {
-    chain: arbitrumSepolia,
-    serviceWalletIdEnv: "GLIDE_GAS_WALLET_ARB_SEPOLIA",
+  arbitrum: {
     /** L2 like Base - tiny gas costs. */
-    minEth: "0.00005",
-    refillEth: "0.0005",
+    testnet: { chain: arbitrumSepolia, minEth: "0.00005", refillEth: "0.0005" },
+    mainnet: { chain: arbitrum, minEth: "0.00005", refillEth: "0.0005" },
   },
-} as const;
+};
 
-type CircleBlockchain = keyof typeof REFILL_CONFIG;
+/** Env var holding the Glide-operated gas service wallet id for a chain,
+ * e.g. GLIDE_GAS_WALLET_BASE_SEPOLIA (testnet) or GLIDE_GAS_WALLET_BASE
+ * (mainnet). The wallet is a Circle SCA holding native gas for refills;
+ * provision it via /api/admin/gas-wallet and fund it. */
+export function gasWalletEnvVar(circleBlockchain: string): string {
+  return `GLIDE_GAS_WALLET_${circleBlockchain.replace(/-/g, "_")}`;
+}
 
-function isSupportedChain(chain: string): chain is CircleBlockchain {
+/** Refill config for the active network, keyed by Circle blockchain id. */
+const REFILL_CONFIG: Record<
+  string,
+  RefillChainConfig & { serviceWalletIdEnv: string }
+> = Object.fromEntries(
+  (Object.keys(EXTERNAL_CHAINS) as ExternalChainKey[]).map((key) => {
+    const circleBlockchain = EXTERNAL_CHAINS[key].circleBlockchain;
+    return [
+      circleBlockchain,
+      {
+        ...REFILL_BY_CHAIN[key][GLIDE_NETWORK],
+        serviceWalletIdEnv: gasWalletEnvVar(circleBlockchain),
+      },
+    ];
+  }),
+);
+
+function isSupportedChain(chain: string): boolean {
   return chain in REFILL_CONFIG;
 }
 

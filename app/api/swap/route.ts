@@ -1,7 +1,7 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { assertPinVerified } from "@/lib/pin";
 import { executeArcSwap } from "@/lib/app-kit";
-import { safeApiError } from "@/lib/circle";
+import { GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
 import { notifySwapComplete } from "@/lib/push";
 import { recordTransaction } from "@/lib/transactions-db";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
       status: "completed",
       txHash: swap.txHash,
       explorerUrl: swap.explorerUrl,
-      chain: "ARC-TESTNET",
+      chain: GLIDE_BLOCKCHAIN,
       metadata: { amountOut: received, tokenIn, tokenOut },
     }).catch((err) => console.error("[Glide] swap record:", err));
 

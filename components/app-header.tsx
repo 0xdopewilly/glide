@@ -8,6 +8,7 @@ import { useGoBack } from "@/lib/use-go-back";
 import { ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { IS_MAINNET } from "@/lib/network";
 
 export function AppHeader({
   title,
@@ -70,16 +71,18 @@ export function AppHeader({
         priority
         className="hidden h-7 w-auto dark:block"
       />
-      <span
-        className="glide-label-mono rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
-        style={{
-          background: "var(--glide-primary-container)",
-          color: "var(--glide-text)",
-        }}
-        aria-label="Testnet"
-      >
-        Testnet
-      </span>
+      {IS_MAINNET ? null : (
+        <span
+          className="glide-label-mono rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+          style={{
+            background: "var(--glide-primary-container)",
+            color: "var(--glide-text)",
+          }}
+          aria-label="Testnet"
+        >
+          Testnet
+        </span>
+      )}
     </Link>
   ) : (
     <span className="h-10 w-10 shrink-0" aria-hidden />

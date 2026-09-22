@@ -5,7 +5,7 @@ import {
   executeArcBridge,
   type BridgeNetworkKey,
 } from "@/lib/app-kit";
-import { safeApiError } from "@/lib/circle";
+import { GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
 import { notifyBridgeComplete } from "@/lib/push";
 import { recordTransaction } from "@/lib/transactions-db";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
@@ -99,13 +99,24 @@ export async function POST(request: NextRequest) {
       status,
       txHash: bridge.txHash,
       explorerUrl: bridge.explorerUrl,
-      chain: "ARC-TESTNET",
+      chain: GLIDE_BLOCKCHAIN,
       metadata: { destination: label, network },
     }).catch((err) => console.error("[Glide] bridge record:", err));
 
-    void notifyBridgeComplete(session.userId, parsed.toFixed(2), label).catch(
-      (err) => console.error("[Glide] bridge push:", err),
-    );
+    // App Kit reports bridge failures on the result (state "error") rather
+    // than throwing — surface them instead of telling the user it worked.
+    if (status === "failed") {
+      return NextResponse.json(
+        { error: "Bridge could not be completed. Your USDC was not moved." },
+        { status: 502 },
+      );
+    }
+
+    if (status === "completed") {
+      void notifyBridgeComplete(session.userId, parsed.toFixed(2), label).catch(
+        (err) => console.error("[Glide] bridge push:", err),
+      );
+    }
 
     return NextResponse.json({
       ok: true,

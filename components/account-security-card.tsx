@@ -1,6 +1,7 @@
 "use client";
 
 import { Shield, Wallet } from "lucide-react";
+import { ARC_NETWORK } from "@/lib/network";
 
 export function AccountSecurityCard() {
   return (
@@ -42,8 +43,8 @@ export function AccountSecurityCard() {
           <strong className="font-medium" style={{ color: "var(--glide-text)" }}>
             Receive & copy:
           </strong>{" "}
-          Your public address is yours to share. Anyone can send USDC to it on
-          Arc testnet.
+          Your public address is yours to share. Anyone can send USDC to it on{" "}
+          {ARC_NETWORK.label}.
         </li>
       </ul>
     </section>

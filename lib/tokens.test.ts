@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { netFlowUsd } from "@/lib/tokens";
+import {
+  ARC_CIRBTC_TOKEN_ADDRESS,
+  ARC_EURC_TOKEN_ADDRESS,
+  ARC_USDC_ERC20_ADDRESS,
+  classifyArcToken,
+  netFlowUsd,
+} from "@/lib/tokens";
 
 const iso = (msAgo: number) => new Date(Date.now() - msAgo).toISOString();
 const MIN = 60_000;
@@ -55,5 +61,36 @@ describe("netFlowUsd", () => {
     expect(
       netFlowUsd([{ variant: "credit", amount: "+€10.00", createdAt: iso(HOUR) }]),
     ).toBeCloseTo(10, 5);
+  });
+});
+
+// Tokens must be identified by contract address: anyone can deploy a token
+// whose symbol/name is "USDC" and airdrop it, so symbol never counts.
+describe("classifyArcToken", () => {
+  it("recognizes native USDC and its ERC-20 interface", () => {
+    expect(classifyArcToken({ isNative: true })).toBe("USDC");
+    expect(classifyArcToken({ tokenAddress: ARC_USDC_ERC20_ADDRESS })).toBe("USDC");
+  });
+
+  it("recognizes EURC and cirBTC by address, case-insensitively", () => {
+    expect(
+      classifyArcToken({ tokenAddress: ARC_EURC_TOKEN_ADDRESS.toLowerCase() }),
+    ).toBe("EURC");
+    expect(classifyArcToken({ tokenAddress: ARC_CIRBTC_TOKEN_ADDRESS })).toBe(
+      "cirBTC",
+    );
+  });
+
+  it("rejects unknown contracts, even ones posing as USDC", () => {
+    expect(
+      classifyArcToken({
+        tokenAddress: "0x1111111111111111111111111111111111111111",
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects a non-native token with no address", () => {
+    expect(classifyArcToken({ isNative: false })).toBeNull();
+    expect(classifyArcToken({})).toBeNull();
   });
 });

@@ -9,7 +9,8 @@ import { fetchOffArcUsdcBalances } from "@/lib/chain-balances";
 import { CHAIN_META } from "@/lib/chain-meta";
 import {
   ARC_DISPLAY_TOKENS,
-  isArcStablecoin,
+  addressesEqual,
+  classifyArcToken,
   isEurcToken,
   isUsdcToken,
   normalizeTokenSymbol,
@@ -57,7 +58,17 @@ type TokenRow = {
   tokenId?: string;
 };
 
-async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
+/** Maps a raw balance row to the symbol we credit it as, or null to drop it.
+ * Must identify tokens by contract address: symbols and names are spoofable. */
+type TokenClassifier = (row: {
+  tokenAddress?: string;
+  isNative?: boolean;
+}) => string | null;
+
+async function fetchTokenRows(
+  walletId: string,
+  classify: TokenClassifier,
+): Promise<TokenRow[]> {
   const initialized = createCircleClient();
   if ("error" in initialized) {
     throw new Error(initialized.error);
@@ -67,13 +78,16 @@ async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
     id: walletId,
   });
 
-  const raw = (balances.data?.tokenBalances ?? []).map((entry) => ({
-    amount: parseFloat(entry.amount ?? "0"),
-    symbol: entry.token?.symbol ?? entry.token?.name,
-    tokenAddress: entry.token?.tokenAddress?.toLowerCase(),
-    isNative: entry.token?.isNative,
-    tokenId: entry.token?.id,
-  }));
+  const raw = (balances.data?.tokenBalances ?? []).flatMap((entry) => {
+    const row = {
+      amount: parseFloat(entry.amount ?? "0"),
+      tokenAddress: entry.token?.tokenAddress?.toLowerCase(),
+      isNative: entry.token?.isNative,
+      tokenId: entry.token?.id,
+    };
+    const symbol = classify(row);
+    return symbol ? [{ ...row, symbol }] : [];
+  });
 
   // Arc-specific: USDC is BOTH the chain's native gas token AND an ERC-20.
   // Circle's API returns the same balance twice (once with isNative:true, no
@@ -112,13 +126,12 @@ async function fetchTokenRows(walletId: string): Promise<TokenRow[]> {
 export async function fetchWalletTokenBalances(
   walletId: string,
 ): Promise<GlideTokenBalance[]> {
-  const rows = await fetchTokenRows(walletId);
+  const rows = await fetchTokenRows(walletId, classifyArcToken);
   const amounts = new Map<string, number>();
 
   for (const row of rows) {
     if (Number.isNaN(row.amount) || row.amount <= 0) continue;
     const symbol = normalizeTokenSymbol(row.symbol);
-    if (!isArcStablecoin(symbol)) continue;
     amounts.set(symbol, (amounts.get(symbol) ?? 0) + row.amount);
   }
 
@@ -170,15 +183,19 @@ export async function fetchUsdcBalance(walletId: string): Promise<number> {
 /** Raw USDC balance on any-chain wallet (returns 0 if no USDC token found).
  * Unlike fetchUsdcBalance which assumes the Arc display set, this reads any
  * supported chain — used by Universal Receive's manual sweep on receive
- * wallets that aren't on Arc. */
+ * wallets that aren't on Arc. `usdcAddress` is that chain's USDC contract;
+ * only that contract counts. */
 export async function fetchUsdcBalanceAnyChain(
   walletId: string,
+  usdcAddress: string,
 ): Promise<number> {
-  const rows = await fetchTokenRows(walletId);
+  const rows = await fetchTokenRows(walletId, (row) =>
+    addressesEqual(row.tokenAddress, usdcAddress) ? "USDC" : null,
+  );
   let total = 0;
   for (const row of rows) {
     if (Number.isNaN(row.amount) || row.amount <= 0) continue;
-    if (isUsdcToken(normalizeTokenSymbol(row.symbol))) total += row.amount;
+    total += row.amount;
   }
   return total;
 }

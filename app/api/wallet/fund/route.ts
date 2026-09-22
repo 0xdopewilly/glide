@@ -1,11 +1,17 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
-import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
+import { createCircleClient, safeApiError } from "@/lib/circle";
+import { ARC_NETWORK, IS_MAINNET } from "@/lib/network";
 import { getOrCreateWalletForUser } from "@/lib/users";
 import { fetchWalletById } from "@/lib/wallet-service";
 import { NextResponse } from "next/server";
 
-/** POST - request testnet USDC for the signed-in user's Arc wallet (Circle faucet). */
+/** POST - request testnet USDC for the signed-in user's Arc wallet (Circle faucet).
+ * Testnet only: there is no faucet for real money. */
 export async function POST() {
+  if (IS_MAINNET || ARC_NETWORK.circleBlockchain !== "ARC-TESTNET") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const session = await requireSessionUser();
   if (isAuthError(session)) return session;
 
@@ -33,7 +39,7 @@ export async function POST() {
 
     await initialized.client.requestTestnetTokens({
       address,
-      blockchain: GLIDE_BLOCKCHAIN,
+      blockchain: ARC_NETWORK.circleBlockchain,
       usdc: true,
     });
 

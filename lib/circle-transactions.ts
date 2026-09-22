@@ -1,15 +1,13 @@
 import { runSaveRulesForReceive } from "@/lib/automations";
-import { createCircleClient } from "@/lib/circle";
+import {
+  createCircleClient,
+  GLIDE_BLOCKCHAIN,
+  resolveCircleToken,
+} from "@/lib/circle";
 import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
 import { notifyIncomingPayment } from "@/lib/push";
-import {
-  ARC_CIRBTC_TOKEN_ADDRESS,
-  ARC_EURC_TOKEN_ADDRESS,
-  addressesEqual,
-  isCirBtcToken,
-  isEurcToken,
-} from "@/lib/tokens";
+import { classifyArcToken } from "@/lib/tokens";
 import { arcExplorerUrl, recordTransaction } from "@/lib/transactions-db";
 import { findUserByWalletAddress } from "@/lib/usernames";
 import { formatRelativeDate, shortenAddress } from "@/lib/format";
@@ -25,8 +23,7 @@ type CircleTx = {
   transactionType?: string;
   txHash?: string;
   blockchain?: string;
-  token?: { symbol?: string; name?: string };
-  tokenAddress?: string;
+  tokenId?: string;
 };
 
 function inferKind(tx: CircleTx): TransactionKind {
@@ -35,27 +32,33 @@ function inferKind(tx: CircleTx): TransactionKind {
   return "send";
 }
 
-function inferToken(tx: CircleTx): "USDC" | "EURC" | "cirBTC" {
-  const sym = tx.token?.symbol ?? tx.token?.name ?? "";
-  if (isCirBtcToken(sym)) return "cirBTC";
-  if (isEurcToken(sym)) return "EURC";
+type ArcToken = "USDC" | "EURC" | "cirBTC";
 
-  // Fall back to contract address (most reliable when Circle omits symbol).
-  if (addressesEqual(tx.tokenAddress, ARC_CIRBTC_TOKEN_ADDRESS)) return "cirBTC";
-  if (addressesEqual(tx.tokenAddress, ARC_EURC_TOKEN_ADDRESS)) return "EURC";
-
-  const type = tx.transactionType?.toLowerCase() ?? "";
-  if (/\bcirbtc\b|\bcir-btc\b/.test(type)) return "cirBTC";
-  if (/\beurc\b/.test(type)) return "EURC";
-  return "USDC";
+/** Which supported Arc token a Circle transaction moved, by contract address
+ * via its tokenId — or null for anything else (contract calls, other chains,
+ * and airdropped look-alike tokens, which on mainnet routinely claim to be
+ * "USDC"). Null rows are never recorded, notified, or fed to automations. */
+async function resolveArcToken(tx: CircleTx): Promise<ArcToken | null> {
+  if (!tx.tokenId) return null;
+  try {
+    const info = await resolveCircleToken(tx.tokenId);
+    if (!info || info.blockchain !== GLIDE_BLOCKCHAIN) return null;
+    return classifyArcToken(info);
+  } catch (err) {
+    // Skip for now; the next sync retries (failed lookups aren't cached).
+    console.warn("[Glide] token lookup:", err);
+    return null;
+  }
 }
 
-export function mapCircleTransaction(tx: CircleTx): GlideTransaction {
+export function mapCircleTransaction(
+  tx: CircleTx,
+  token: ArcToken,
+): GlideTransaction {
   const amountRaw = tx.amounts?.[0] ?? "0";
   const amountNum = parseFloat(amountRaw);
   const kind = inferKind(tx);
   const isCredit = kind === "receive";
-  const token = inferToken(tx);
 
   const txHash = tx.txHash;
   const explorerUrl = txHash ? arcExplorerUrl(txHash) : undefined;
@@ -93,10 +96,13 @@ export async function syncCircleTransactionsToDb(
   walletId: string,
 ): Promise<GlideTransaction[]> {
   const circleTxs = await fetchCircleTransactions(walletId);
+  const synced: GlideTransaction[] = [];
 
   for (const tx of circleTxs) {
-    const token = inferToken(tx);
-    const mapped = mapCircleTransaction(tx);
+    const token = await resolveArcToken(tx);
+    if (!token) continue;
+    const mapped = mapCircleTransaction(tx, token);
+    synced.push(mapped);
 
     // Universal Receive: skip Arc INBOUND mints that are CCTP sweep tails.
     // The webhook already created the activity row + fired the push - sync
@@ -238,5 +244,5 @@ export async function syncCircleTransactionsToDb(
     }
   }
 
-  return circleTxs.map(mapCircleTransaction);
+  return synced;
 }

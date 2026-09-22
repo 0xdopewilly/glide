@@ -3,6 +3,7 @@
 import { FlowPage } from "@/components/flow-page";
 import { FormField, inputClassName } from "@/components/form-field";
 import { StableTokenSegment } from "@/components/stable-token-segment";
+import { IS_MAINNET } from "@/lib/network";
 import { PLACEHOLDER_GLIDE_TAG } from "@/lib/placeholders";
 import { GlideButton } from "@/components/glide-button";
 import { NumericKeypad } from "@/components/numeric-keypad";
@@ -354,15 +355,17 @@ export default function RequestPage() {
           </div>
         )}
 
-        <p className="mt-8 text-center text-xs text-[var(--glide-muted)]">
-          Need testnet USDC or EURC?{" "}
-          <Link
-            href="/receive"
-            className="font-semibold text-[var(--glide-text)] underline"
-          >
-            Get testnet funds
-          </Link>
-        </p>
+        {IS_MAINNET ? null : (
+          <p className="mt-8 text-center text-xs text-[var(--glide-muted)]">
+            Need testnet USDC or EURC?{" "}
+            <Link
+              href="/receive"
+              className="font-semibold text-[var(--glide-text)] underline"
+            >
+              Get testnet funds
+            </Link>
+          </p>
+        )}
       </div>
     </FlowPage>
   );

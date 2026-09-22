@@ -3,6 +3,7 @@
 import type { ActionSuccessType } from "@/lib/chat-cache";
 import { ArrowLeftRight, Globe2, HandCoins, Send } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ARC_NETWORK } from "@/lib/network";
 
 export type ProcessingAction = ActionSuccessType | "request";
 
@@ -15,7 +16,7 @@ const ICONS: Record<ProcessingAction, typeof Send> = {
 
 const STAGES: Record<ProcessingAction, { label: string; hint: string }[]> = {
   send: [
-    { label: "Sending", hint: "On Arc testnet" },
+    { label: "Sending", hint: `On ${ARC_NETWORK.label}` },
     { label: "Confirming", hint: "Almost there" },
   ],
   swap: [
@@ -25,7 +26,7 @@ const STAGES: Record<ProcessingAction, { label: string; hint: string }[]> = {
   ],
   bridge: [
     { label: "Bridging", hint: "Cross-chain via CCTP" },
-    { label: "Confirming", hint: "Can take a minute on testnet" },
+    { label: "Confirming", hint: "Can take a minute" },
     { label: "Finishing", hint: "Almost there" },
   ],
   request: [

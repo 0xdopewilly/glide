@@ -1,6 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { getAdminStats } from "@/lib/admin-stats";
+import { ARC_NETWORK } from "@/lib/network";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -330,7 +331,7 @@ export default async function AdminDashboardPage() {
         </section>
 
         <footer className="pb-4 pt-4 text-center text-xs text-slate-400">
-          glidepay admin · Arc testnet
+          glidepay admin · {ARC_NETWORK.label}
         </footer>
       </div>
     </main>
