@@ -27,5 +27,6 @@ CREATE INDEX "Transaction_userId_createdAt_idx" ON "Transaction"("userId", "crea
 -- CreateIndex
 CREATE INDEX "Transaction_txHash_idx" ON "Transaction"("txHash");
 
--- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- Foreign key to "User" moved to 20250519000001_transaction_user_fk: this
+-- migration sorts before init (which creates "User"), so adding it here broke
+-- `migrate deploy` on an empty database.
