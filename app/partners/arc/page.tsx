@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { prisma } from "@/lib/db";
+import { getSweepStats, getTransferStats, getUserStats } from "@/lib/metrics";
+import { IS_MAINNET, type ExternalChainKey } from "@/lib/network";
 
 // Re-render at most every 5 minutes; partner viewers don't need real-time.
 export const revalidate = 300;
@@ -8,18 +9,12 @@ export const revalidate = 300;
 const CHAIN_LABELS = ["Base", "Ethereum", "Polygon", "Arbitrum"] as const;
 type ChainLabel = (typeof CHAIN_LABELS)[number];
 
-type SweepRow = {
-  originChain: string | null;
-  status: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  amountLabel: string;
-};
-
 type ArcStats = {
   totalUsers: number;
-  totalSweeps: number;
-  completedSweeps: number;
+  activeUsers30d: number;
+  settledSweeps: number;
+  failedSweeps: number;
+  inFlightSweeps: number;
   sweepsByChain: Record<ChainLabel, number>;
   medianSweepSeconds: number | null;
   arcTransactions: number;
@@ -28,113 +23,37 @@ type ArcStats = {
   generatedAt: string;
 };
 
-function parseAmount(label: string): number {
-  // amountLabel is a display string like "+$12.50" or "−$0.00".
-  // Strip everything but digits and dot, then parse.
-  const n = parseFloat(label.replace(/[^0-9.]/g, ""));
-  return Number.isFinite(n) ? n : 0;
-}
+const CHAIN_KEY: Record<ChainLabel, ExternalChainKey> = {
+  Base: "base",
+  Ethereum: "ethereum",
+  Polygon: "polygon",
+  Arbitrum: "arbitrum",
+};
 
-function isCompletedStatus(status: string | null | undefined): boolean {
-  if (!status) return false;
-  const s = status.toLowerCase();
-  return s !== "pending" && s !== "failed" && s !== "error";
-}
-
+/** Same definitions as /api/public/stats and /admin (lib/metrics.ts). */
 async function getArcStats(): Promise<ArcStats> {
-  const [
-    totalUsers,
-    sweeps,
-    arcTransactions,
-    arcTxRows,
-  ] = await Promise.all([
-    prisma.user.count(),
-    prisma.transaction.findMany({
-      where: { kind: "receive", originChain: { not: null } },
-      select: {
-        originChain: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        amountLabel: true,
-      },
-    }),
-    prisma.transaction.count({
-      where: {
-        OR: [
-          { chain: "arc-testnet" },
-          { kind: { in: ["send", "swap"] } },
-        ],
-      },
-    }),
-    // For token volume split, we need metadata.token. Pull only the on-Arc rows.
-    prisma.transaction.findMany({
-      where: {
-        kind: { in: ["send", "receive", "swap"] },
-        status: { notIn: ["failed", "error"] },
-      },
-      select: { amountLabel: true, metadata: true, kind: true, circleTransactionId: true },
-    }),
+  const [users, transfers, sweeps] = await Promise.all([
+    getUserStats(),
+    getTransferStats(),
+    getSweepStats(),
   ]);
 
-  // Sweep aggregations
-  const sweepsByChain: Record<ChainLabel, number> = {
-    Base: 0,
-    Ethereum: 0,
-    Polygon: 0,
-    Arbitrum: 0,
-  };
-  let completedSweeps = 0;
-  const sweepDurationsMs: number[] = [];
-  for (const s of sweeps as SweepRow[]) {
-    const c = s.originChain as ChainLabel | null;
-    if (c && c in sweepsByChain) sweepsByChain[c] += 1;
-    if (isCompletedStatus(s.status)) {
-      completedSweeps += 1;
-      const dur = s.updatedAt.getTime() - s.createdAt.getTime();
-      if (dur > 0 && dur < 1000 * 60 * 60) {
-        // Cap at 1 hour to avoid background-job tail rewrites skewing the median.
-        sweepDurationsMs.push(dur);
-      }
-    }
-  }
-  let medianSweepSeconds: number | null = null;
-  if (sweepDurationsMs.length > 0) {
-    sweepDurationsMs.sort((a, b) => a - b);
-    const mid = Math.floor(sweepDurationsMs.length / 2);
-    const ms =
-      sweepDurationsMs.length % 2 === 0
-        ? (sweepDurationsMs[mid - 1] + sweepDurationsMs[mid]) / 2
-        : sweepDurationsMs[mid];
-    medianSweepSeconds = Math.round(ms / 1000);
-  }
-
-  // Volume by token. One Circle transfer creates two rows (sender debit +
-  // recipient credit); de-dupe on circleTransactionId so we don't double-count.
-  const seen = new Set<string>();
-  let usdcVolume = 0;
-  let eurcVolume = 0;
-  for (const r of arcTxRows) {
-    if (r.circleTransactionId) {
-      if (seen.has(r.circleTransactionId)) continue;
-      seen.add(r.circleTransactionId);
-    }
-    const meta = (r.metadata ?? {}) as { token?: unknown };
-    const token = typeof meta.token === "string" ? meta.token.toUpperCase() : "USDC";
-    const amt = parseAmount(r.amountLabel);
-    if (token === "EURC") eurcVolume += amt;
-    else usdcVolume += amt;
+  const sweepsByChain = {} as Record<ChainLabel, number>;
+  for (const label of CHAIN_LABELS) {
+    sweepsByChain[label] = sweeps.settledBySource[CHAIN_KEY[label]];
   }
 
   return {
-    totalUsers,
-    totalSweeps: sweeps.length,
-    completedSweeps,
+    totalUsers: users.total,
+    activeUsers30d: users.activeLast30d,
+    settledSweeps: sweeps.settled,
+    failedSweeps: sweeps.failed,
+    inFlightSweeps: sweeps.inFlight,
     sweepsByChain,
-    medianSweepSeconds,
-    arcTransactions,
-    usdcVolume,
-    eurcVolume,
+    medianSweepSeconds: sweeps.medianSeconds,
+    arcTransactions: transfers.count,
+    usdcVolume: transfers.volumeByToken.USDC ?? 0,
+    eurcVolume: transfers.volumeByToken.EURC ?? 0,
     generatedAt: new Date().toISOString(),
   };
 }
@@ -183,7 +102,7 @@ export default async function ArcPartnersPage({
   }
 
   const stats = await getArcStats();
-  const totalSweeps = stats.totalSweeps;
+  const totalSweeps = stats.settledSweeps;
 
   const chainEntries: Array<{ label: ChainLabel; count: number; pct: number }> =
     CHAIN_LABELS.map((label) => {
@@ -250,7 +169,7 @@ export default async function ArcPartnersPage({
               fontWeight: 700,
             }}
           >
-            Testnet
+            {IS_MAINNET ? "Mainnet" : "Testnet"}
           </span>
         </header>
 
@@ -289,18 +208,10 @@ export default async function ArcPartnersPage({
               lineHeight: 1.5,
             }}
           >
-            Every sweep moves real USDC onto Arc from another chain — that&apos;s
-            volume glidepay is actively driving to the network.
-            {stats.completedSweeps > 0 && totalSweeps > 0 ? (
-              <>
-                {" "}
-                {fmtInt(stats.completedSweeps)} settled
-                {totalSweeps - stats.completedSweeps > 0
-                  ? `, ${fmtInt(totalSweeps - stats.completedSweeps)} in flight or retrying`
-                  : ""}
-                .
-              </>
-            ) : null}
+            Settled sweeps only — each one moved USDC onto Arc from another
+            chain, volume glidepay is actively driving to the network.
+            {stats.inFlightSweeps > 0 ? ` ${fmtInt(stats.inFlightSweeps)} in flight.` : ""}
+            {stats.failedSweeps > 0 ? ` ${fmtInt(stats.failedSweeps)} failed.` : ""}
           </p>
         </section>
 
@@ -406,14 +317,14 @@ export default async function ArcPartnersPage({
             hint="Source-chain confirm → funds on Arc"
           />
           <Stat
-            label="Transactions on Arc"
+            label="Payments on Arc"
             value={fmtInt(stats.arcTransactions)}
-            hint="Sends, receives, swaps"
+            hint="Distinct transfers, each counted once"
           />
           <Stat
             label="Total users"
             value={fmtInt(stats.totalUsers)}
-            hint="glidepay accounts"
+            hint={`${fmtInt(stats.activeUsers30d)} active in the last 30 days`}
           />
           <Stat
             label="USDC volume"

@@ -6,12 +6,15 @@
 //   - `Transaction.amountLabel` is a display string (e.g. "+$12.50"). We strip
 //     non-numeric chars to derive the magnitude.
 //   - One Circle transfer creates TWO rows (debit on sender + credit on
-//     recipient). For volume we count CREDIT rows only so we don't double-count.
+//     recipient). Volume and sweep counts come from lib/metrics.ts, which
+//     counts each transfer once — shared with /api/public/stats and the
+//     partner page.
 //   - Universal Receive sweeps are `kind="receive"` rows with `originChain`
 //     populated (e.g. "Base", "Ethereum"). No separate table exists.
 //
 // The Prisma client lives in `lib/db.ts` in this repo (no `lib/prisma.ts`).
 import { prisma } from "@/lib/db";
+import { getSweepStats, getTransferStats } from "@/lib/metrics";
 
 type ByType = {
   send: number;
@@ -84,25 +87,6 @@ async function activeUsersSince(since: Date): Promise<number> {
   return rows.length;
 }
 
-function normaliseSource(label: string | null | undefined): keyof BySource | null {
-  if (!label) return null;
-  const l = label.toLowerCase();
-  if (l.includes("base")) return "base";
-  if (l.includes("eth")) return "ethereum";
-  if (l.includes("polygon") || l.includes("matic")) return "polygon";
-  if (l.includes("arb")) return "arbitrum";
-  return null;
-}
-
-function normaliseToken(raw: string | null | undefined): keyof VolumeByToken | null {
-  if (!raw) return null;
-  const t = raw.toUpperCase();
-  if (t === "USDC") return "usdc";
-  if (t === "EURC") return "eurc";
-  if (t === "CIRBTC" || t === "CBTC" || t === "BTC") return "cirbtc";
-  return null;
-}
-
 function labelToNumber(label: string | null | undefined): number {
   if (!label) return 0;
   const cleaned = label.replace(/[^0-9.]/g, "");
@@ -150,10 +134,9 @@ export async function getAdminStats(): Promise<AdminStats> {
     txLast30d,
     byKindRows,
     failedCount,
-    ursTotal,
-    ursLast7d,
-    sweepsByChainRows,
-    volumeRows,
+    transfers,
+    sweeps,
+    sweeps7d,
     recentRows,
   ] = await Promise.all([
     prisma.user.count(),
@@ -170,36 +153,11 @@ export async function getAdminStats(): Promise<AdminStats> {
       _count: { _all: true },
     }),
     prisma.transaction.count({ where: { status: "failed" } }),
-    prisma.transaction.count({
-      where: { kind: "receive", originChain: { not: null } },
-    }),
-    prisma.transaction.count({
-      where: {
-        kind: "receive",
-        originChain: { not: null },
-        createdAt: { gte: since7d },
-      },
-    }),
-    prisma.transaction.groupBy({
-      by: ["originChain"],
-      where: { kind: "receive", originChain: { not: null } },
-      _count: { _all: true },
-    }),
-    // Sum credit-side rows only so a send→receive pair counts once.
-    prisma.$queryRaw<Array<{ token: string; total: number }>>`
-      SELECT
-        COALESCE(UPPER(metadata->>'token'), 'USDC') AS token,
-        SUM(
-          CAST(
-            REGEXP_REPLACE("amountLabel", '[^0-9.]', '', 'g')
-            AS NUMERIC
-          )
-        )::float AS total
-      FROM "Transaction"
-      WHERE "variant" = 'credit'
-        AND "status" IS DISTINCT FROM 'failed'
-      GROUP BY 1
-    `,
+    // Volume + Universal Receive use the shared definitions (lib/metrics.ts)
+    // so admin, /api/public/stats and the partner page always agree.
+    getTransferStats(),
+    getSweepStats(),
+    getSweepStats(since7d),
     prisma.transaction.findMany({
       orderBy: { createdAt: "desc" },
       take: 50,
@@ -225,26 +183,18 @@ export async function getAdminStats(): Promise<AdminStats> {
       byType[k as keyof ByType] = row._count._all;
     }
   }
-  // "bridgeIn" = Universal Receive sweeps (subset of "receive" with originChain).
-  byType.bridgeIn = ursTotal;
+  // "bridgeIn" = settled Universal Receive sweeps.
+  byType.bridgeIn = sweeps.settled;
 
-  const bySource: BySource = {};
-  for (const row of sweepsByChainRows) {
-    const key = normaliseSource(row.originChain);
-    if (key) bySource[key] = (bySource[key] ?? 0) + row._count._all;
-  }
+  const bySource: BySource = { ...sweeps.settledBySource };
 
-  const volumeByToken: VolumeByToken = { usdc: 0, eurc: 0 };
-  for (const row of volumeRows) {
-    const key = normaliseToken(row.token);
-    if (!key) continue;
-    const value = Number(row.total ?? 0);
-    if (key === "cirbtc") {
-      volumeByToken.cirbtc = (volumeByToken.cirbtc ?? 0) + value;
-    } else {
-      volumeByToken[key] = (volumeByToken[key] ?? 0) + value;
-    }
-  }
+  const volumeByToken: VolumeByToken = {
+    usdc: transfers.volumeByToken.USDC ?? 0,
+    eurc: transfers.volumeByToken.EURC ?? 0,
+    ...(transfers.volumeByToken.cirBTC
+      ? { cirbtc: transfers.volumeByToken.cirBTC }
+      : {}),
+  };
 
   const recent = recentRows.map((r) => {
     const amount = labelToNumber(r.amountLabel);
@@ -278,11 +228,10 @@ export async function getAdminStats(): Promise<AdminStats> {
       failed: failedCount,
     },
     universalReceive: {
-      total: ursTotal,
-      last7d: ursLast7d,
+      total: sweeps.settled,
+      last7d: sweeps7d.settled,
       bySource,
-      // Origin-chain timestamps are not persisted, so latency is unmeasurable.
-      medianSweepSeconds: null,
+      medianSweepSeconds: sweeps.medianSeconds,
     },
     recent,
   };
