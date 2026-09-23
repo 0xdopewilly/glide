@@ -22,7 +22,7 @@ import {
 import { findContactByExactName } from "@/lib/contacts-db";
 import { ARC_NETWORK, IS_MAINNET } from "@/lib/network";
 import { findUserByUsername } from "@/lib/usernames";
-import { normalizeUsername } from "@/lib/validation";
+import { isValidWalletAddress, normalizeUsername } from "@/lib/validation";
 
 export type GlideIntent =
   | { action: "reply"; message: string }
@@ -40,7 +40,7 @@ export type GlideIntent =
       recipientName?: string;
     }
   | { action: "swap"; amount: string }
-  | { action: "bridge"; amount: string; network: BridgeNetwork }
+  | { action: "bridge"; amount: string; network: BridgeNetwork; to?: string }
   | {
       action: "request";
       amount: string;
@@ -112,7 +112,7 @@ You are Billy, the in-app assistant for glidepay. You output JSON only. You spea
 - Addresses: 0x + 40 hex chars.
 - Recipient ("to") can be a 0x address, @username, or a saved contact name.
 - "swap" is always swap JSON. EURC is a token, not a person. Never confuse with send.
-- "bridge" is always bridge JSON with network. Never send.
+- "bridge" is always bridge JSON with network. Never send. Include "to" (the 0x wallet address on that chain that receives the USDC) only if the user gave one — never invent it.
 - "split": the user ALREADY paid a bill and wants to request each friend's share. Equal split, dividing by (friends + 1). NEVER invent a total — use what the user said. NEVER send money on split.
 - "request": ask someone to pay YOU. Never navigate to /request.
 - Bridge supports USDC ONLY. If user asks to bridge EURC or cirBTC, reply explaining.
@@ -124,7 +124,7 @@ You are Billy, the in-app assistant for glidepay. You output JSON only. You spea
 - {"action":"send","amount":"1.00","token":"EURC","to":"khadee","recipientName":"Khadee"}
 - {"action":"send_batch","transfers":[{"amount":"1.00","token":"USDC"},{"amount":"0.001","token":"cirBTC"}],"to":"fifi"}
 - {"action":"swap","amount":"5.00"}
-- {"action":"bridge","amount":"10.00","network":"base"|"ethereum"|"polygon"|"arbitrum"}
+- {"action":"bridge","amount":"10.00","network":"base"|"ethereum"|"polygon"|"arbitrum","to":"0x..."}
 - {"action":"request","amount":"10.00","token":"USDC","glideTag":"khadee"}
 - {"action":"split","total":"60.00","token":"USDC","recipients":["khadee","tom"]}
 - {"action":"rule","ruleType":"save_on_receive","percent":10,"token":"USDC"}
@@ -208,10 +208,12 @@ export function parseAgentJson(raw: string): GlideIntent | null {
       typeof data.network === "string" &&
       BRIDGE_NETWORKS.has(data.network)
     ) {
+      const to = typeof data.to === "string" ? data.to.trim() : "";
       return {
         action: "bridge",
         amount: data.amount.trim(),
         network: data.network as BridgeNetwork,
+        ...(isValidWalletAddress(to) ? { to } : {}),
       };
     }
     if (

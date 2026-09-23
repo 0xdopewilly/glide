@@ -118,16 +118,14 @@ export async function notifySwapComplete(
 
 /** Notify a user that an auto-save rule ran — push + in-app inbox. Amount
  * labels are already formatted (e.g. "$10.00"). */
-export async function notifyAutoSave(
-  userId: string,
-  savedAmountLabel: string,
-  fromAmountLabel: string,
-  percent: number,
-) {
+/** Sent once the auto-save transfer has settled on-chain (not on submit).
+ * `summary` is the run's settled summary, e.g. "Saved $10.00 (10%) from a
+ * $100.00 payment". */
+export async function notifyAutoSave(userId: string, summary: string) {
   await notifyUser(userId, {
     type: "automation_saved",
     title: "Auto-saved to Savings",
-    body: `Saved ${savedAmountLabel} (${percent}%) from a ${fromAmountLabel} payment.`,
+    body: `${summary}.`,
     url: "/automations",
   });
 }

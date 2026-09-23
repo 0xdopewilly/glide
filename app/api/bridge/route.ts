@@ -2,8 +2,9 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { assertPinVerified } from "@/lib/pin";
 import {
   BRIDGE_NETWORKS,
-  executeArcBridge,
+  BRIDGE_TO_CIRCLE_BLOCKCHAIN,
   type BridgeNetworkKey,
+  executeArcBridge,
 } from "@/lib/app-kit";
 import { GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
 import { prisma } from "@/lib/db";
@@ -11,7 +12,8 @@ import type { Prisma } from "@prisma/client";
 import { notifyBridgeComplete } from "@/lib/push";
 import { recordTransaction } from "@/lib/transactions-db";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
-import { parseMoneyAmount } from "@/lib/validation";
+import { addressesEqual } from "@/lib/tokens";
+import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
 import { assertSufficientBalance } from "@/lib/wallet-service";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -39,15 +41,23 @@ export async function POST(request: NextRequest) {
       walletId?: string;
       amount?: string;
       network?: string;
+      destinationAddress?: string;
     };
 
     const walletId = body.walletId?.trim();
     const amount = body.amount?.trim();
     const network = body.network?.trim().toLowerCase() as BridgeNetworkKey;
+    const destinationAddress = body.destinationAddress?.trim() ?? "";
 
     if (!walletId || !amount || !network) {
       return NextResponse.json(
         { error: "walletId, amount, and network are required" },
+        { status: 400 },
+      );
+    }
+    if (!isValidWalletAddress(destinationAddress)) {
+      return NextResponse.json(
+        { error: "Enter the wallet address that should receive the USDC." },
         { status: 400 },
       );
     }
@@ -78,6 +88,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // glidepay's Arc address isn't a wallet the user controls on other chains,
+    // and their own receive address would just sweep straight back: both would
+    // strand or loop the funds.
+    const ownReceive = await prisma.walletAddress.findFirst({
+      where: {
+        userId: session.userId,
+        chain: BRIDGE_TO_CIRCLE_BLOCKCHAIN[network],
+      },
+      select: { address: true },
+    });
+    if (
+      addressesEqual(destinationAddress, wallet.address) ||
+      addressesEqual(destinationAddress, ownReceive?.address)
+    ) {
+      return NextResponse.json(
+        {
+          error: `That's your own glidepay address. Enter a wallet you control on ${BRIDGE_NETWORKS[network].label}.`,
+        },
+        { status: 400 },
+      );
+    }
+
     await assertSufficientBalance(walletId, parsed);
 
     // Record before bridging: if the function times out mid-bridge the user
@@ -91,7 +123,7 @@ export async function POST(request: NextRequest) {
       variant: "neutral",
       status: "pending",
       chain: GLIDE_BLOCKCHAIN,
-      metadata: { destination: label, network },
+      metadata: { destination: label, network, recipientAddress: destinationAddress },
     });
     pendingRowId = pendingRow.id;
 
@@ -99,6 +131,7 @@ export async function POST(request: NextRequest) {
       walletAddress: wallet.address,
       amount: parsed.toFixed(2),
       network,
+      recipientAddress: destinationAddress,
     });
 
     // App Kit reports failures on the result (state "error") rather than
@@ -121,6 +154,7 @@ export async function POST(request: NextRequest) {
           metadata: {
             destination: label,
             network,
+            recipientAddress: destinationAddress,
             ...(status === "completed"
               ? {}
               : { bridgeState: bridge.state, bridgeResult: bridge.snapshot }),

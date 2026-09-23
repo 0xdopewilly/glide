@@ -15,6 +15,7 @@ import { ArrowDown, Check, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ARC_NETWORK } from "@/lib/network";
+import { isValidWalletAddress } from "@/lib/validation";
 
 const NETWORKS: { value: BridgeNetworkKey; label: string }[] = [
   { value: "base", label: "Base" },
@@ -31,6 +32,7 @@ export default function BridgePage() {
   const { bridgeMoney, error, clearError, wallet } = useWalletActions();
   const [network, setNetwork] = useState<BridgeNetworkKey>("base");
   const [amount, setAmount] = useState("");
+  const [destination, setDestination] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState<Step>("form");
 
@@ -42,14 +44,20 @@ export default function BridgePage() {
   const { ready: circleReady } = useCircleReady("bridge");
   const overBalance = parsed > balance;
   const walletReady = wallet != null;
+  const destinationOk = isValidWalletAddress(destination);
   const canSubmit =
-    parsed > 0 && !overBalance && !submitting && circleReady && walletReady;
+    parsed > 0 &&
+    !overBalance &&
+    destinationOk &&
+    !submitting &&
+    circleReady &&
+    walletReady;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     clearError();
-    const result = await bridgeMoney(amount, network);
+    const result = await bridgeMoney(amount, network, destination.trim());
     setSubmitting(false);
     if (result.ok) setStep("success");
   };
@@ -245,8 +253,35 @@ export default function BridgePage() {
                     </p>
                   </div>
                   <p className="glide-label-mono mt-3 text-[11px] font-semibold text-[var(--glide-muted)]">
-                    USDC on {networkLabel}
+                    USDC on {networkLabel}, minus a small transfer fee
                   </p>
+                  <label
+                    htmlFor="bridge-destination"
+                    className="glide-label-mono mt-5 block text-[11px] font-semibold text-[var(--glide-muted)]"
+                  >
+                    Send to (wallet address on {networkLabel})
+                  </label>
+                  <input
+                    id="bridge-destination"
+                    type="text"
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    placeholder="0x…"
+                    className="mt-2 w-full rounded-2xl border bg-transparent px-4 py-3 font-mono text-[13px] focus:outline-none"
+                    style={{
+                      borderColor: "var(--glide-elevated-border)",
+                      color: "var(--glide-text)",
+                    }}
+                  />
+                  {destination.trim() && !destinationOk ? (
+                    <p className="mt-2 text-xs text-red-400">
+                      Enter a valid 0x wallet address
+                    </p>
+                  ) : null}
                 </div>
 
                 {overBalance ? (

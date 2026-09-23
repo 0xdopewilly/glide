@@ -198,12 +198,14 @@ export async function executeGatedAutomation(input: {
       token,
       idempotencyKey: stableIdempotencyKey(input.sourceRef),
     });
+    // Submitted to Circle; lib/settlement.ts marks it completed (or failed)
+    // once the transfer settles.
     if (runId) {
       await prisma.automationRun.update({
         where: { id: runId },
         data: {
-          status: "completed",
-          summary: `Sent ${amountLabel} to ${dest.label}${input.contextLabel ? ` (${input.contextLabel})` : ""}`,
+          status: "submitted",
+          summary: `Sending ${amountLabel} to ${dest.label}${input.contextLabel ? ` (${input.contextLabel})` : ""}`,
           resultTxId: txId,
         },
       });
@@ -290,16 +292,18 @@ export async function approvePending(
       token: ap.token,
       idempotencyKey: stableIdempotencyKey(`approval:${ap.id}`),
     });
+    // "submitted" until Circle settles; lib/settlement.ts then marks the
+    // approval "executed" (and its run completed) or failed.
     await prisma.pendingApproval.update({
       where: { id: ap.id },
-      data: { status: "executed", resultTxId: txId },
+      data: { status: "submitted", resultTxId: txId },
     });
     if (ap.ruleId && ap.sourceRef) {
       await prisma.automationRun.updateMany({
         where: { ruleId: ap.ruleId, sourceRef: ap.sourceRef },
         data: {
-          status: "completed",
-          summary: `Approved — sent ${formatStableAmount(parseFloat(ap.amount), asToken(ap.token))} to ${ap.recipientLabel ?? "recipient"}`,
+          status: "submitted",
+          summary: `Approved — sending ${formatStableAmount(parseFloat(ap.amount), asToken(ap.token))} to ${ap.recipientLabel ?? "recipient"}`,
           resultTxId: txId,
         },
       });

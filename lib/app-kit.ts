@@ -1,6 +1,5 @@
 import { createCircleWalletsAdapter } from "@circle-fin/adapter-circle-wallets";
 import { AppKit, type BridgeResult } from "@circle-fin/app-kit";
-import { ensureSourceGas } from "@/lib/gas-refill";
 import { kitKeyStatus, resolveKitKey } from "@/lib/kit-key";
 import { EXTERNAL_CHAINS, IS_MAINNET, type ExternalChainKey } from "@/lib/network";
 import {
@@ -130,14 +129,21 @@ export async function estimateArcBridge(input: {
   walletAddress: string;
   amount: string;
   network: BridgeNetworkKey;
+  recipientAddress?: string;
 }) {
   const dest = BRIDGE_NETWORKS[input.network];
   if (!dest) throw new Error("Unsupported destination network");
 
   const { kit, adapter: bridgeAdapter } = getGlideAppKit();
+  // Same forwarder route as executeArcBridge; the recipient doesn't affect
+  // fees, so the user's own address stands in until they enter one.
   const estimate = await kit.estimateBridge({
     from: { adapter: bridgeAdapter, chain: ARC_KIT_CHAIN, address: input.walletAddress },
-    to: { adapter: bridgeAdapter, chain: dest.chain, address: input.walletAddress },
+    to: {
+      chain: dest.chain,
+      recipientAddress: input.recipientAddress ?? input.walletAddress,
+      useForwarder: true,
+    },
     amount: input.amount,
     token: "USDC",
   });
@@ -263,10 +269,15 @@ export async function sweepIncomingToArc(input: {
   };
 }
 
+/** Outbound bridge: USDC from the user's Arc wallet to any address on the
+ * destination chain. Circle's Forwarding Service mints on the destination
+ * (relay fee taken from the amount that arrives), so the recipient needs no
+ * glidepay wallet and nobody needs destination-chain gas. */
 export async function executeArcBridge(input: {
   walletAddress: string;
   amount: string;
   network: BridgeNetworkKey;
+  recipientAddress: string;
 }) {
   const dest = BRIDGE_NETWORKS[input.network];
   if (!dest) {
@@ -274,28 +285,6 @@ export async function executeArcBridge(input: {
   }
 
   const { kit, adapter: bridgeAdapter } = getGlideAppKit();
-
-  // Outbound mirror of cctp-receive's inbound refill: Circle's bridge SDK
-  // pre-flights native balance on BOTH chains. Source (Arc) is fine - USDC
-  // pays gas. Destination is an EVM testnet where the user's same DCW
-  // address has 0 native ETH on first use, so the SDK throws
-  // "Insufficient <native> on <chain> to cover gas fees". Top up from the
-  // Glide service wallet for that chain before signing so the bridge stays
-  // gasless from the user's perspective.
-  const destCircleBlockchain = BRIDGE_TO_CIRCLE_BLOCKCHAIN[input.network];
-  if (destCircleBlockchain) {
-    try {
-      await ensureSourceGas({
-        circleBlockchain: destCircleBlockchain,
-        userWalletAddress: input.walletAddress,
-      });
-    } catch (err) {
-      console.error("[Glide] outbound bridge gas refill:", err);
-      // Don't abort - if the user already has gas (e.g. from a prior
-      // inbound sweep refill), the bridge can still succeed. Otherwise
-      // the SDK will surface the real error and the catch below maps it.
-    }
-  }
 
   try {
     const result = await kit.bridge({
@@ -305,9 +294,9 @@ export async function executeArcBridge(input: {
         address: input.walletAddress,
       },
       to: {
-        adapter: bridgeAdapter,
         chain: dest.chain,
-        address: input.walletAddress,
+        recipientAddress: input.recipientAddress,
+        useForwarder: true,
       },
       amount: input.amount,
       token: "USDC",

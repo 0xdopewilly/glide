@@ -16,7 +16,12 @@ import {
 } from "@/lib/wallet-service";
 import { formatResolvedRecipientLabel } from "@/lib/resolve-recipient";
 import { arcExplorerUrl } from "@/lib/transactions-db";
-import { NextRequest, NextResponse } from "next/server";
+import { resumeStuckBridges } from "@/lib/bridge-resume";
+import { reconcileSettlements } from "@/lib/settlement";
+import { after, NextRequest, NextResponse } from "next/server";
+
+// Post-response settlement + bridge resumes can run long.
+export const maxDuration = 60;
 
 /** Permanent failure (no wallet, recipient gone): stop retrying. */
 async function pauseJob(id: string) {
@@ -139,6 +144,15 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error("[Glide] threshold-sweeps cron:", err);
   }
+
+  // Global sweep for users who aren't online to trigger it from their own
+  // polls: settle everything in flight (including what just ran above,
+  // after Arc's few seconds) and resume a handful of stuck bridges.
+  after(async () => {
+    await new Promise((r) => setTimeout(r, 4_000));
+    await reconcileSettlements();
+    await resumeStuckBridges({ limit: 5 });
+  });
 
   return NextResponse.json({
     processed: results.length,

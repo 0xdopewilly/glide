@@ -226,7 +226,7 @@ export function extractBridgeNetworkFromText(text: string): BridgeNetwork {
 /** Deterministic swap/bridge from the latest user line (beats stale send context). */
 export function parseExplicitIntentFromMessage(
   text: string,
-): { action: "swap"; amount: string } | { action: "bridge"; amount: string; network: BridgeNetwork } | null {
+): { action: "swap"; amount: string } | { action: "bridge"; amount: string; network: BridgeNetwork; to?: string } | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
 
@@ -234,10 +234,12 @@ export function parseExplicitIntentFromMessage(
   if (!amount) return null;
 
   if (/\bbridge\b/i.test(trimmed)) {
+    const to = trimmed.match(ADDRESS_RE)?.[0];
     return {
       action: "bridge",
       amount,
       network: extractBridgeNetworkFromText(trimmed),
+      ...(to && isValidWalletAddress(to) ? { to } : {}),
     };
   }
 

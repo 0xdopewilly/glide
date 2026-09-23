@@ -1,7 +1,8 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { approvePending, rejectPending } from "@/lib/approvals";
 import { assertPinVerified } from "@/lib/pin";
-import { NextResponse } from "next/server";
+import { settleSoon } from "@/lib/settlement";
+import { after, NextResponse } from "next/server";
 
 /** POST { decision: "approve" | "reject" } - act on a pending approval. */
 export async function POST(
@@ -35,7 +36,9 @@ export async function POST(
         { status: 409 },
       );
     }
-    return NextResponse.json({ ok: true, status: "executed" });
+    // Submitted to Circle; settles (executed / failed) within seconds.
+    after(() => settleSoon(session.userId));
+    return NextResponse.json({ ok: true, status: "submitted" });
   }
   if (decision === "reject") {
     const ok = await rejectPending(session.userId, id);

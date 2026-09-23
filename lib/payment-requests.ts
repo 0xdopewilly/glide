@@ -65,9 +65,15 @@ export async function getPaymentRequestByCode(code: string) {
   });
 }
 
-export async function markPaymentRequestPaid(code: string, paidByUserId: string) {
+/** A matching payment was submitted: hold the request as "processing" (not
+ * payable again) until Circle settles it — lib/settlement.ts then marks it
+ * "paid" or reopens it. */
+export async function markPaymentRequestProcessing(
+  code: string,
+  paidByUserId: string,
+) {
   return prisma.paymentRequest.updateMany({
     where: { code: code.trim().toLowerCase(), status: "pending" },
-    data: { status: "paid", paidByUserId },
+    data: { status: "processing", paidByUserId },
   });
 }

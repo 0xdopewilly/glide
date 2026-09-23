@@ -138,6 +138,7 @@ type WalletContextValue = {
   bridgeMoney: (
     amount: string,
     network: string,
+    destinationAddress: string,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   clearError: () => void;
   clearNotice: () => void;
@@ -598,13 +599,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   );
 
   const bridgeMoney = useCallback(
-    async (amount: string, network: string) => {
+    async (amount: string, network: string, destinationAddress: string) => {
       if (!wallet) return { ok: false as const, error: "Wallet not ready" };
       setError(null);
       try {
         const { res, data } = await postMoneyOut<{ balance?: number }>(
           "/api/bridge",
-          { walletId: wallet.id, amount, network },
+          { walletId: wallet.id, amount, network, destinationAddress },
         );
         if (!res.ok) throw new Error(data.error ?? "Bridge failed");
         if (typeof data.balance === "number") setBalance(data.balance);

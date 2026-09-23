@@ -22,7 +22,8 @@ import {
   fetchWalletBalance,
   fetchWalletById,
 } from "@/lib/wallet-service";
-import { NextRequest, NextResponse } from "next/server";
+import { settleSoon } from "@/lib/settlement";
+import { after, NextRequest, NextResponse } from "next/server";
 
 // Circle createTransaction is fast but the request+sync cycle plus push
 // notifications can occasionally cross 10s. Be safe.
@@ -195,6 +196,7 @@ export async function POST(request: NextRequest) {
         token,
         recipient: recipientReceiptLabel,
         recipientAddress: destinationAddress,
+        ...(requestCode ? { requestCode } : {}),
       },
     });
 
@@ -241,10 +243,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (requestCode) {
-      const { getPaymentRequestByCode, markPaymentRequestPaid } =
+      const { getPaymentRequestByCode, markPaymentRequestProcessing } =
         await import("@/lib/payment-requests");
-      const { notifyRequestPaid } = await import("@/lib/push");
-      const { prisma } = await import("@/lib/db");
       const req = await getPaymentRequestByCode(requestCode);
       // Only a payment that actually satisfies the request marks it paid: to
       // the requester's wallet, in the requested token, for at least the
@@ -255,22 +255,13 @@ export async function POST(request: NextRequest) {
         addressesEqual(req.user?.circleWalletAddress, destinationAddress) &&
         normalizeTokenSymbol(req.token) === token &&
         parsed >= Number(req.amount);
+      // "Processing" until Circle settles the transfer; lib/settlement.ts then
+      // marks it paid (and notifies the requester) or reopens it.
       const updated = satisfies
-        ? await markPaymentRequestPaid(requestCode, session.userId)
+        ? await markPaymentRequestProcessing(requestCode, session.userId)
         : { count: 0 };
-      if (updated.count > 0 && req?.userId && req.userId !== session.userId) {
-        const payer = await prisma.user.findUnique({
-          where: { id: session.userId },
-          select: { username: true, displayName: true },
-        });
-        const payerLabel =
-          payer?.username ?? payer?.displayName ?? session.displayName ?? "Someone";
-        void notifyRequestPaid(
-          req.userId,
-          formatted,
-          payerLabel,
-          token,
-        ).catch((err) => console.error("[Glide] request paid notify:", err));
+      if (updated.count > 0) {
+        after(() => settleSoon(session.userId));
       }
     }
 

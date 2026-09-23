@@ -1,3 +1,4 @@
+import { isValidWalletAddress } from "@/lib/validation";
 import type { GlideIntent } from "@/lib/agent-intents";
 
 /** Parses /-style commands so power users can skip the LLM entirely.
@@ -38,6 +39,8 @@ export function parseSlashCommand(input: string): GlideIntent | null {
     const network = rest.find((t) =>
       /^(base|ethereum|polygon|arbitrum)$/i.test(t),
     );
+    // /bridge 5 base 0x… — the recipient on the destination chain
+    const to = rest.find((t) => isValidWalletAddress(t));
     if (amount && network) {
       return {
         action: "bridge",
@@ -47,6 +50,7 @@ export function parseSlashCommand(input: string): GlideIntent | null {
           | "ethereum"
           | "polygon"
           | "arbitrum",
+        ...(to ? { to } : {}),
       };
     }
   }

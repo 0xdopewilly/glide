@@ -1,7 +1,6 @@
 import { createCircleClient, GLIDE_BLOCKCHAIN } from "@/lib/circle";
 import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
-import { notifyAutoSave } from "@/lib/push";
 import { recipientConfirmLabel, resolveRecipient } from "@/lib/resolve-recipient";
 import {
   isScheduleFrequency,
@@ -413,25 +412,16 @@ export async function runSaveRulesForReceive(input: {
         fee: { type: "level", config: { feeLevel: "MEDIUM" } },
       });
 
+      // Submitted, not done: lib/settlement.ts completes it (and sends the
+      // "Auto-saved" push) once Circle settles the transfer.
       await prisma.automationRun.update({
         where: { id: runId },
         data: {
-          status: "completed",
-          summary: `Saved ${formatStableAmount(amount, token)} (${rule.percent}%) from a ${formatStableAmount(input.receivedAmount, token)} payment`,
+          status: "submitted",
+          summary: `Saving ${formatStableAmount(amount, token)} (${rule.percent}%) from a ${formatStableAmount(input.receivedAmount, token)} payment`,
           resultTxId: res.data?.id ?? null,
         },
       });
-
-      try {
-        await notifyAutoSave(
-          input.userId,
-          formatStableAmount(amount, token),
-          formatStableAmount(input.receivedAmount, token),
-          rule.percent,
-        );
-      } catch (err) {
-        console.error("[Glide] auto-save notify:", err);
-      }
     } catch (err) {
       await prisma.automationRun.update({
         where: { id: runId },

@@ -1,11 +1,14 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
-import type { AgentHistoryMessage } from "@/lib/agent-context";
 import {
   AGENT_SYSTEM_PROMPT,
   parseAgentJson,
   reconcileIntentWithHistory,
   type GlideIntent,
 } from "@/lib/agent-intents";
+import {
+  parseExplicitIntentFromMessage,
+  type AgentHistoryMessage,
+} from "@/lib/agent-context";
 import { parseSlashCommand } from "@/lib/agent-slash";
 import { fuzzySuggestRecipients } from "@/lib/recipient-fuzzy";
 import {
@@ -81,6 +84,9 @@ function intentReply(intent: GlideIntent): { reply: string; intent?: GlideIntent
     const amount = parseMoneyAmount(intent.amount);
     if (amount === null || amount <= 0) {
       return { reply: "How much should I bridge?" };
+    }
+    if (!intent.to || !isValidWalletAddress(intent.to)) {
+      return { reply: bridgeAddressPrompt(intent.network) };
     }
     return {
       reply: `Bridging $${amount.toFixed(2)}…`,
@@ -211,6 +217,32 @@ async function resolveSendBatchRecipient(
   };
 }
 
+const BRIDGE_ADDRESS_PROMPT_PREFIX = "Which wallet address on";
+
+function bridgeAddressPrompt(network: string): string {
+  const label = network.charAt(0).toUpperCase() + network.slice(1);
+  return `${BRIDGE_ADDRESS_PROMPT_PREFIX} ${label} should receive it? Paste the 0x address.`;
+}
+
+/** The user answered our "which address?" question with an address:
+ * rebuild the bridge from their earlier request deterministically, so the
+ * model can't reinterpret "0x…" as a plain send on Arc. */
+function pendingBridgeFromHistory(
+  history: AgentHistoryMessage[],
+  message: string,
+): GlideIntent | null {
+  const lastAssistant = [...history].reverse().find((m) => m.role === "assistant");
+  if (!lastAssistant?.content.startsWith(BRIDGE_ADDRESS_PROMPT_PREFIX)) return null;
+  const to = message.match(/0x[a-fA-F0-9]{40}/)?.[0];
+  if (!to || !isValidWalletAddress(to)) return null;
+  const lastBridge = [...history]
+    .reverse()
+    .find((m) => m.role === "user" && /\bbridge\b/i.test(m.content));
+  const parsed = lastBridge ? parseExplicitIntentFromMessage(lastBridge.content) : null;
+  if (parsed?.action !== "bridge") return null;
+  return { ...parsed, to };
+}
+
 /** POST { message, history? } - Groq assistant with full conversation context */
 export async function POST(request: NextRequest) {
   const session = await requireSessionUser();
@@ -230,6 +262,9 @@ export async function POST(request: NextRequest) {
       (m.role === "user" || m.role === "assistant") &&
       typeof m.content === "string",
   );
+
+  const pendingBridge = pendingBridgeFromHistory(history, message);
+  if (pendingBridge) return NextResponse.json(intentReply(pendingBridge));
 
   // Slash commands short-circuit the LLM entirely. /send /swap /bridge etc.
   // are parsed deterministically — no model failure mode, no token cost.

@@ -248,7 +248,9 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         return {
           ...base,
           confirmKind: "bridge",
-          confirmText: `Bridge ${formatStableAmountWithCode(intent.amount, "USDC")} to ${network}`,
+          confirmText: `Bridge ${formatStableAmountWithCode(intent.amount, "USDC")} to ${network}${
+            intent.to ? ` · ${shortenAddress(intent.to)}` : ""
+          }`,
         };
       }
       if (intent.action === "rule") {
@@ -470,7 +472,16 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         return;
       }
       if (intent.action === "bridge") {
-        const result = await bridgeMoney(intent.amount, intent.network);
+        if (!intent.to) {
+          pushMessage({
+            id: `bridge-to-${Date.now()}`,
+            role: "assistant",
+            kind: "text",
+            text: "Which wallet address should receive it? Paste the 0x address.",
+          });
+          return;
+        }
+        const result = await bridgeMoney(intent.amount, intent.network, intent.to);
         setProcessingAction(null);
         if (result.ok) {
           pushMessage({

@@ -3,7 +3,11 @@ import { safeApiError } from "@/lib/circle";
 import { syncCircleTransactionsToDb } from "@/lib/circle-transactions";
 import { listUserTransactions } from "@/lib/transactions-db";
 import { userOwnsWallet } from "@/lib/users";
-import { NextRequest, NextResponse } from "next/server";
+import { settleSoon } from "@/lib/settlement";
+import { after, NextRequest, NextResponse } from "next/server";
+
+// The post-response work below (settlement + a bridge resume) can run long.
+export const maxDuration = 60;
 
 /** GET ?walletId= - on-chain activity from Circle, cached in Supabase */
 export async function GET(request: NextRequest) {
@@ -34,6 +38,15 @@ export async function GET(request: NextRequest) {
     // values, which lack counterparty info.
     await syncCircleTransactionsToDb(session.userId, walletId);
     const transactions = await listUserTransactions(session.userId);
+
+    // After responding: settle this user's in-flight automations / requests
+    // (including any auto-save the sync just submitted) and finish one stuck
+    // bridge. Runs on every poll while the app is open.
+    after(async () => {
+      await settleSoon(session.userId);
+      const { resumeStuckBridges } = await import("@/lib/bridge-resume");
+      await resumeStuckBridges({ userId: session.userId, limit: 1 });
+    });
 
     return NextResponse.json({ transactions });
   } catch (err) {

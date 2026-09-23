@@ -537,7 +537,9 @@ export default function AutomationsPage() {
                   ? { text: "Failed", bg: "color-mix(in srgb, #ef4444 14%, transparent)", fg: "#ef4444" }
                   : run.status === "held"
                     ? { text: "Held", bg: "color-mix(in srgb, #f59e0b 16%, transparent)", fg: "#f59e0b" }
-                    : { text: "Done", bg: "var(--glide-success-container)", fg: "var(--glide-success)" };
+                    : run.status === "submitted" || run.status === "pending"
+                      ? { text: "Processing", bg: "var(--glide-surface-container)", fg: "var(--glide-muted)" }
+                      : { text: "Done", bg: "var(--glide-success-container)", fg: "var(--glide-success)" };
               return (
                 <li
                   key={run.id}

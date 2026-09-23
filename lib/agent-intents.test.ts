@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { parseExplicitIntentFromMessage } from "@/lib/agent-context";
+import { parseSlashCommand } from "@/lib/agent-slash";
 import {
   parseAgentJson,
   parseSaveRuleFromMessage,
@@ -166,5 +168,41 @@ describe("parser edge cases", () => {
     expect(parseAgentJson('{"action":"navigate","path":"/automations"}')).toMatchObject(
       { action: "navigate", path: "/automations" },
     );
+  });
+});
+
+// Bridges now go to an external address on the destination chain. The model
+// may only pass one through when the user gave it — never invent one.
+describe("bridge recipient parsing", () => {
+  const ADDR = "0x742d35cc6634c0532925a3b844bc9e7595f0beb0";
+
+  it("keeps a valid `to` from the model", () => {
+    expect(
+      parseAgentJson(
+        JSON.stringify({ action: "bridge", amount: "10.00", network: "base", to: ADDR }),
+      ),
+    ).toEqual({ action: "bridge", amount: "10.00", network: "base", to: ADDR });
+  });
+
+  it("drops an invalid `to` so the user is asked for the address", () => {
+    expect(
+      parseAgentJson(
+        JSON.stringify({ action: "bridge", amount: "10.00", network: "base", to: "bob" }),
+      ),
+    ).toEqual({ action: "bridge", amount: "10.00", network: "base" });
+  });
+
+  it("reads the recipient from an explicit bridge message", () => {
+    expect(
+      parseExplicitIntentFromMessage(`bridge $10 to base ${ADDR}`),
+    ).toMatchObject({ action: "bridge", network: "base", to: ADDR });
+  });
+
+  it("reads the recipient from /bridge", () => {
+    expect(parseSlashCommand(`/bridge 5 arbitrum ${ADDR}`)).toMatchObject({
+      action: "bridge",
+      network: "arbitrum",
+      to: ADDR,
+    });
   });
 });

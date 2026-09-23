@@ -80,6 +80,10 @@ export default function PayRequestPage({
               style={{ background: "var(--glide-surface-container)" }}
             />
           </div>
+        ) : info.status === "processing" ? (
+          <p className="text-sm glide-muted">
+            A payment for this request is going through.
+          </p>
         ) : info.status !== "pending" ? (
           <p className="text-sm glide-muted">This request was already paid.</p>
         ) : (
