@@ -1,5 +1,6 @@
+import { cacheGet, cacheSet } from "@/lib/client-cache";
 /**
- * Tiny user-scoped sessionStorage cache for small UI summaries (savings totals,
+ * Tiny user-scoped persistent cache for small UI summaries (savings totals,
  * automation stats, etc.). Lets a screen seed from last-known values on mount
  * and render instantly instead of popping in after a fetch — killing the
  * layout shift on repeat visits. Best-effort: never throws, returns null on any
@@ -17,7 +18,7 @@ export function readUiCache<T>(
 ): T | null {
   if (typeof window === "undefined" || !userId) return null;
   try {
-    const raw = sessionStorage.getItem(key(name, userId));
+    const raw = cacheGet(key(name, userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { v: T; t: number };
     if (typeof parsed.t !== "number") return null;
@@ -35,7 +36,7 @@ export function writeUiCache<T>(
 ): void {
   if (typeof window === "undefined" || !userId) return;
   try {
-    sessionStorage.setItem(
+    cacheSet(
       key(name, userId),
       JSON.stringify({ v: value, t: Date.now() }),
     );

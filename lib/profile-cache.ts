@@ -1,3 +1,4 @@
+import { cacheGet, cacheSet } from "@/lib/client-cache";
 import type { GlideProfile } from "@/lib/types";
 
 function cacheKey(userId: string) {
@@ -7,7 +8,7 @@ function cacheKey(userId: string) {
 export function readCachedProfile(userId?: string | null): GlideProfile | null {
   if (typeof window === "undefined" || !userId) return null;
   try {
-    const raw = sessionStorage.getItem(cacheKey(userId));
+    const raw = cacheGet(cacheKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as GlideProfile;
     if (parsed?.email) return parsed;
@@ -22,5 +23,5 @@ export function writeCachedProfile(
   userId?: string | null,
 ): void {
   if (typeof window === "undefined" || !userId) return;
-  sessionStorage.setItem(cacheKey(userId), JSON.stringify(profile));
+  cacheSet(cacheKey(userId), JSON.stringify(profile));
 }

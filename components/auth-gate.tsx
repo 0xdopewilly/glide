@@ -1,11 +1,11 @@
 "use client";
 
-import { useAuth } from "@/context/auth-context";
+import { useAppAuth } from "@/context/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { user, ready } = useAuth();
+  const { user, ready } = useAppAuth();
   const router = useRouter();
 
   useEffect(() => {

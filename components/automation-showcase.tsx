@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/context/auth-context";
+import { useAppAuth } from "@/context/auth-context";
 import { readUiCache, writeUiCache } from "@/lib/ui-cache";
 import { ChevronRight, Zap } from "lucide-react";
 import Link from "next/link";
@@ -29,7 +29,7 @@ const CACHE_MAX_AGE_MS = 1000 * 60 * 30;
  * repeat visits instead of swapping in after the fetch. Taps through to the
  * Automations dashboard. */
 export function AutomationShowcase() {
-  const { user } = useAuth();
+  const { user } = useAppAuth();
   const userId = user?.id ?? null;
 
   const [summary, setSummary] = useState<ShowcaseSummary | null>(() =>

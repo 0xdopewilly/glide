@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/context/auth-context";
+import { useAppAuth } from "@/context/auth-context";
 import { haptics } from "@/lib/haptics";
 import { readUiCache, writeUiCache } from "@/lib/ui-cache";
 import { useCallback, useEffect, useState } from "react";
@@ -23,7 +23,7 @@ export function SavingsCard({
   className?: string;
   onChange?: () => void;
 }) {
-  const { user } = useAuth();
+  const { user } = useAppAuth();
   const userId = user?.id ?? null;
 
   const [savings, setSavings] = useState<Summary | null>(() =>

@@ -1,3 +1,4 @@
+import { cacheGet, cacheSet, cacheRemove } from "@/lib/client-cache";
 import type { GlideTokenBalance } from "@/lib/types";
 
 export type CachedWalletBalances = {
@@ -18,7 +19,7 @@ export function readCachedWalletBalances(
 ): CachedWalletBalances | null {
   if (typeof window === "undefined" || !userId) return null;
   try {
-    const raw = sessionStorage.getItem(cacheKey(userId));
+    const raw = cacheGet(cacheKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CachedWalletBalances;
     if (
@@ -40,7 +41,7 @@ export function writeCachedWalletBalances(
   userId?: string | null,
 ): void {
   if (typeof window === "undefined" || !userId) return;
-  sessionStorage.setItem(
+  cacheSet(
     cacheKey(userId),
     JSON.stringify({ ...payload, updatedAt: Date.now() }),
   );
@@ -48,5 +49,5 @@ export function writeCachedWalletBalances(
 
 export function clearCachedWalletBalances(userId?: string | null): void {
   if (typeof window === "undefined" || !userId) return;
-  sessionStorage.removeItem(cacheKey(userId));
+  cacheRemove(cacheKey(userId));
 }

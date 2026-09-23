@@ -6,7 +6,7 @@ import type {
   GlideTransaction,
   GlideWallet,
 } from "@/lib/types";
-import { useAuth } from "@/context/auth-context";
+import { useAppAuth } from "@/context/auth-context";
 import {
   readCachedTransactions,
   writeCachedTransactions,
@@ -87,6 +87,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -273,7 +274,7 @@ async function loadProfileFromApi(): Promise<GlideProfile | null> {
 }
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const { user, ready: authReady } = useAuth();
+  const { user, ready: authReady } = useAppAuth();
   const [profile, setProfile] = useState<GlideProfile>(DEFAULT_PROFILE);
   const [wallet, setWallet] = useState<GlideWallet | null>(null);
   const [balance, setBalance] = useState(0);
@@ -623,7 +624,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     [wallet, refresh],
   );
 
-  useEffect(() => {
+  // Layout effect: seed from the (persistent) caches before the first paint,
+  // so a cold start never flashes "Guest" / $0.00 before cached data lands.
+  useLayoutEffect(() => {
     if (!authReady) return;
 
     if (!user) {

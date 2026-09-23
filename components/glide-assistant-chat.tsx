@@ -21,7 +21,7 @@ import {
   writeChatHistory,
   type StoredChatMessage,
 } from "@/lib/chat-cache";
-import { useAuth } from "@/context/auth-context";
+import { useAppAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
 import { ArrowUp, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -78,7 +78,7 @@ function toAgentHistory(messages: StoredChatMessage[]) {
 export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user } = useAppAuth();
   const {
     sendMoney,
     swapMoney,

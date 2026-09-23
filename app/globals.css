@@ -447,17 +447,6 @@ body {
   }
 }
 
-.glide-stagger > * {
-  animation: glide-fade-up 320ms var(--glide-ease-spring) both;
-}
-
-.glide-stagger > *:nth-child(1) { animation-delay: 30ms; }
-.glide-stagger > *:nth-child(2) { animation-delay: 70ms; }
-.glide-stagger > *:nth-child(3) { animation-delay: 110ms; }
-.glide-stagger > *:nth-child(4) { animation-delay: 150ms; }
-.glide-stagger > *:nth-child(5) { animation-delay: 190ms; }
-.glide-stagger > *:nth-child(6) { animation-delay: 230ms; }
-.glide-stagger > *:nth-child(n+7) { animation-delay: 270ms; }
 
 /* Cross-fade on remount - used for tab content swaps. Keep it subtle:
    opacity + tiny translate only, no scale (per CLAUDE.md motion rules). */

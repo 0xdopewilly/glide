@@ -73,7 +73,7 @@ export default function PaymentsPage() {
         <p className="mt-1 text-sm text-[var(--glide-muted)]">
           Send, request, schedule, and split. All in one place.
         </p>
-        <div className="glide-stagger mt-5 grid grid-cols-2 gap-3">
+        <div className="mt-5 grid grid-cols-2 gap-3">
           {TILES.map(({ href, title, description, icon: Icon }) => (
             <Link
               key={href}

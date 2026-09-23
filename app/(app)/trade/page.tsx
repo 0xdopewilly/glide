@@ -35,7 +35,7 @@ export default function TradePage() {
         <p className="mt-1 text-sm text-[var(--glide-muted)]">
           Swap stablecoins or bridge to other networks.
         </p>
-        <ul className="glide-stagger mt-5 flex flex-col gap-3">
+        <ul className="mt-5 flex flex-col gap-3">
           {TRADE_ACTIONS.map(({ href, title, description, icon: Icon }) => (
             <li key={href}>
               <Link
