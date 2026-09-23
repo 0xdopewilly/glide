@@ -6,6 +6,7 @@ import { FlowPage } from "@/components/flow-page";
 import { ReceiveQr } from "@/components/receive-qr";
 import { UserAvatar } from "@/components/user-avatar";
 import { useProfile, useWalletActions } from "@/context/wallet-context";
+import { EXTERNAL_CHAINS, type ExternalChainKey } from "@/lib/network";
 import { motion } from "framer-motion";
 import { Share2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -159,6 +160,10 @@ export default function ReceivePage() {
   const active = tabs.find((t) => t.key === selected) ?? tabs[0];
   const address = active.address;
   const stuckBalance = active.key !== "arc" ? (active.usdcBalance ?? 0) : 0;
+  const minSweep =
+    active.key in EXTERNAL_CHAINS
+      ? EXTERNAL_CHAINS[active.key as ExternalChainKey].minSweepUsd
+      : 0;
 
   const handleSweep = async () => {
     if (sweeping) return;
@@ -174,11 +179,14 @@ export default function ReceivePage() {
         status?: string;
         amount?: string;
         detail?: string;
+        minimum?: number;
       };
       if (json.status === "swept") {
         setSweepMsg(`Bridged $${json.amount} to Arc.`);
       } else if (json.status === "nothing_to_sweep") {
         setSweepMsg("Nothing to sweep.");
+      } else if (json.status === "below_minimum") {
+        setSweepMsg(`Sweeps from ${active.label} start at $${json.minimum}.`);
       } else if (json.status === "in_progress") {
         setSweepMsg("Sweep already in progress.");
       } else {
@@ -248,16 +256,9 @@ export default function ReceivePage() {
                   }}
                 >
                   {isActive ? (
-                    <motion.span
-                      layoutId="receive-chain-pill"
+                    <span
                       className="absolute inset-0 rounded-full"
                       style={{ background: "var(--glide-accent)" }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 420,
-                        damping: 34,
-                        mass: 0.7,
-                      }}
                     />
                   ) : null}
                   <span className="relative z-10">{t.label}</span>
@@ -308,6 +309,9 @@ export default function ReceivePage() {
               <p className="glide-label-mono mt-3 text-[10px] font-semibold leading-relaxed text-[var(--glide-muted)]">
                 USDC sent here lands on Arc automatically via CCTP — usually
                 within a minute.
+                {minSweep > 0
+                  ? ` Amounts under $${minSweep} wait here until you sweep them.`
+                  : ""}
               </p>
             ) : null}
           </div>
@@ -332,7 +336,7 @@ export default function ReceivePage() {
                 <button
                   type="button"
                   onClick={() => void handleSweep()}
-                  disabled={sweeping || stuckBalance <= 0}
+                  disabled={sweeping || stuckBalance <= 0 || stuckBalance < minSweep}
                   className="glide-tap glide-label-mono rounded-full px-4 py-2 text-[11px] font-bold transition-opacity disabled:opacity-40"
                   style={{
                     background: "var(--glide-accent)",

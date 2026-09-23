@@ -1,4 +1,3 @@
-import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { getPaymentRequestByCode } from "@/lib/payment-requests";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -28,24 +27,4 @@ export async function GET(
         ? `@${row.user.username}`
         : row.user.circleWalletAddress,
   });
-}
-
-/** POST - mark request paid after successful send */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ code: string }> },
-) {
-  const session = await requireSessionUser();
-  if (isAuthError(session)) return session;
-
-  const { code } = await params;
-  const row = await getPaymentRequestByCode(code);
-  if (!row || row.status !== "pending") {
-    return NextResponse.json({ error: "Request not available" }, { status: 404 });
-  }
-
-  const { markPaymentRequestPaid } = await import("@/lib/payment-requests");
-  await markPaymentRequestPaid(code, session.userId);
-
-  return NextResponse.json({ ok: true });
 }

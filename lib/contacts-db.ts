@@ -29,6 +29,16 @@ export async function findContactByName(userId: string, name: string) {
   );
 }
 
+/** Exact (case-insensitive) contact-name match. Money paths use this, never
+ * the substring fallback above, so "jo" can't silently pay "John" or "Jo-Ann". */
+export async function findContactByExactName(userId: string, name: string) {
+  const normalized = name.trim().toLowerCase();
+  if (!normalized) return null;
+  return prisma.contact.findFirst({
+    where: { userId, name: { equals: normalized, mode: "insensitive" } },
+  });
+}
+
 export async function findContactByWallet(userId: string, walletAddress: string) {
   const normalized = walletAddress.trim().toLowerCase();
   if (!normalized.startsWith("0x")) return null;

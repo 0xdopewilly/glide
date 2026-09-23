@@ -77,8 +77,10 @@ export async function runDueScheduleRules(
 export async function runThresholdSweeps(
   limit = 50,
 ): Promise<{ id: string; status: string; excess?: number }[]> {
+  // Least-recently-run first, so rules past the limit get their turn.
   const rules = await prisma.automationRule.findMany({
     where: { trigger: THRESHOLD_TRIGGER, action: SAVE_ACTION, active: true },
+    orderBy: [{ lastRunAt: { sort: "asc", nulls: "first" } }, { id: "asc" }],
     take: limit,
   });
 

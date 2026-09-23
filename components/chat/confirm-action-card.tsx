@@ -12,11 +12,13 @@ export function ConfirmActionCard({
   busy,
   onConfirm,
   onCancel,
+  enter = true,
 }: {
   message: StoredChatMessage;
   busy: boolean;
   onConfirm: (id: string) => void;
   onCancel: (id: string) => void;
+  enter?: boolean;
 }) {
   if (message.kind !== "confirm_action") return null;
   const status = message.confirmStatus ?? "pending";
@@ -28,7 +30,7 @@ export function ConfirmActionCard({
 
   return (
     <div
-      className="glide-chat-enter rounded-2xl border p-4"
+      className={`${enter ? "glide-chat-enter " : ""}rounded-2xl border p-4`}
       style={{
         background: "var(--glide-surface-elevated)",
         borderColor: "var(--glide-elevated-border)",
@@ -58,7 +60,11 @@ export function ConfirmActionCard({
           {status === "pending"
             ? "Confirm"
             : status === "confirmed"
-              ? "Sent"
+              ? message.confirmKind === "swap" ||
+                message.confirmKind === "bridge" ||
+                message.confirmKind === "rule"
+                ? "Done"
+                : "Sent"
               : status === "cancelled"
                 ? "Cancelled"
                 : "Failed"}
@@ -100,6 +106,10 @@ function headlineFor(message: StoredChatMessage): string {
       return `Request shares of ${formatStableAmountWithCode(amount, token)} from ${
         message.recipients?.length ?? 0
       } people`;
+    case "swap":
+    case "bridge":
+    case "rule":
+      return message.confirmText ?? "Confirm action";
     default:
       return "Confirm action";
   }

@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 import { ActionSuccessCard } from "@/components/chat/action-success-card";
 import { ConfirmActionCard } from "@/components/chat/confirm-action-card";
 import type { ActionSuccessType, StoredChatMessage } from "@/lib/chat-cache";
@@ -16,7 +18,9 @@ function resolveSuccessAction(
   return null;
 }
 
-export function ChatMessageBubble({
+/** Memoized: the chat re-renders on every keystroke and wallet poll, and
+ * history can hold ~100 bubbles. Callers pass stable callbacks. */
+export const ChatMessageBubble = memo(function ChatMessageBubble({
   message,
   onSaveContact,
   onSkipContact,
@@ -25,6 +29,7 @@ export function ChatMessageBubble({
   onCancelAction,
   confirmBusy,
   onRetry,
+  enter = true,
 }: {
   message: StoredChatMessage;
   onSaveContact?: (id: string) => void;
@@ -34,10 +39,14 @@ export function ChatMessageBubble({
   onCancelAction?: (id: string) => void;
   confirmBusy?: boolean;
   onRetry?: (prompt: string) => void;
+  /** Play the entrance animation. Off for messages restored from history. */
+  enter?: boolean;
 }) {
+  const enterClass = enter ? "glide-chat-enter" : "";
   if (message.kind === "confirm_action") {
     return (
       <ConfirmActionCard
+        enter={enter}
         message={message}
         busy={!!confirmBusy}
         onConfirm={(id) => onConfirmAction?.(id)}
@@ -48,7 +57,7 @@ export function ChatMessageBubble({
   const successAction = resolveSuccessAction(message);
   if (successAction) {
     return (
-      <div className="glide-chat-enter">
+      <div className={enterClass}>
         <ActionSuccessCard
           action={successAction}
           amount={message.amount}
@@ -69,7 +78,7 @@ export function ChatMessageBubble({
     !message.contactSkipped
   ) {
     return (
-      <div className="glide-chat-enter flex justify-start px-1 py-0.5">
+      <div className={`${enterClass} flex justify-start px-1 py-0.5`}>
         <div
           className="glide-on-elevated-surface max-w-[min(88%,280px)] rounded-[20px] rounded-bl-[6px] border px-3.5 py-3"
           style={{
@@ -120,7 +129,7 @@ export function ChatMessageBubble({
 
   if (message.kind === "add_contact" && message.contactSaved) {
     return (
-      <div className="glide-chat-enter flex justify-start px-2 py-0.5">
+      <div className={`${enterClass} flex justify-start px-2 py-0.5`}>
         <span className="text-[12px] text-[var(--glide-muted)]">
           {message.contactName} saved to contacts
         </span>
@@ -139,7 +148,7 @@ export function ChatMessageBubble({
 
   return (
     <div
-      className={`glide-chat-enter flex w-full min-w-0 px-1 py-0.5 ${isUser ? "justify-end" : "justify-start"}`}
+      className={`${enterClass} flex w-full min-w-0 px-1 py-0.5 ${isUser ? "justify-end" : "justify-start"}`}
     >
       <div
         className={`min-w-0 max-w-[min(88%,280px)] text-[15px] leading-[1.45] [overflow-wrap:anywhere] break-words ${
@@ -180,4 +189,4 @@ export function ChatMessageBubble({
       </div>
     </div>
   );
-}
+});

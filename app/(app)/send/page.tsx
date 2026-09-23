@@ -4,7 +4,7 @@ import { FlowPage } from "@/components/flow-page";
 import { SendScanSheet } from "@/components/send-scan-sheet";
 import { SwipeToConfirm } from "@/components/swipe-to-confirm";
 import { UserAvatar } from "@/components/user-avatar";
-import { shortenAddress } from "@/lib/format";
+import { newIdempotencyKey, shortenAddress } from "@/lib/format";
 import {
   currencyPrefixForToken,
   formatStableAmount,
@@ -79,15 +79,18 @@ export default function SendPage() {
   useEffect(() => {
     const to = searchParams.get("to")?.trim();
     if (to) setRecipient(to);
+    const t = searchParams.get("token")?.trim();
+    const linkToken = t ? stableTokenFromSymbol(t) : undefined;
+    if (linkToken) setToken(linkToken);
     const amt = searchParams.get("amount")?.trim();
     if (amt) {
       const n = parseFloat(amt);
-      if (!Number.isNaN(n) && n > 0) setAmount(n.toFixed(2).replace(/\.?0+$/, "") || "0");
+      // cirBTC carries 8 decimals; rounding to 2 would change the amount.
+      const dp = linkToken === "cirBTC" ? 8 : 2;
+      if (!Number.isNaN(n) && n > 0) setAmount(n.toFixed(dp).replace(/\.?0+$/, "") || "0");
     }
     const n = searchParams.get("note")?.trim();
     if (n) setNote(n);
-    const t = searchParams.get("token")?.trim();
-    if (t) setToken(stableTokenFromSymbol(t));
   }, [searchParams]);
 
   const tokenBalance = useMemo(() => {
@@ -204,19 +207,31 @@ export default function SendPage() {
     parsed > 0 && recipientOk && wallet != null && !overBalance;
   const amountPrefix = currencyPrefixForToken(token);
 
+  // One idempotency key per intended payment: kept across retries (e.g.
+  // after a timeout) so Circle can't pay twice, reset when the payment
+  // details change or it succeeds.
+  const payKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    payKeyRef.current = null;
+  }, [recipient, amount, token]);
+
   const handlePay = async () => {
     if (!wallet || !canContinue) return;
     setSubmitting(true);
     setLocalError(null);
     clearError();
+    payKeyRef.current ??= newIdempotencyKey();
     const result = await sendMoney(recipient.trim(), amount, {
       note: note.trim() || undefined,
       requestCode,
       token,
+      idempotencyKey: payKeyRef.current,
     });
     setSubmitting(false);
-    if (result.ok) setStep("success");
-    else setLocalError(result.error);
+    if (result.ok) {
+      payKeyRef.current = null;
+      setStep("success");
+    } else setLocalError(result.error);
   };
 
   const recipientLabel = resolvedMeta?.label ?? recipient.trim();

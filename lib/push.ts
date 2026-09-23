@@ -1,3 +1,4 @@
+import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
 import { createNotification, type NotificationType } from "@/lib/notifications";
 import {
@@ -98,15 +99,20 @@ export async function notifyIncomingPayment(
   });
 }
 
-export async function notifySwapComplete(userId: string, amount: string) {
-  const parsed = formatAmountForPush(`$${amount}`);
+export async function notifySwapComplete(
+  userId: string,
+  amount: string,
+  tokenIn = "USDC",
+  tokenOut = "EURC",
+) {
+  const parsed = formatStableAmount(amount, tokenIn);
 
   await notifyUser(userId, {
     type: "swap_complete",
     title: "Swap complete",
-    body: `You swapped ${parsed} to EURC.`,
+    body: `You swapped ${parsed} to ${tokenOut}.`,
     url: "/activity",
-    metadata: { amount },
+    metadata: { amount, tokenIn, tokenOut },
   });
 }
 
@@ -178,8 +184,9 @@ export async function notifyRequestPaid(
   requesterUserId: string,
   amount: string,
   payerLabel: string,
+  token = "USDC",
 ) {
-  const parsed = formatAmountForPush(`$${amount}`);
+  const parsed = formatStableAmount(amount, token);
   const from = formatUsernameForPush(payerLabel);
 
   await notifyUser(requesterUserId, {

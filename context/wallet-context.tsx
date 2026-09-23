@@ -16,7 +16,6 @@ import {
   writeCachedProfile,
 } from "@/lib/profile-cache";
 import {
-  estimateNetUsdFromTransactions,
   resolveWalletTotalUsd,
 } from "@/lib/tokens";
 import {
@@ -27,6 +26,7 @@ import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import { playSuccessChime } from "@/lib/success-chime";
 import { haptics } from "@/lib/haptics";
 import { formatStableAmount } from "@/lib/currency-format";
+import { newIdempotencyKey } from "@/lib/format";
 import { requirePin } from "@/lib/pin-gate";
 
 /**
@@ -125,6 +125,7 @@ type WalletContextValue = {
       note?: string;
       requestCode?: string;
       token?: string;
+      idempotencyKey?: string;
     },
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   swapMoney: (
@@ -189,6 +190,18 @@ type WalletApiPayload = {
   totalUsd?: number;
   error?: string;
 };
+
+/** Keep the previous value when the new one is structurally equal, so a
+ * 30s poll that returns the same data doesn't hand every subscriber a new
+ * object (and re-render Home, Activity, chat and open forms mid-interaction). */
+function sameOr<T>(prev: T, next: T): T {
+  if (prev === next) return prev;
+  try {
+    return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+  } catch {
+    return next;
+  }
+}
 
 function applyWalletPayload(
   data: WalletApiPayload,
@@ -275,6 +288,19 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  const setWalletStable = useCallback(
+    (w: GlideWallet) => setWallet((prev) => sameOr(prev, w)),
+    [],
+  );
+  const setTokensStable = useCallback(
+    (t: GlideTokenBalance[]) => setTokens((prev) => sameOr(prev, t)),
+    [],
+  );
+  const setTransactionsStable = useCallback(
+    (list: GlideTransaction[]) => setTransactions((prev) => sameOr(prev, list)),
+    [],
+  );
+
   const updateProfile = useCallback((patch: Partial<GlideProfile>) => {
     setProfile((prev) => {
       const next = { ...prev, ...patch };
@@ -321,10 +347,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.error ?? "Could not load wallet");
       }
       const data = (await res.json()) as WalletApiPayload;
-      applyWalletPayload(data, userId, setWallet, setBalance, setTokens);
+      applyWalletPayload(
+        data,
+        userId,
+        setWalletStable,
+        setBalance,
+        setTokensStable,
+      );
       return data;
     },
-    [],
+    [setWalletStable, setTokensStable],
   );
 
   const fetchTransactions = useCallback(
@@ -341,13 +373,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (!res.ok) return;
         const data = (await res.json()) as { transactions: GlideTransaction[] };
         const list = data.transactions ?? [];
-        setTransactions(list);
+        setTransactionsStable(list);
         if (uid) writeCachedTransactions(list, uid);
       } finally {
         if (!quick) setTransactionsLoading(false);
       }
     },
-    [],
+    [setTransactionsStable],
   );
 
   const loadTransactions = useCallback(
@@ -363,8 +395,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setRefreshing(true);
     setError(null);
     try {
-      await fetchWalletState(wallet, userIdRef.current);
-      await loadTransactions(wallet.id);
+      await Promise.all([
+        fetchWalletState(wallet, userIdRef.current),
+        loadTransactions(wallet.id),
+      ]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Refresh failed");
     } finally {
@@ -378,8 +412,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const silentRefresh = useCallback(async () => {
     if (!wallet || !userIdRef.current) return;
     try {
-      await fetchWalletState(wallet, userIdRef.current);
-      await loadTransactions(wallet.id);
+      await Promise.all([
+        fetchWalletState(wallet, userIdRef.current),
+        loadTransactions(wallet.id),
+      ]);
     } catch {
       // background sync - never surface errors to the user
     }
@@ -394,10 +430,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const { wallet: w, balance: b, tokens: t } = await loadWalletFromApi({
         walletId: wallet?.id,
       });
-      setWallet(w);
+      setWalletStable(w);
       writeCachedWallet(w, uid);
       setBalance(b);
-      setTokens(t);
+      setTokensStable(t);
       writeCachedWalletBalances(
         {
           balance: b,
@@ -414,7 +450,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [loadTransactions, wallet]);
+  }, [loadTransactions, wallet, setWalletStable, setTokensStable]);
 
   const ensureWallet = useCallback(async () => {
     const uid = userIdRef.current;
@@ -459,6 +495,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         note?: string;
         requestCode?: string;
         token?: string;
+        /** One key per intended payment: Circle dedupes on it, so a retry
+         * (PIN prompt re-post, or the user retrying after a timeout with the
+         * same key) can never pay twice. */
+        idempotencyKey?: string;
       },
     ) => {
       if (!wallet) return { ok: false as const, error: "Wallet not ready" };
@@ -499,6 +539,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             token: options?.token,
             note: options?.note,
             requestCode: options?.requestCode,
+            idempotencyKey: options?.idempotencyKey ?? newIdempotencyKey(),
           },
         );
         if (!res.ok) {
@@ -610,13 +651,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const cached = readCachedWallet(user.id);
     const cachedBalances = readCachedWalletBalances(user.id);
     const cachedTxs = readCachedTransactions(user.id);
-    if (cachedTxs?.length) setTransactions(cachedTxs);
+    if (cachedTxs?.length) setTransactionsStable(cachedTxs);
     if (cachedBalances) {
       setBalance(cachedBalances.balance);
-      setTokens(cachedBalances.tokens);
+      setTokensStable(cachedBalances.tokens);
     }
     if (cached) {
-      setWallet(cached);
+      setWalletStable(cached);
       void fetchTransactions(cached.id, { quick: true });
     }
     setLoading(!cachedBalances);
@@ -656,15 +697,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
       if (walletResult && !cancelled) {
         const { wallet: w, balance: b, tokens: t, totalUsd } = walletResult;
-        setWallet(w);
+        setWalletStable(w);
         writeCachedWallet(w, user.id);
         setBalance(b);
-        setTokens(t);
+        setTokensStable(t);
         writeCachedWalletBalances(
           { balance: b, tokens: t, totalUsd },
           user.id,
         );
-        void loadTransactions(w.id);
+        // The quick DB read already ran above for a cached wallet; only the
+        // full Circle sync is still needed.
+        if (cached?.id === w.id) void fetchTransactions(w.id);
+        else void loadTransactions(w.id);
       }
 
       if (!cancelled) setLoading(false);
@@ -673,7 +717,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [authReady, user?.id, fetchTransactions, loadTransactions]);
+  }, [
+    authReady,
+    user?.id,
+    fetchTransactions,
+    loadTransactions,
+    setWalletStable,
+    setTokensStable,
+    setTransactionsStable,
+  ]);
 
   // Real-time balance updates. All triggers use silentRefresh so they don't
   // re-render swap/bridge/send forms mid-interaction (no `refreshing` flag
@@ -731,11 +783,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     };
   }, [wallet, silentRefresh]);
 
-  const totalUsd = useMemo(() => {
-    const onChain = resolveWalletTotalUsd(tokens, balance);
-    if (onChain > 0) return onChain;
-    return estimateNetUsdFromTransactions(transactions);
-  }, [tokens, balance, transactions]);
+  // On-chain balance only. An activity-derived estimate would show money
+  // that may not exist (failed sends, unsettled mirrors, swaps, bridges).
+  const totalUsd = useMemo(
+    () => resolveWalletTotalUsd(tokens, balance),
+    [tokens, balance],
+  );
 
   const clearError = useCallback(() => setError(null), []);
   const clearNotice = useCallback(() => setNotice(null), []);

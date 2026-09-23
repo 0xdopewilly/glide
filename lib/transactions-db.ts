@@ -65,6 +65,31 @@ function mergeMetadata(
   return incoming;
 }
 
+/** True when recordTransaction would change nothing on this row, so the
+ * periodic sync can skip the write. Mirrors the update rules below. */
+export function isRowUpToDate(
+  existing: {
+    status: string | null;
+    txHash: string | null;
+    explorerUrl: string | null;
+    amountLabel: string;
+    title: string;
+    circleTransactionId: string | null;
+  },
+  input: RecordTransactionInput,
+): boolean {
+  return (
+    (input.status ?? existing.status) === existing.status &&
+    (input.txHash ?? existing.txHash) === existing.txHash &&
+    (input.explorerUrl ?? existing.explorerUrl) === existing.explorerUrl &&
+    pickAmountLabel(existing.amountLabel, input.amountLabel) ===
+      existing.amountLabel &&
+    pickTitle(existing.title, input.title) === existing.title &&
+    (!input.circleTransactionId ||
+      existing.circleTransactionId === input.circleTransactionId)
+  );
+}
+
 export async function recordTransaction(input: RecordTransactionInput) {
   // Look up an existing row for THIS user only. A single Circle transaction
   // creates two activity rows (one per side of the transfer), so the unique

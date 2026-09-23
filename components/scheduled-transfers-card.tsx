@@ -8,6 +8,8 @@ import {
   type ScheduleFrequency,
 } from "@/lib/scheduled-transfers";
 import { GlideButton } from "@/components/glide-button";
+import { IS_MAINNET } from "@/lib/network";
+import { fetchWithPin } from "@/lib/pin-gate";
 import { useEffect, useState } from "react";
 
 type Row = {
@@ -39,7 +41,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
   const create = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/scheduled", {
+      const res = await fetchWithPin("/api/scheduled", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ destination, amount, frequency }),
@@ -155,7 +157,9 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
           <option value="daily">Daily</option>
           <option value="weekly">Weekly</option>
           <option value="monthly">Monthly</option>
-          <option value="minutely">Every minute (test)</option>
+          {IS_MAINNET ? null : (
+            <option value="minutely">Every minute (test)</option>
+          )}
         </select>
       </FormField>
       {frequency === "minutely" ? (

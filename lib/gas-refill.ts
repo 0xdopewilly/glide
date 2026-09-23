@@ -99,10 +99,19 @@ async function waitForCircleTx(txId: string, timeoutMs = 30_000): Promise<boolea
     try {
       const res = await initialized.client.getTransaction({ id: txId });
       const state = res.data?.transaction?.state;
-      // Circle DCW lifecycle: INITIATED -> QUEUED -> SENT -> CLEARED (success).
-      // STUCK / CANCELLED are terminal failures.
-      if (state === "CLEARED") return true;
-      if (state === "CANCELLED" || state === "STUCK") return false;
+      // Circle DCW states (SDK order): INITIATED -> CLEARED -> QUEUED ->
+      // SENT -> CONFIRMED -> COMPLETE. CLEARED is pre-chain, so the gas is
+      // only usable once CONFIRMED. FAILED / DENIED / CANCELLED / STUCK are
+      // terminal failures — stop waiting instead of burning the timeout.
+      if (state === "CONFIRMED" || state === "COMPLETE") return true;
+      if (
+        state === "FAILED" ||
+        state === "DENIED" ||
+        state === "CANCELLED" ||
+        state === "STUCK"
+      ) {
+        return false;
+      }
     } catch {
       // transient - retry
     }

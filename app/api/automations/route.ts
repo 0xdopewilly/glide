@@ -1,4 +1,5 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
+import { assertPinVerified } from "@/lib/pin";
 import {
   createSaveOnReceiveRule,
   createScheduleRule,
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ rule, savingsWalletAddress: savings.address });
     }
     if (type === "scheduled_send") {
+      // Pays a third party on every run with no further prompt, so creating
+      // one needs the same PIN as a one-off send.
+      const gate = await assertPinVerified(session.userId);
+      if (!gate.ok) {
+        return NextResponse.json(
+          { error: "Confirm with your PIN to continue.", code: gate.code },
+          { status: 401 },
+        );
+      }
       const rule = await createScheduleRule({
         userId: session.userId,
         amount: str(b.amount) ?? "",

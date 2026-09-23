@@ -19,7 +19,7 @@ import {
   parseRequestFromMessage,
   parseSplitFromMessage,
 } from "@/lib/agent-context";
-import { findContactByName } from "@/lib/contacts-db";
+import { findContactByExactName } from "@/lib/contacts-db";
 import { ARC_NETWORK, IS_MAINNET } from "@/lib/network";
 import { findUserByUsername } from "@/lib/usernames";
 import { normalizeUsername } from "@/lib/validation";
@@ -636,7 +636,7 @@ export async function reconcileIntentWithHistory(
           amount,
           to: glideUser.circleWalletAddress,
           token,
-          recipientName: glideUser.displayName ?? glideUser.username,
+          recipientName: `@${glideUser.username}`,
         };
       }
     }
@@ -644,7 +644,7 @@ export async function reconcileIntentWithHistory(
     const name = extractRecipientNameFromHistory(fullHistory);
     if (name && amount && !extractWalletFromHistory(fullHistory)) {
       const token = extractTokenFromText(latestUserMessage) ?? "USDC";
-      const contact = await findContactByName(userId, name);
+      const contact = await findContactByExactName(userId, name);
       if (contact) {
         return {
           action: "send",
@@ -661,7 +661,7 @@ export async function reconcileIntentWithHistory(
           amount,
           to: glideUser.circleWalletAddress,
           token,
-          recipientName: glideUser.displayName ?? glideUser.username,
+          recipientName: `@${glideUser.username}`,
         };
       }
     }

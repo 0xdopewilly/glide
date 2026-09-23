@@ -1,6 +1,13 @@
 export type ActionSuccessType = "send" | "swap" | "bridge";
 
-export type ConfirmActionKind = "send" | "send_batch" | "request" | "split";
+export type ConfirmActionKind =
+  | "send"
+  | "send_batch"
+  | "request"
+  | "split"
+  | "swap"
+  | "bridge"
+  | "rule";
 
 export type StoredChatMessage = {
   id: string;
@@ -36,6 +43,9 @@ export type StoredChatMessage = {
   confirmStatus?: "pending" | "confirmed" | "cancelled" | "failed";
   /** For confirm_action request: target user's glide tag. */
   glideTag?: string;
+  /** For confirm_action swap / bridge / rule: plain-language summary shown
+   * as the card headline. */
+  confirmText?: string;
   /** When set on a text bubble, render a 'Try again' button that re-invokes
    * Billy with this exact message. Used for retry-with-correction UX. */
   retryPrompt?: string;

@@ -62,6 +62,9 @@ type ExternalChainConfig = {
   label: string;
   /** Full network label for chain badges ("Base Sepolia" on testnet). */
   networkLabel: string;
+  /** Smallest deposit (USD) glidepay sweeps to Arc. Each sweep costs real
+   * gas on mainnet, so dust waits on the Receive screen until it adds up. */
+  minSweepUsd: number;
 };
 
 const EXTERNAL_BY_NETWORK: Record<
@@ -69,16 +72,16 @@ const EXTERNAL_BY_NETWORK: Record<
   Record<ExternalChainKey, ExternalChainConfig>
 > = {
   mainnet: {
-    base: { circleBlockchain: "BASE", label: "Base", networkLabel: "Base" },
-    ethereum: { circleBlockchain: "ETH", label: "Ethereum", networkLabel: "Ethereum" },
-    polygon: { circleBlockchain: "MATIC", label: "Polygon", networkLabel: "Polygon" },
-    arbitrum: { circleBlockchain: "ARB", label: "Arbitrum", networkLabel: "Arbitrum" },
+    base: { circleBlockchain: "BASE", label: "Base", networkLabel: "Base", minSweepUsd: 1 },
+    ethereum: { circleBlockchain: "ETH", label: "Ethereum", networkLabel: "Ethereum", minSweepUsd: 10 },
+    polygon: { circleBlockchain: "MATIC", label: "Polygon", networkLabel: "Polygon", minSweepUsd: 1 },
+    arbitrum: { circleBlockchain: "ARB", label: "Arbitrum", networkLabel: "Arbitrum", minSweepUsd: 1 },
   },
   testnet: {
-    base: { circleBlockchain: "BASE-SEPOLIA", label: "Base", networkLabel: "Base Sepolia" },
-    ethereum: { circleBlockchain: "ETH-SEPOLIA", label: "Ethereum", networkLabel: "Ethereum Sepolia" },
-    polygon: { circleBlockchain: "MATIC-AMOY", label: "Polygon", networkLabel: "Polygon Amoy" },
-    arbitrum: { circleBlockchain: "ARB-SEPOLIA", label: "Arbitrum", networkLabel: "Arbitrum Sepolia" },
+    base: { circleBlockchain: "BASE-SEPOLIA", label: "Base", networkLabel: "Base Sepolia", minSweepUsd: 0 },
+    ethereum: { circleBlockchain: "ETH-SEPOLIA", label: "Ethereum", networkLabel: "Ethereum Sepolia", minSweepUsd: 0 },
+    polygon: { circleBlockchain: "MATIC-AMOY", label: "Polygon", networkLabel: "Polygon Amoy", minSweepUsd: 0 },
+    arbitrum: { circleBlockchain: "ARB-SEPOLIA", label: "Arbitrum", networkLabel: "Arbitrum Sepolia", minSweepUsd: 0 },
   },
 };
 

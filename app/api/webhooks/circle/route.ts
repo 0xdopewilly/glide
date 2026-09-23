@@ -1,4 +1,5 @@
 import { claimIncoming, completeSweep, isInboundUsdc } from "@/lib/cctp-receive";
+import { getReceiveChainByCircleBlockchain, RECEIVE_CHAINS } from "@/lib/circle";
 import { verifyCircleWebhook } from "@/lib/webhook-signature";
 import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -92,6 +93,14 @@ export async function POST(request: NextRequest) {
   }
   if (!isUsdc) {
     return NextResponse.json({ ok: true, ignored: "not USDC" });
+  }
+
+  // Dust stays on the source chain (visible on the Receive screen, where the
+  // user can sweep once it adds up) — each sweep costs real gas on mainnet.
+  const receiveKey = getReceiveChainByCircleBlockchain(chain);
+  const minSweep = receiveKey ? RECEIVE_CHAINS[receiveKey].minSweepUsd : 0;
+  if (!(parseFloat(amount) >= minSweep)) {
+    return NextResponse.json({ ok: true, ignored: "below minimum sweep" });
   }
 
   // Phase 1 (sync): atomic claim. If another retry already claimed this

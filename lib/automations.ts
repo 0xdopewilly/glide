@@ -2,7 +2,7 @@ import { createCircleClient, GLIDE_BLOCKCHAIN } from "@/lib/circle";
 import { formatStableAmount } from "@/lib/currency-format";
 import { prisma } from "@/lib/db";
 import { notifyAutoSave } from "@/lib/push";
-import { resolveRecipient } from "@/lib/resolve-recipient";
+import { recipientConfirmLabel, resolveRecipient } from "@/lib/resolve-recipient";
 import {
   isScheduleFrequency,
   nextRunFromNow,
@@ -141,10 +141,20 @@ export async function createScheduleRule(input: {
   if (!isScheduleFrequency(input.frequency)) {
     throw new Error("Frequency must be daily, weekly, or monthly.");
   }
-  const destination = input.destination.trim();
-  if (!destination) throw new Error("A destination is required.");
+  const raw = input.destination.trim();
+  if (!raw) throw new Error("A destination is required.");
+  // Pin the recipient's address now; re-resolving a name on every run would
+  // pay whoever holds that pay tag or contact name at the time.
+  const resolved = raw === "savings" ? null : await resolveRecipient(input.userId, raw);
+  if (raw !== "savings" && !resolved) {
+    throw new Error(
+      `Couldn't find "${raw}". Use a @username, a saved contact, or a 0x address.`,
+    );
+  }
+  const destination = resolved ? resolved.address : raw;
   const token = narrowToken(input.token);
-  const label = input.recipientLabel?.trim() || destination;
+  const label =
+    input.recipientLabel?.trim() || (resolved ? recipientConfirmLabel(resolved) : "Savings");
   return prisma.automationRule.create({
     data: {
       userId: input.userId,

@@ -14,7 +14,7 @@ import {
 } from "@/lib/currency-format";
 import { safeApiError } from "@/lib/circle";
 import { groqChat, type GroqMessage } from "@/lib/groq";
-import { resolveRecipient } from "@/lib/resolve-recipient";
+import { recipientConfirmLabel, resolveRecipient } from "@/lib/resolve-recipient";
 import { formatSplitProcessingReply } from "@/lib/split-bill";
 import { isValidWalletAddress, parseMoneyAmount } from "@/lib/validation";
 import { NextRequest, NextResponse } from "next/server";
@@ -183,11 +183,12 @@ async function resolveSendRecipient(
   return {
     ...intent,
     to: resolved.address,
+    // Show who the money actually goes to: @tag for pay tags, the sender's
+    // own name for contacts. Never the LLM's or the recipient's chosen name.
     recipientName:
-      intent.recipientName ??
-      (resolved.source === "contact" || resolved.source === "username"
-        ? resolved.label.replace(/^@/, "")
-        : undefined),
+      resolved.source === "wallet"
+        ? intent.recipientName
+        : recipientConfirmLabel(resolved),
   };
 }
 
@@ -201,11 +202,12 @@ async function resolveSendBatchRecipient(
   return {
     ...intent,
     to: resolved.address,
+    // Show who the money actually goes to: @tag for pay tags, the sender's
+    // own name for contacts. Never the LLM's or the recipient's chosen name.
     recipientName:
-      intent.recipientName ??
-      (resolved.source === "contact" || resolved.source === "username"
-        ? resolved.label.replace(/^@/, "")
-        : undefined),
+      resolved.source === "wallet"
+        ? intent.recipientName
+        : recipientConfirmLabel(resolved),
   };
 }
 

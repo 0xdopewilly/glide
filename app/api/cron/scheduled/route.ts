@@ -18,6 +18,13 @@ import { formatResolvedRecipientLabel } from "@/lib/resolve-recipient";
 import { arcExplorerUrl } from "@/lib/transactions-db";
 import { NextRequest, NextResponse } from "next/server";
 
+/** Permanent failure (no wallet, recipient gone): stop retrying. */
+async function pauseJob(id: string) {
+  await prisma.scheduledTransfer
+    .update({ where: { id }, data: { active: false } })
+    .catch(() => {});
+}
+
 /** GET - run due scheduled sends (protect with CRON_SECRET) */
 export async function GET(request: NextRequest) {
   // Fail closed: require CRON_SECRET to be set AND to match. If it's unset we
@@ -39,13 +46,15 @@ export async function GET(request: NextRequest) {
         select: { circleWalletId: true },
       });
       if (!user?.circleWalletId) {
-        results.push({ id: job.id, ok: false, error: "no wallet" });
+        await pauseJob(job.id);
+        results.push({ id: job.id, ok: false, error: "no wallet (paused)" });
         continue;
       }
 
       const resolved = await resolveRecipient(job.userId, job.destination);
       if (!resolved) {
-        results.push({ id: job.id, ok: false, error: "bad recipient" });
+        await pauseJob(job.id);
+        results.push({ id: job.id, ok: false, error: "bad recipient (paused)" });
         continue;
       }
 
@@ -99,6 +108,15 @@ export async function GET(request: NextRequest) {
 
       results.push({ id: job.id, ok: true });
     } catch (err) {
+      // Transient (low balance, Circle hiccup): retry on tomorrow's run.
+      // Moving nextRunAt also puts it behind other due jobs, so failing jobs
+      // can't starve the queue. The idempotency key makes the retry safe.
+      await prisma.scheduledTransfer
+        .update({
+          where: { id: job.id },
+          data: { nextRunAt: new Date(Date.now() + 24 * 60 * 60 * 1000) },
+        })
+        .catch(() => {});
       results.push({
         id: job.id,
         ok: false,

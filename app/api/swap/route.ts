@@ -95,12 +95,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // assertSufficientBalance is USDC-only today; gate on USDC swaps only.
-    if (tokenIn === "USDC") {
-      await assertSufficientBalance(walletId, parsed);
-    }
+    await assertSufficientBalance(walletId, parsed, tokenIn);
 
-    const amountInStr = tokenIn === "cirBTC" ? String(parsed) : parsed.toFixed(2);
+    // Plain decimal string: String() would give "1e-7" for tiny cirBTC amounts.
+    const amountInStr =
+      tokenIn === "cirBTC"
+        ? parsed.toFixed(8).replace(/\.?0+$/, "")
+        : parsed.toFixed(2);
 
     const swap = await executeArcSwap({
       walletAddress: wallet.address,
@@ -126,7 +127,7 @@ export async function POST(request: NextRequest) {
       metadata: { amountOut: received, tokenIn, tokenOut },
     }).catch((err) => console.error("[Glide] swap record:", err));
 
-    void notifySwapComplete(session.userId, amountInStr).catch((err) =>
+    void notifySwapComplete(session.userId, amountInStr, tokenIn, tokenOut).catch((err) =>
       console.error("[Glide] swap push:", err),
     );
 

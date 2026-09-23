@@ -6,6 +6,8 @@ import {
   type BridgeNetworkKey,
 } from "@/lib/app-kit";
 import { GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
+import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { notifyBridgeComplete } from "@/lib/push";
 import { recordTransaction } from "@/lib/transactions-db";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
@@ -20,6 +22,7 @@ export const maxDuration = 60;
 /** POST { walletId, amount, network } - bridge USDC from Arc via CCTP.
  *  Entire body is wrapped in a try/catch so any error returns JSON. */
 export async function POST(request: NextRequest) {
+  let pendingRowId: string | null = null;
   try {
     const session = await requireSessionUser();
     if (isAuthError(session)) return session;
@@ -77,34 +80,55 @@ export async function POST(request: NextRequest) {
 
     await assertSufficientBalance(walletId, parsed);
 
+    // Record before bridging: if the function times out mid-bridge the user
+    // still sees a pending bridge in Activity — not nothing, which invites a
+    // retry and a second burn.
+    const { row: pendingRow } = await recordTransaction({
+      userId: session.userId,
+      kind: "bridge",
+      title: `Bridge to ${label}`,
+      amountLabel: `−$${parsed.toFixed(2)}`,
+      variant: "neutral",
+      status: "pending",
+      chain: GLIDE_BLOCKCHAIN,
+      metadata: { destination: label, network },
+    });
+    pendingRowId = pendingRow.id;
+
     const bridge = await executeArcBridge({
       walletAddress: wallet.address,
       amount: parsed.toFixed(2),
       network,
     });
 
+    // App Kit reports failures on the result (state "error") rather than
+    // throwing. Before the burn nothing moved; after it the USDC is in
+    // transit (resumable via kit.retry from the saved result).
     const status =
       bridge.state === "success"
         ? "completed"
-        : bridge.state === "error"
+        : bridge.state === "error" && !bridge.burned
           ? "failed"
           : "pending";
 
-    void recordTransaction({
-      userId: session.userId,
-      kind: "bridge",
-      title: `Bridge to ${label}`,
-      amountLabel: `−$${parsed.toFixed(2)}`,
-      variant: "neutral",
-      status,
-      txHash: bridge.txHash,
-      explorerUrl: bridge.explorerUrl,
-      chain: GLIDE_BLOCKCHAIN,
-      metadata: { destination: label, network },
-    }).catch((err) => console.error("[Glide] bridge record:", err));
+    await prisma.transaction
+      .update({
+        where: { id: pendingRow.id },
+        data: {
+          status,
+          txHash: bridge.txHash ?? null,
+          explorerUrl: bridge.explorerUrl ?? null,
+          metadata: {
+            destination: label,
+            network,
+            ...(status === "completed"
+              ? {}
+              : { bridgeState: bridge.state, bridgeResult: bridge.snapshot }),
+          } as Prisma.InputJsonValue,
+        },
+      })
+      .catch((err) => console.error("[Glide] bridge record:", err));
 
-    // App Kit reports bridge failures on the result (state "error") rather
-    // than throwing — surface them instead of telling the user it worked.
     if (status === "failed") {
       return NextResponse.json(
         { error: "Bridge could not be completed. Your USDC was not moved." },
@@ -137,6 +161,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error("[Glide] bridge:", err);
+    if (pendingRowId) {
+      await prisma.transaction
+        .update({ where: { id: pendingRowId }, data: { status: "failed" } })
+        .catch(() => {});
+    }
     const message = safeApiError(err);
     const status = message.toLowerCase().includes("insufficient") ? 400 : 502;
     return NextResponse.json({ error: message }, { status });

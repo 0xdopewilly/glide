@@ -21,3 +21,25 @@ export function requirePin(mode: PinMode): Promise<boolean> {
   if (!handler) return Promise.resolve(false);
   return handler(mode);
 }
+
+/** fetch() for a PIN-gated route: if the server answers 401 pin_required /
+ * pin_setup_required, prompt via the global PIN modal and retry once. The
+ * request body must be re-sendable (a string, as with JSON.stringify). */
+export async function fetchWithPin(
+  input: string,
+  init?: RequestInit,
+): Promise<Response> {
+  const res = await fetch(input, init);
+  if (res.status !== 401) return res;
+  const data = (await res
+    .clone()
+    .json()
+    .catch(() => ({}))) as { code?: string };
+  if (data.code !== "pin_required" && data.code !== "pin_setup_required") {
+    return res;
+  }
+  const ok = await requirePin(
+    data.code === "pin_setup_required" ? "setup" : "verify",
+  );
+  return ok ? fetch(input, init) : res;
+}

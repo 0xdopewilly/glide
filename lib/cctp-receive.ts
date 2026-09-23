@@ -8,6 +8,7 @@ import {
   type ReceiveChainKey,
 } from "@/lib/circle";
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { notifyIncomingFromChain } from "@/lib/push";
 import { addressesEqual } from "@/lib/tokens";
 import { ensureSourceGas } from "@/lib/gas-refill";
@@ -126,6 +127,7 @@ export async function sweepStuckBalance(input: {
 }): Promise<
   | { status: "swept"; amount: string; transactionId: string }
   | { status: "nothing_to_sweep" }
+  | { status: "below_minimum"; minimum: number }
   | { status: "in_progress" }
   | { status: "no_arc_wallet" }
   | { status: "failed"; detail: string }
@@ -155,8 +157,13 @@ export async function sweepStuckBalance(input: {
     externalUsdcAddress(input.chain),
   );
   if (balance <= 0) return { status: "nothing_to_sweep" };
+  if (balance < def.minSweepUsd) {
+    return { status: "below_minimum", minimum: def.minSweepUsd };
+  }
 
-  const amount = balance.toFixed(2);
+  // Round DOWN to cents: toFixed rounds up (12.345678 -> "12.35"), which is
+  // more than the wallet holds, so every sweep of that balance would fail.
+  const amount = (Math.floor(balance * 100 + 1e-9) / 100).toFixed(2);
 
   // Deterministic synthetic txHash: two clicks within the same 90s bucket
   // collide on the DB unique constraint, so rapid double-taps can't trigger
@@ -252,18 +259,35 @@ export async function completeSweep(input: {
     });
 
     // App Kit reports failures on the result (state "error") rather than
-    // throwing. Only a "success" sweep is complete and worth a push.
-    if (result.state === "error") {
-      throw new Error("bridge returned state=error");
+    // throwing. Before the burn nothing moved (failed); after it the USDC is
+    // in transit and stays "pending" with the result saved for kit.retry.
+    // Only a "success" sweep is complete and worth a push.
+    if (result.state === "error" && !result.burned) {
+      throw new Error("bridge returned state=error before burn");
     }
     const settled = result.state === "success";
 
+    const existing = settled
+      ? null
+      : await prisma.transaction.findUnique({
+          where: { id: input.transactionId },
+          select: { metadata: true },
+        });
     await prisma.transaction.update({
       where: { id: input.transactionId },
       data: {
         status: settled ? "complete" : "pending",
         txHash: result.txHash ?? null,
         explorerUrl: result.explorerUrl ?? null,
+        ...(settled
+          ? {}
+          : {
+              metadata: {
+                ...((existing?.metadata as Record<string, unknown> | null) ?? {}),
+                bridgeState: result.state,
+                bridgeResult: result.snapshot,
+              } as Prisma.InputJsonValue,
+            }),
       },
     });
 

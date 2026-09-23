@@ -2,6 +2,7 @@ import { isAuthError, requireSessionUser } from "@/lib/api-auth";
 import { assertPinVerified } from "@/lib/pin";
 import { createCircleClient, GLIDE_BLOCKCHAIN, safeApiError } from "@/lib/circle";
 import {
+  addressesEqual,
   arcTokenAddressForSymbol,
   normalizeTokenSymbol,
 } from "@/lib/tokens";
@@ -27,6 +28,9 @@ import { NextRequest, NextResponse } from "next/server";
 // notifications can occasionally cross 10s. Be safe.
 export const maxDuration = 60;
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function precisionForToken(token: string): number {
   return token === "cirBTC" ? 8 : 2;
 }
@@ -51,6 +55,7 @@ export async function POST(request: NextRequest) {
     token?: string;
     note?: string;
     requestCode?: string;
+    idempotencyKey?: string;
   };
 
   const walletId = body.walletId?.trim();
@@ -59,6 +64,9 @@ export async function POST(request: NextRequest) {
   const token = normalizeTokenSymbol(body.token);
   const note = body.note?.trim().slice(0, 140) || undefined;
   const requestCode = body.requestCode?.trim().toLowerCase();
+  const idempotencyKey = UUID_RE.test(body.idempotencyKey?.trim() ?? "")
+    ? body.idempotencyKey!.trim()
+    : undefined;
 
   if (!walletId || !recipientRaw || !amount) {
     return NextResponse.json(
@@ -80,7 +88,9 @@ export async function POST(request: NextRequest) {
 
   const destinationAddress = resolved.address;
 
-  const parsed = parseMoneyAmount(amount);
+  const parsed = parseMoneyAmount(amount, {
+    maxDecimals: precisionForToken(token),
+  });
   if (parsed === null) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
@@ -152,6 +162,9 @@ export async function POST(request: NextRequest) {
         type: "level",
         config: { feeLevel: "MEDIUM" },
       },
+      // Client-supplied, one per intended payment: Circle dedupes on it, so
+      // a retried request returns the original transfer instead of a second.
+      ...(idempotencyKey ? { idempotencyKey } : {}),
     });
 
     const circleId = res.data?.id;
@@ -233,10 +246,18 @@ export async function POST(request: NextRequest) {
       const { notifyRequestPaid } = await import("@/lib/push");
       const { prisma } = await import("@/lib/db");
       const req = await getPaymentRequestByCode(requestCode);
-      const updated = await markPaymentRequestPaid(
-        requestCode,
-        session.userId,
-      );
+      // Only a payment that actually satisfies the request marks it paid: to
+      // the requester's wallet, in the requested token, for at least the
+      // requested amount. Anything else is just a send.
+      const satisfies =
+        req?.status === "pending" &&
+        req.userId !== session.userId &&
+        addressesEqual(req.user?.circleWalletAddress, destinationAddress) &&
+        normalizeTokenSymbol(req.token) === token &&
+        parsed >= Number(req.amount);
+      const updated = satisfies
+        ? await markPaymentRequestPaid(requestCode, session.userId)
+        : { count: 0 };
       if (updated.count > 0 && req?.userId && req.userId !== session.userId) {
         const payer = await prisma.user.findUnique({
           where: { id: session.userId },
@@ -248,6 +269,7 @@ export async function POST(request: NextRequest) {
           req.userId,
           formatted,
           payerLabel,
+          token,
         ).catch((err) => console.error("[Glide] request paid notify:", err));
       }
     }

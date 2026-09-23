@@ -7,6 +7,8 @@ import {
 } from "@/components/chat/processing-bubble";
 import type { GlideIntent } from "@/lib/agent-intents";
 import { formatStableAmountWithCode } from "@/lib/currency-format";
+import { shortenAddress } from "@/lib/format";
+import { fetchWithPin } from "@/lib/pin-gate";
 import {
   computeSplitSharePerPerson,
   formatSplitPartialMessage,
@@ -92,6 +94,11 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     useState<ProcessingAction | null>(null);
   const [savingContactId, setSavingContactId] = useState<string | null>(null);
   const [messages, setMessages] = useState<StoredChatMessage[]>([WELCOME]);
+  /** Ids restored from history: rendered without the entrance animation. */
+  const [historyIds, setHistoryIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const scrollBehaviorRef = useRef<ScrollBehavior>("smooth");
   const [hydrated, setHydrated] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -110,12 +117,19 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     if (!userId) return;
     // Paint instantly from localStorage so the screen isn't blank, then ask
     // the server for the canonical cross-device history and reconcile.
-    setMessages(readChatHistory(userId));
+    // Restored messages don't replay their entrance animation, and the list
+    // jumps to the end instead of smooth-scrolling through ~100 bubbles.
+    const local = readChatHistory(userId);
+    setHistoryIds(new Set(local.map((m) => m.id)));
+    scrollBehaviorRef.current = "auto";
+    setMessages(local);
     setHydrated(true);
 
     let cancelled = false;
     void fetchServerChatHistory().then((serverHistory) => {
       if (cancelled || !serverHistory) return;
+      setHistoryIds(new Set(serverHistory.map((m) => m.id)));
+      scrollBehaviorRef.current = "auto";
       setMessages(serverHistory);
       writeChatHistory(serverHistory, userId);
     });
@@ -154,10 +168,12 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
   }, [messages, hydrated, userId]);
 
   const scrollToEnd = useCallback(() => {
+    const behavior = scrollBehaviorRef.current;
+    scrollBehaviorRef.current = "smooth";
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({
         top: listRef.current.scrollHeight,
-        behavior: "smooth",
+        behavior,
       });
     });
   }, []);
@@ -219,6 +235,39 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           recipients: intent.recipients,
         };
       }
+      if (intent.action === "swap") {
+        return {
+          ...base,
+          confirmKind: "swap",
+          confirmText: `Swap ${formatStableAmountWithCode(intent.amount, "USDC")} to EURC`,
+        };
+      }
+      if (intent.action === "bridge") {
+        const network =
+          intent.network.charAt(0).toUpperCase() + intent.network.slice(1);
+        return {
+          ...base,
+          confirmKind: "bridge",
+          confirmText: `Bridge ${formatStableAmountWithCode(intent.amount, "USDC")} to ${network}`,
+        };
+      }
+      if (intent.action === "rule") {
+        const token = intent.token ?? "USDC";
+        let confirmText: string;
+        if (intent.ruleType === "scheduled_send") {
+          const who =
+            intent.recipientName ??
+            (intent.destination.startsWith("0x")
+              ? shortenAddress(intent.destination)
+              : `@${intent.destination}`);
+          confirmText = `Send ${formatStableAmountWithCode(intent.amount, token)} to ${who} ${intent.frequency}`;
+        } else if (intent.ruleType === "threshold_save") {
+          confirmText = `Keep ${token} under ${formatStableAmountWithCode(intent.thresholdAmount, token)} and move the rest to Savings`;
+        } else {
+          confirmText = `Save ${intent.percent}% of every ${token} payment you receive`;
+        }
+        return { ...base, confirmKind: "rule", confirmText };
+      }
       return null;
     },
     [],
@@ -244,7 +293,10 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
         (intent.action === "send" ||
           intent.action === "send_batch" ||
           intent.action === "request" ||
-          intent.action === "split")
+          intent.action === "split" ||
+          intent.action === "swap" ||
+          intent.action === "bridge" ||
+          intent.action === "rule")
       ) {
         const card = buildConfirmCard(intent);
         if (card) {
@@ -509,7 +561,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           successText = `Done — auto-save is on. I'll move ${intent.percent}% of every ${token} payment you receive into your Savings, hands-free. Manage it in Automations.`;
         }
         try {
-          const res = await fetch("/api/automations", {
+          const res = await fetchWithPin("/api/automations", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
@@ -789,6 +841,22 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
     }
   };
 
+  // Stable wrappers around the latest handlers, so memoized bubbles don't
+  // re-render on every keystroke.
+  const handlersRef = useRef({ saveContact, skipContact, sendToAgent });
+  useEffect(() => {
+    handlersRef.current = { saveContact, skipContact, sendToAgent };
+  });
+  const onSaveContactStable = useCallback((id: string) => {
+    void handlersRef.current.saveContact(id);
+  }, []);
+  const onSkipContactStable = useCallback((id: string) => {
+    handlersRef.current.skipContact(id);
+  }, []);
+  const onRetryStable = useCallback((prompt: string) => {
+    void handlersRef.current.sendToAgent(prompt);
+  }, []);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const text = message.trim();
@@ -875,13 +943,14 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
           <ChatMessageBubble
             key={m.id}
             message={m}
+            enter={!historyIds.has(m.id)}
             savingContact={savingContactId === m.id}
-            onSaveContact={saveContact}
-            onSkipContact={skipContact}
+            onSaveContact={onSaveContactStable}
+            onSkipContact={onSkipContactStable}
             onConfirmAction={onConfirmAction}
             onCancelAction={onCancelAction}
-            confirmBusy={busy}
-            onRetry={(prompt) => void sendToAgent(prompt)}
+            confirmBusy={m.kind === "confirm_action" ? busy : false}
+            onRetry={onRetryStable}
           />
         ))}
         {processingAction ? (

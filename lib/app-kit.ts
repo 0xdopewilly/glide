@@ -66,6 +66,22 @@ export function getGlideAppKit(): GlideAppKit {
   return cached;
 }
 
+const SECRET_KEYS = new Set(["apiKey", "kitKey", "entitySecret"]);
+
+/** JSON-safe copy for the DB (bigints stringified, credential-like keys
+ * dropped defensively — BridgeResult carries none today). */
+function toJsonSafe(value: unknown): unknown {
+  try {
+    return JSON.parse(
+      JSON.stringify(value, (key, v) =>
+        SECRET_KEYS.has(key) ? undefined : typeof v === "bigint" ? v.toString() : v,
+      ),
+    );
+  } catch {
+    return null;
+  }
+}
+
 export function extractBridgeTx(result: BridgeResult) {
   const steps = result.steps ?? [];
   const withHash = steps.filter((s) => s.txHash);
@@ -75,6 +91,14 @@ export function extractBridgeTx(result: BridgeResult) {
     txHash: primary?.txHash,
     explorerUrl: primary?.explorerUrl,
     steps,
+    // Once the burn lands the USDC has left the source chain: a later error
+    // means it's in transit (resumable via kit.retry), not "not moved".
+    burned: steps.some(
+      (s) => s.name.toLowerCase() === "burn" && s.state === "success",
+    ),
+    // Full result, persisted so a stuck transfer can be resumed later with
+    // kit.retry(result, ...).
+    snapshot: toJsonSafe(result),
   };
 }
 
@@ -152,6 +176,13 @@ export async function executeArcSwap(input: {
       throw new Error(
         "Swap did not return a transaction. Check CIRCLE_KIT_KEY and Arc App Kit access in Circle Console.",
       );
+    }
+
+    // Same-chain swaps settle atomically and are confirmed (and checked for
+    // revert) before swap() returns; PENDING only means amountOut wasn't
+    // enriched yet. FAILED is still treated as a failure, defensively.
+    if (result.progress?.status === "FAILED") {
+      throw new Error("Swap could not be completed. Your funds were not moved.");
     }
 
     return {

@@ -3,7 +3,7 @@
 import { inputClassName } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
 import { AUTOMATION_TEMPLATES } from "@/lib/automation-templates";
-import { requirePin } from "@/lib/pin-gate";
+import { fetchWithPin, requirePin } from "@/lib/pin-gate";
 import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -143,7 +143,7 @@ export default function AutomationsPage() {
   const savePolicy = async () => {
     setSavingPolicy(true);
     try {
-      await fetch("/api/approvals/policy", {
+      await fetchWithPin("/api/approvals/policy", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -164,7 +164,7 @@ export default function AutomationsPage() {
   const toggle = async (id: string, active: boolean) => {
     setBusyId(id);
     try {
-      await fetch(`/api/automations/${id}`, {
+      await fetchWithPin(`/api/automations/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ active }),
@@ -203,7 +203,7 @@ export default function AutomationsPage() {
   const activateTemplate = async (body: Record<string, unknown>, id: string) => {
     setBusyId(id);
     try {
-      await fetch("/api/automations", {
+      await fetchWithPin("/api/automations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
