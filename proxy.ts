@@ -60,6 +60,14 @@ export default clerkMiddleware(
     authorizedParties,
     signInUrl: "/sign-in",
     signUpUrl: "/sign-up",
+    // Clerk production runs its Frontend API through this app at /__clerk
+    // (Clerk "app proxy" — no Clerk DNS records). Enabled only where
+    // NEXT_PUBLIC_CLERK_PROXY_URL is set (mainnet); the testnet deployment
+    // on Clerk's development instance doesn't proxy. Clerk answers these
+    // requests before the handler above runs.
+    frontendApiProxy: {
+      enabled: Boolean(process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.trim()),
+    },
   },
 );
 
@@ -67,5 +75,7 @@ export const config = {
   matcher: [
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
+    // Clerk's proxied script paths end in .js, which the first pattern skips.
+    "/__clerk/(.*)",
   ],
 };
