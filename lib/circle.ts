@@ -34,13 +34,19 @@ export function createCircleClient() {
     return { error: "Missing CIRCLE_API_KEY or CIRCLE_ENTITY_SECRET" as const };
   }
 
-  return {
-    client: initiateDeveloperControlledWalletsClient({
-      apiKey,
-      entitySecret,
-    }),
-  };
+  // Reuse one client per instance: the SDK caches Circle's entity public key
+  // on the client, so a fresh client per call re-fetches it on every
+  // signed request (send, swap, automations).
+  cachedClient ??= initiateDeveloperControlledWalletsClient({
+    apiKey,
+    entitySecret,
+  });
+  return { client: cachedClient };
 }
+
+let cachedClient: ReturnType<
+  typeof initiateDeveloperControlledWalletsClient
+> | null = null;
 
 export async function getOrCreateWalletSetId(
   client: ReturnType<typeof initiateDeveloperControlledWalletsClient>,

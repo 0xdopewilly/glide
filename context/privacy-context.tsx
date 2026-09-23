@@ -9,7 +9,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -22,11 +21,9 @@ type PrivacyContextValue = PrivacyPreferences & {
 const PrivacyContext = createContext<PrivacyContextValue | null>(null);
 
 export function PrivacyProvider({ children }: { children: React.ReactNode }) {
-  const [prefs, setPrefs] = useState<PrivacyPreferences>(DEFAULT_FALLBACK);
-
-  useEffect(() => {
-    setPrefs(readPrivacyPreferences());
-  }, []);
+  // Read saved prefs on the first render (this tree only renders on the
+  // client, behind AuthGate), so a hidden balance never flashes visible.
+  const [prefs, setPrefs] = useState<PrivacyPreferences>(readPrivacyPreferences);
 
   const persist = useCallback((next: PrivacyPreferences) => {
     setPrefs(next);

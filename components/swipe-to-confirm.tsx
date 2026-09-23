@@ -18,7 +18,10 @@ export function SwipeToConfirm({ label, onConfirm, disabled, loading, successLab
   const x = useMotionValue(0);
   const [completed, setCompleted] = useState(false);
 
-  const fillWidth = useTransform(x, (v) => `${v + 56}px`); // fills under thumb
+  // Fill under the thumb, transform-only: a full-width bar parked just left
+  // of the (overflow-hidden) track slides right so its edge follows the thumb.
+  // Animating `width` would force a layout on every drag frame.
+  const fillX = useTransform(x, (v) => v + 56);
   const labelOpacity = useTransform(x, [0, 100], [1, 0]);
 
   async function triggerConfirm() {
@@ -74,8 +77,8 @@ export function SwipeToConfirm({ label, onConfirm, disabled, loading, successLab
       {/* Fill that grows under the thumb */}
       <motion.div
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0 rounded-full"
-        style={{ width: fillWidth, background: "var(--glide-primary)", opacity: 0.15 }}
+        className="pointer-events-none absolute inset-y-0 right-full w-full rounded-full"
+        style={{ x: fillX, background: "var(--glide-primary)", opacity: 0.15 }}
       />
       {/* Label */}
       <motion.span

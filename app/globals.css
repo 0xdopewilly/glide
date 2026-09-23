@@ -356,11 +356,13 @@ body {
 
 /* Tap feedback - press is INSTANT (0ms), release is bouncy. The action behind
    onClick fires on tap-up; visual feedback never gates the action. */
+/* No will-change: it's on ~70 elements (cards, chips, tiles) and would pin
+   each to its own GPU layer permanently — costly while scrolling on Android.
+   :active transforms are promoted on demand. */
 .glide-tap {
   transition: transform 0.22s var(--glide-ease-spring);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  will-change: transform;
 }
 
 .glide-tap:active:not(:disabled) {
@@ -376,7 +378,6 @@ body {
     background-color 0.24s var(--glide-ease-out);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  will-change: transform, opacity;
   border-radius: 16px;
 }
 
@@ -595,8 +596,9 @@ body {
   }
 }
 
+/* Hidden amounts already render as "•••"; no filter (a blur on every row of
+   a scrolling list is expensive on Android). */
 .glide-amount-blur {
-  filter: blur(7px);
   user-select: none;
 }
 

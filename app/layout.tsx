@@ -7,9 +7,12 @@ import { ErrorReporter } from "@/components/error-reporter";
 import { AuthProvider } from "@/context/auth-context";
 import { WalletProvider } from "@/context/wallet-context";
 
+// Fallback only (Jakarta renders first), so don't spend first-load bandwidth
+// preloading it.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  preload: false,
 });
 
 const geistMono = Geist_Mono({

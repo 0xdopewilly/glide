@@ -76,6 +76,22 @@ export async function getOrCreateWalletForUser(input: {
   email: string;
   displayName?: string | null;
 }): Promise<{ user: GlideDbUser; wallet: GlideWallet }> {
+  // Hot path (every balance load): the wallet is already provisioned, so
+  // skip the upsert and the Circle round-trip. requireSessionUser has
+  // already ensured the row exists.
+  const existing = await prisma.user.findUnique({
+    where: { id: input.userId },
+  });
+  if (existing?.circleWalletId && existing.circleWalletAddress) {
+    return {
+      user: existing,
+      wallet: {
+        id: existing.circleWalletId,
+        address: existing.circleWalletAddress,
+      },
+    };
+  }
+
   let user = await upsertUserFromClerk({
     id: input.userId,
     email: input.email,

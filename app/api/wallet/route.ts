@@ -1,8 +1,8 @@
 import { isAuthError, requireSessionUser } from "@/lib/api-auth";
+import { CHAIN_META } from "@/lib/chain-meta";
 import { resolveWalletTotalUsd } from "@/lib/tokens";
 import {
   fetchAllWalletTokenBalances,
-  fetchWalletBalance,
   fetchWalletById,
 } from "@/lib/wallet-service";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
@@ -15,20 +15,22 @@ async function walletPayload(
 ) {
   const includeOffArc = options?.includeOffArc ?? false;
   let tokens: Awaited<ReturnType<typeof fetchAllWalletTokenBalances>> = [];
-  let balance = 0;
 
   try {
-    [tokens, balance] = await Promise.all([
-      fetchAllWalletTokenBalances(walletId, address, { includeOffArc }),
-      fetchWalletBalance(walletId),
-    ]);
+    tokens = await fetchAllWalletTokenBalances(walletId, address, {
+      includeOffArc,
+    });
   } catch (err) {
     console.error("[Glide] wallet balances:", err);
     tokens = await fetchAllWalletTokenBalances(walletId, address, {
       includeOffArc: false,
     });
-    balance = tokens.find((t) => t.symbol === "USDC")?.amount ?? 0;
   }
+  // One Circle balance call serves both: USDC on Arc is in `tokens` already.
+  const balance =
+    tokens.find(
+      (t) => t.symbol === "USDC" && t.chainId === CHAIN_META["arc-testnet"].id,
+    )?.amount ?? 0;
 
   const totalUsd = resolveWalletTotalUsd(tokens, balance);
 
