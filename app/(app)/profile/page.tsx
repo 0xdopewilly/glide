@@ -12,6 +12,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/context/auth-context";
 import { usePrivacy } from "@/context/privacy-context";
 import { useWallet } from "@/context/wallet-context";
+import { fetchWithPin } from "@/lib/pin-gate";
 import { ChevronRight, Moon, Sun, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
@@ -364,7 +365,7 @@ function DeleteAccountButton() {
     setDeleting(true);
     setError(null);
     try {
-      const res = await fetch("/api/account/delete", { method: "POST" });
+      const res = await fetchWithPin("/api/account/delete", { method: "POST" });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
         setError(data.error ?? "Could not delete your account. Try again.");

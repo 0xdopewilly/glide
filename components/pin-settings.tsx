@@ -1,5 +1,6 @@
 "use client";
 
+import { usePinReset } from "@/hooks/use-pin-reset";
 import { requirePin } from "@/lib/pin-gate";
 import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -8,6 +9,7 @@ import { useEffect, useState } from "react";
  * and lets the user set or change it (change = reset via the Clerk session,
  * then set fresh — no current-PIN step). Reuses the global PIN modal. */
 export function PinSettings() {
+  const resetPin = usePinReset();
   const [isSet, setIsSet] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -29,8 +31,9 @@ export function PinSettings() {
     setBusy(true);
     try {
       if (isSet) {
-        // Change: clear then set a new one (authenticated via Clerk session).
-        await fetch("/api/pin/reset", { method: "POST" });
+        // Change: clear then set a new one. Clearing needs a fresh email-code
+        // verification; stop if the user cancels it.
+        if (!(await resetPin())) return;
       }
       await requirePin("setup");
       await load();

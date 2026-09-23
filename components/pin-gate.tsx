@@ -1,6 +1,7 @@
 "use client";
 
 import { haptics } from "@/lib/haptics";
+import { usePinReset } from "@/hooks/use-pin-reset";
 import { registerPinHandler, type PinMode } from "@/lib/pin-gate";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -9,6 +10,7 @@ const PIN_LENGTH = 6;
 type Stage = "create" | "confirm";
 
 export function PinGate() {
+  const resetPin = usePinReset();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<PinMode>("verify");
   const [stage, setStage] = useState<Stage>("create");
@@ -150,7 +152,10 @@ export function PinGate() {
     setBusy(true);
     setError(null);
     try {
-      await fetch("/api/pin/reset", { method: "POST" });
+      if (!(await resetPin())) {
+        setError("We couldn't confirm it's you. Try again.");
+        return;
+      }
       setMode("setup");
       setStage("create");
       setEntry("");
