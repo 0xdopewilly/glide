@@ -6,13 +6,14 @@ import { FormField, inputClassName } from "@/components/form-field";
 import { useAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
 import { PLACEHOLDER_GLIDE_TAG } from "@/lib/placeholders";
+import { skipTag } from "@/lib/tag-skip";
 import { isValidUsername, normalizeUsername } from "@/lib/validation";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
 export default function SetupUsernamePage() {
   const router = useRouter();
-  const { user, ready } = useAuth();
+  const { user, ready, signOut } = useAuth();
   const { profile, profileHydrated, updateProfile } = useWallet();
   const [username, setUsername] = useState("");
   const [checking, setChecking] = useState(false);
@@ -133,7 +134,7 @@ export default function SetupUsernamePage() {
     <OnboardingShell>
       <form
         onSubmit={(e) => void handleSubmit(e)}
-        className="flex flex-1 flex-col px-7 pb-10 pt-14"
+        className="flex flex-1 flex-col px-7 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]"
       >
         <h1 className="text-2xl font-bold tracking-tight">Pick your pay tag</h1>
         <p className="mt-2 text-sm leading-relaxed glide-muted">
@@ -195,6 +196,26 @@ export default function SetupUsernamePage() {
           </GlideButton>
           <p className="mt-3 text-center text-[11px] glide-muted">
             Pay tags are permanent and unique on glidepay.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              skipTag(user.id);
+              router.replace("/");
+            }}
+            className="glide-tap mt-4 w-full py-2.5 text-center text-[15px] font-semibold text-[var(--glide-text)]"
+          >
+            Skip for now
+          </button>
+          <p className="mt-3 text-center text-[12.5px] glide-muted">
+            Signed in as {profile.email || user.email}.{" "}
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="glide-tap font-semibold text-[var(--glide-accent)] underline-offset-2 hover:underline"
+            >
+              Log out
+            </button>
           </p>
         </div>
       </form>

@@ -214,16 +214,14 @@ body {
   opacity: 1;
 }
 
-/* glidepay.cash navy — the original, single-layer wash (cheap to paint
-   under animations). */
+/* glidepay.cash navy. The very top and bottom are exactly --glide-chrome
+   (#0A2F5C) — the solid color iOS paints into the status bar and home
+   indicator — so the bars blend in; the page is #062448 in between, with
+   the soft purple glow. Two layers, cheap to paint under animations. */
 .dark .glide-bg-wash {
   background:
-    radial-gradient(
-      ellipse 80% 60% at 50% 0%,
-      rgba(91, 61, 245, 0.20) 0%,
-      transparent 70%
-    ),
-    var(--glide-bg);
+    radial-gradient(ellipse 80% 40% at 50% 34%, rgba(91, 61, 245, 0.2) 0%, transparent 70%),
+    linear-gradient(180deg, #0A2F5C 0%, #062448 34%, #062448 72%, #0A2F5C 100%);
 }
 
 /* Brand glow utility — apply sparingly to the user's primary focal points
