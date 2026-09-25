@@ -19,7 +19,7 @@ export default function SignInPage() {
       className="fixed inset-0 flex w-full flex-col overflow-y-auto overflow-x-hidden"
       style={{
         fontFamily: jakarta,
-        background: "var(--glide-bg)",
+        backgroundColor: "var(--glide-chrome)",
       }}
     >
       <div

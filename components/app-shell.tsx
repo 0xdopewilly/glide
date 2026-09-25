@@ -73,7 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="app-shell-root fixed inset-0 flex w-full flex-col md:items-center md:justify-center md:p-8"
-      style={{ background: "var(--glide-bg)" }}
+      style={{ backgroundColor: "var(--glide-chrome)" }}
     >
       <div className="glide-app-frame relative flex h-full w-full max-w-md flex-col overflow-hidden md:h-[85vh] md:rounded-[var(--glide-radius-xl)] md:shadow-2xl md:ring-1 md:ring-black/5 dark:md:ring-white/10">
         <GlideGradient className="opacity-100" />

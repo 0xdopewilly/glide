@@ -35,6 +35,8 @@
   --glide-nav-surface: #FFFFFF;
   --glide-nav-active: #5B3DF5;
   --glide-nav-inactive: #8A94A8;
+  /* Solid color iOS samples for the status bar / home-indicator areas. */
+  --glide-chrome: #F7F9FC;
   --glide-balance-cents: #8A94A8;
   --glide-primary-container: rgba(91, 61, 245, 0.10);
   --glide-success-container: rgba(22, 199, 132, 0.14);
@@ -106,6 +108,7 @@
   --glide-surface-container: rgba(255, 255, 255, 0.07);
   --glide-surface-container-high: rgba(255, 255, 255, 0.11);
   --glide-nav-surface: #0A2F5C;
+  --glide-chrome: #0A2F5C;
   --glide-nav-active: #9D86FF;
   --glide-nav-inactive: #7C8AA8;
   --glide-balance-cents: #7C8AA8;
@@ -149,13 +152,17 @@
   background: linear-gradient(180deg, transparent 0, transparent 72px, #08294F 72px);
 }
 
-html.dark,
-html.dark body {
-  background: linear-gradient(180deg, #0A2F5C 0%, #0A2F5C 50%, #0A2F5C 50%, #0A2F5C 100%);
+/* iOS 26 paints the status bar and home-indicator areas of a home-screen
+   app with a SAMPLED solid background-color — from fixed elements at the
+   screen edges, else html/body. It ignores theme-color and gradients (a
+   gradient reads as "no color" → black). So html, body and the fixed app
+   shells carry a solid --glide-chrome that matches the header and tab bar. */
+html,
+body {
+  background-color: var(--glide-chrome);
 }
 
 body {
-  background: var(--glide-bg);
   color: var(--glide-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -164,7 +171,7 @@ body {
 }
 
 .onboarding-shell-root {
-  background: var(--glide-bg);
+  background-color: var(--glide-chrome);
 }
 
 /* Prevent iOS Safari zoom on input focus */
@@ -207,13 +214,16 @@ body {
   opacity: 1;
 }
 
-/* glidepay.cash navy: a lifted navy top with a soft brand-purple glow behind
-   the balance, settling into #062448. Static. */
+/* glidepay.cash navy — the original, single-layer wash (cheap to paint
+   under animations). */
 .dark .glide-bg-wash {
   background:
-    radial-gradient(ellipse 85% 42% at 50% 30%, rgba(91, 61, 245, 0.22) 0%, transparent 70%),
-    radial-gradient(ellipse 70% 38% at 100% 4%, rgba(91, 61, 245, 0.14) 0%, transparent 70%),
-    linear-gradient(180deg, #0A2F5C 0%, #083063 26%, #062448 62%, #062448 100%);
+    radial-gradient(
+      ellipse 80% 60% at 50% 0%,
+      rgba(91, 61, 245, 0.20) 0%,
+      transparent 70%
+    ),
+    var(--glide-bg);
 }
 
 /* Brand glow utility — apply sparingly to the user's primary focal points
@@ -1522,7 +1532,8 @@ html[data-splash] .glide-splash {
   display: flex;
   align-items: center;
   justify-content: center;
-  background:
+  background-color: #0A2F5C; /* sampled by iOS for the bars */
+  background-image:
     radial-gradient(
       ellipse 90% 55% at 50% 42%,
       rgba(91, 61, 245, 0.35) 0%,

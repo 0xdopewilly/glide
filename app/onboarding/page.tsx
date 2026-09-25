@@ -44,10 +44,23 @@ export default function OnboardingPage() {
     if (ready && user) router.replace("/");
   }, [ready, user, router]);
 
-  // Warm Log in / Sign up so tapping them opens instantly.
+  // Warm Log in / Sign up once the phone is idle — well after the entrance
+  // animations — so the download/parse never competes with them.
   useEffect(() => {
-    router.prefetch("/sign-in");
-    router.prefetch("/sign-up");
+    let idle: number | undefined;
+    const timer = window.setTimeout(() => {
+      const warm = () => {
+        router.prefetch("/sign-in");
+        router.prefetch("/sign-up");
+      };
+      if ("requestIdleCallback" in window) {
+        idle = window.requestIdleCallback(warm, { timeout: 4000 });
+      } else warm();
+    }, 2500);
+    return () => {
+      window.clearTimeout(timer);
+      if (idle !== undefined) window.cancelIdleCallback(idle);
+    };
   }, [router]);
 
   const goNext = useCallback(() => {
