@@ -2,23 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ArrowLeftRight,
-  Home,
-  Sparkles,
-  UserCircle2,
-  Wallet,
-  Zap,
-} from "lucide-react";
+import { ArrowLeftRight, Home, Sparkles, Zap } from "lucide-react";
 import { haptics } from "@/lib/haptics";
 
+// Four tabs, Revolut style. Profile/settings opens from the avatar on Home
+// and Activity from "See all" — both are pushed screens, not tabs.
 const SLOTS = [
   { href: "/", icon: Home, label: "Home" },
-  { href: "/payments", icon: Wallet, label: "Wallet" },
+  { href: "/payments", icon: ArrowLeftRight, label: "Payments" },
   { href: "/automations", icon: Zap, label: "Automate" },
-  { href: "/ask", icon: Sparkles, label: "Discover" },
-  { href: "/activity", icon: ArrowLeftRight, label: "Activity" },
-  { href: "/profile", icon: UserCircle2, label: "Profile" },
+  { href: "/ask", icon: Sparkles, label: "Billy" },
 ] as const;
 
 export function BottomNav() {

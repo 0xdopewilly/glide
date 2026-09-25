@@ -2,7 +2,6 @@
 
 import { headerIconButtonClassName } from "@/components/header-icon-button";
 import { NotificationBell } from "@/components/notification-bell";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { useGoBack } from "@/lib/use-go-back";
 import { ChevronLeft } from "lucide-react";
@@ -85,7 +84,8 @@ export function AppHeader({
       )}
     </Link>
   ) : (
-    <span className="h-10 w-10 shrink-0" aria-hidden />
+    // Tab screens: your avatar top-left opens Settings, Revolut style.
+    <UserAvatar size="sm" linked />
   );
 
   return (
@@ -98,15 +98,13 @@ export function AppHeader({
         </h1>
       ) : null}
 
-      <div
-        className="glide-m3-toolbar flex shrink-0 items-center gap-0.5 p-0.5"
-        role="toolbar"
-        aria-label="Account actions"
-      >
-        {showNotifications ? <NotificationBell /> : null}
-        <ThemeToggle />
-        <UserAvatar size="sm" linked />
-      </div>
+      {showNotifications ? (
+        <div className="flex shrink-0 items-center">
+          <NotificationBell />
+        </div>
+      ) : (
+        <span className="h-10 w-10 shrink-0" aria-hidden />
+      )}
     </header>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { SettingsRow } from "@/components/settings-list";
 import { usePinReset } from "@/hooks/use-pin-reset";
 import { requirePin } from "@/lib/pin-gate";
 import { Lock } from "lucide-react";
@@ -43,39 +44,19 @@ export function PinSettings() {
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-3.5">
-      <span className="flex items-center gap-3">
-        <span
-          className="flex h-9 w-9 items-center justify-center rounded-xl"
-          style={{ background: "var(--glide-surface-container-high)" }}
-        >
-          <Lock className="h-4 w-4" strokeWidth={2} />
-        </span>
-        <span className="text-left">
-          <span className="block text-sm font-semibold tracking-tight text-[var(--glide-text)]">
-            Transaction PIN
-          </span>
-          <span className="block text-xs text-[var(--glide-muted)]">
-            {isSet === null
-              ? "…"
-              : isSet
-                ? "On — required for transfers"
-                : "Off — set one to secure transfers"}
-          </span>
-        </span>
-      </span>
-      <button
-        type="button"
-        onClick={() => void handle()}
-        disabled={busy || isSet === null}
-        className="glide-tap glide-label-mono shrink-0 rounded-full px-3 py-1 text-[11px] font-bold disabled:opacity-50"
-        style={{
-          background: "color-mix(in srgb, var(--glide-accent) 14%, transparent)",
-          color: "var(--glide-accent)",
-        }}
-      >
-        {isSet ? "Change" : "Set PIN"}
-      </button>
-    </div>
+    <SettingsRow
+      icon={Lock}
+      title="Transaction PIN"
+      subtitle={
+        isSet === null
+          ? "Checking…"
+          : isSet
+            ? "Required for every payment"
+            : "Add a PIN to protect your payments"
+      }
+      value={isSet === null ? undefined : isSet ? "Change" : "Set up"}
+      onClick={() => void handle()}
+      disabled={busy || isSet === null}
+    />
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/auth-context";
+import { SettingsRow, SettingsSwitch } from "@/components/settings-list";
 import { Bell, BellOff } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -13,7 +14,7 @@ function urlBase64ToUint8Array(base64: string) {
   return out;
 }
 
-export function PushNotificationsToggle({ className = "" }: { className?: string }) {
+export function PushNotificationsToggle() {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -76,56 +77,39 @@ export function PushNotificationsToggle({ className = "" }: { className?: string
 
   if (!supported) {
     return (
-      <p className={`text-xs glide-muted ${className}`}>
-        Push alerts need VAPID keys on the server (see DEPLOY.md).
-      </p>
+      <SettingsRow
+        icon={BellOff}
+        title="Payment alerts"
+        subtitle="Not available in this browser"
+        trailing={<SettingsSwitch checked={false} />}
+      />
     );
   }
 
+  const toggle = () => {
+    setBusy(true);
+    void (async () => {
+      try {
+        if (enabled) await unsubscribe();
+        else {
+          const ok = await subscribe();
+          setEnabled(ok);
+        }
+      } finally {
+        setBusy(false);
+      }
+    })();
+  };
+
   return (
-    <button
-      type="button"
+    <SettingsRow
+      icon={enabled ? Bell : BellOff}
+      title="Payment alerts"
+      subtitle="Get notified when money arrives"
+      trailing={<SettingsSwitch checked={enabled} />}
+      onClick={toggle}
       disabled={busy}
-      onClick={() => {
-        setBusy(true);
-        void (async () => {
-          try {
-            if (enabled) await unsubscribe();
-            else {
-              const ok = await subscribe();
-              setEnabled(ok);
-            }
-          } finally {
-            setBusy(false);
-          }
-        })();
-      }}
-      className={`glide-tap flex w-full items-center justify-between rounded-2xl bg-neutral-100 px-4 py-3.5 dark:bg-[var(--glide-surface-container)] ${className}`}
-    >
-      <span className="flex items-center gap-3">
-        {enabled ? (
-          <Bell className="h-5 w-5 text-violet-500" />
-        ) : (
-          <BellOff className="h-5 w-5 glide-muted" />
-        )}
-        <span className="text-left">
-          <span className="block text-sm font-semibold tracking-tight">
-            Payment alerts
-          </span>
-          <span className="block text-xs glide-muted">
-            {enabled ? "On when you receive USDC" : "Get notified when money arrives"}
-          </span>
-        </span>
-      </span>
-      <span
-        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-          enabled
-            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-            : "bg-neutral-200 text-neutral-600 dark:bg-white/10 dark:text-white/50"
-        }`}
-      >
-        {enabled ? "On" : "Off"}
-      </span>
-    </button>
+      switchChecked={enabled}
+    />
   );
 }

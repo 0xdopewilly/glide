@@ -92,15 +92,18 @@ function buildTitle(tx: GlideTransaction): string {
 
 function TransactionSkeleton() {
   return (
-    <ul className="flex flex-col gap-2.5" aria-hidden>
+    <div className="glide-surface-card overflow-hidden rounded-2xl py-1" aria-hidden>
       {[0, 1, 2].map((i) => (
-        <li
-          key={i}
-          className="h-[68px] animate-pulse rounded-2xl border bg-[color:var(--glide-surface-elevated)]"
-          style={{ borderColor: "var(--glide-elevated-border)" }}
-        />
+        <div key={i} className="flex items-center gap-3 px-4 py-3">
+          <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-[color:var(--glide-surface-container)]" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-3 w-28 animate-pulse rounded bg-[color:var(--glide-surface-container)]" />
+            <div className="h-2.5 w-20 animate-pulse rounded bg-[color:var(--glide-surface-container)]" />
+          </div>
+          <div className="h-3 w-12 animate-pulse rounded bg-[color:var(--glide-surface-container)]" />
+        </div>
       ))}
-    </ul>
+    </div>
   );
 }
 
@@ -125,17 +128,14 @@ export function TransactionList({
 
   if (transactions.length === 0 && !grouped) {
     return (
-      <div
-        className="rounded-2xl border bg-[color:var(--glide-surface-elevated)] p-6 text-center text-sm text-[color:var(--glide-on-elevated-variant)]"
-        style={{ borderColor: "var(--glide-elevated-border)" }}
-      >
+      <div className="glide-surface-card rounded-2xl px-4 py-8 text-center text-sm text-[var(--glide-muted)]">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <ul className="flex flex-col gap-2.5">
+    <ul className="glide-surface-card overflow-hidden rounded-2xl py-1">
       {transactions.map((tx) => (
         <li key={`${tx.id}-${tx.createdAt ?? ""}`}>
           <TransactionRow tx={tx} />
@@ -164,10 +164,7 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
 
   return (
     <article
-      className={`flex items-center gap-3 rounded-2xl border bg-[color:var(--glide-surface-elevated)] p-3.5 ${
-        isPending ? "opacity-80" : ""
-      }`}
-      style={{ borderColor: "var(--glide-elevated-border)" }}
+      className={`flex items-center gap-3 px-4 py-3 ${isPending ? "opacity-80" : ""}`}
     >
       <div
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${

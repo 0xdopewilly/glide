@@ -1,15 +1,12 @@
 "use client";
 
-import { AutomationShowcase } from "@/components/automation-showcase";
-import { NotificationBell } from "@/components/notification-bell";
+import { AppHeader } from "@/components/app-header";
+import { MoreActionsSheet } from "@/components/more-actions-sheet";
 import { SavingsCard } from "@/components/savings-card";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { TokenBalances } from "@/components/token-balances";
 import { TransactionList } from "@/components/transaction-list";
-import { UserAvatar } from "@/components/user-avatar";
 import { usePrivacy } from "@/context/privacy-context";
-import { useProfile, useWallet } from "@/context/wallet-context";
-import type { TransactionKind } from "@/lib/types";
+import { useWallet } from "@/context/wallet-context";
 import { netFlowUsd } from "@/lib/tokens";
 import {
   ArrowDown,
@@ -17,12 +14,11 @@ import {
   ArrowUp,
   Eye,
   EyeOff,
-  Workflow,
+  MoreHorizontal,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-
-type Filter = "all" | "send" | "receive" | "swap" | "bridge";
+import { useCallback, useMemo, useState } from "react";
 
 // Hoisted: Intl.NumberFormat construction is the expensive part. Reused
 // across renders instead of re-allocated every time.
@@ -33,27 +29,11 @@ const USD_FORMATTER = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "send", label: "Sent" },
-  { id: "receive", label: "Received" },
-  { id: "swap", label: "Swap" },
-  { id: "bridge", label: "Bridge" },
-];
-
 const QUICK_ACTIONS = [
   { href: "/send", label: "Send", icon: ArrowUp },
   { href: "/receive", label: "Receive", icon: ArrowDown },
   { href: "/swap", label: "Swap", icon: ArrowLeftRight },
-  { href: "/bridge", label: "Bridge", icon: Workflow },
 ] as const;
-
-function greetingFor(date: Date) {
-  const h = date.getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-}
 
 export default function HomePage() {
   const {
@@ -66,26 +46,17 @@ export default function HomePage() {
     clearError,
     refresh,
   } = useWallet();
-  const { profile } = useProfile();
   const { hideBalance, setHideBalance } = usePrivacy();
-  const [filter, setFilter] = useState<Filter>("all");
+  const [moreOpen, setMoreOpen] = useState(false);
+  const closeMore = useCallback(() => setMoreOpen(false), []);
 
-  // Real signed net flow today (received − sent) from activity — green when
-  // up, red when down, muted when there's been no movement. No more fake %.
+  // Real signed net flow today (received − sent) from activity. Only shown
+  // when something moved today.
   const netToday = useMemo(() => netFlowUsd(transactions), [transactions]);
-  const netTodayZero = Math.abs(netToday) < 0.005;
   const netTodayPositive = netToday > 0;
-  const showDelta = !hideBalance && !netTodayZero;
+  const showDelta = !hideBalance && Math.abs(netToday) >= 0.005;
 
-  const greeting = useMemo(() => greetingFor(new Date()), []);
-  const firstName = (profile.displayName ?? "").trim().split(" ")[0] || "there";
-
-  const filteredTransactions = useMemo(() => {
-    if (filter === "all") return transactions;
-    return transactions.filter((tx) => tx.kind === (filter as TransactionKind));
-  }, [filter, transactions]);
-
-  const visibleTransactions = filteredTransactions.slice(0, 6);
+  const recentTransactions = transactions.slice(0, 5);
 
   // Pre-format BEFORE JSX so the number always renders even when totalUsd is
   // 0 or undefined (fixes invisible-balance bug where number went missing).
@@ -95,27 +66,7 @@ export default function HomePage() {
 
   return (
     <>
-      <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 px-5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <UserAvatar size="sm" linked />
-          <div className="min-w-0 flex-1">
-            <p className="glide-label-mono text-[10px] font-semibold text-[var(--glide-muted)]">
-              {greeting}
-            </p>
-            <p className="truncate text-[15px] font-bold tracking-tight text-[var(--glide-text)]">
-              Hi, {firstName}
-            </p>
-          </div>
-        </div>
-        <div
-          className="glide-m3-toolbar flex shrink-0 items-center gap-0.5 p-0.5"
-          role="toolbar"
-          aria-label="Account actions"
-        >
-          <NotificationBell />
-          <ThemeToggle />
-        </div>
-      </header>
+      <AppHeader showNotifications />
 
       <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6">
         {error ? (
@@ -127,194 +78,125 @@ export default function HomePage() {
           </div>
         ) : null}
 
-        {/* HERO PORTFOLIO CARD — "Total Portfolio": privacy-toggleable
-            portfolio total + 24h change pill. */}
-        <section
-          className="relative mt-4 overflow-hidden rounded-3xl border p-5 sm:p-6"
-          style={{
-            background: "var(--glide-surface-elevated)",
-            borderColor: "var(--glide-elevated-border)",
-            flexShrink: 0,
-          }}
-        >
-          <div className="relative">
-            <div className="flex min-w-0 flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-[color:var(--glide-on-surface-variant)]">
-                  Spendable
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setHideBalance(!hideBalance)}
-                  aria-label={hideBalance ? "Show balance" : "Hide balance"}
-                  aria-pressed={hideBalance}
-                  className="glide-tap text-[color:var(--glide-on-surface-variant)] transition-colors hover:text-[color:var(--glide-on-surface)]"
-                >
-                  {hideBalance ? (
-                    <EyeOff className="h-4 w-4" strokeWidth={2.25} />
-                  ) : (
-                    <Eye className="h-4 w-4" strokeWidth={2.25} />
-                  )}
-                </button>
-              </div>
+        {/* BALANCE */}
+        <section className="mt-6 flex shrink-0 flex-col items-center text-center">
+          <button
+            type="button"
+            onClick={() => setHideBalance(!hideBalance)}
+            aria-label={hideBalance ? "Show balance" : "Hide balance"}
+            aria-pressed={hideBalance}
+            className="glide-tap inline-flex items-center gap-1.5 text-[13px] font-medium text-[color:var(--glide-on-surface-variant)]"
+          >
+            Spendable
+            {hideBalance ? (
+              <EyeOff className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
+            ) : (
+              <Eye className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
+            )}
+          </button>
 
-              <p
-                className="font-display text-4xl font-bold leading-none text-[color:var(--glide-on-surface)] tabular-nums sm:text-5xl"
-                style={{ minHeight: "3rem" }}
-              >
-                {hideBalance ? "••••" : formattedTotalUsd}
-              </p>
+          <p
+            className="font-display mt-2 text-[44px] font-bold leading-none tracking-tight text-[color:var(--glide-on-surface)] tabular-nums"
+            style={{ minHeight: "2.75rem" }}
+          >
+            {hideBalance ? "••••" : formattedTotalUsd}
+          </p>
 
-              <div
-                className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1"
-                style={{
-                  background: !showDelta
-                    ? "color-mix(in srgb, var(--glide-on-surface) 8%, transparent)"
-                    : netTodayPositive
-                      ? "var(--glide-success-container)"
-                      : "color-mix(in srgb, var(--glide-error) 12%, transparent)",
-                }}
-              >
-                {showDelta ? (
-                  netTodayPositive ? (
-                    <ArrowUp
-                      className="h-3 w-3"
-                      strokeWidth={2.5}
-                      style={{ color: "var(--glide-success)" }}
-                    />
-                  ) : (
-                    <ArrowDown
-                      className="h-3 w-3"
-                      strokeWidth={2.5}
-                      style={{ color: "var(--glide-error)" }}
-                    />
-                  )
-                ) : null}
-                <span
-                  className="text-xs font-semibold tabular-nums"
-                  style={{
-                    color: !showDelta
-                      ? "var(--glide-on-surface-variant)"
-                      : netTodayPositive
-                        ? "var(--glide-success)"
-                        : "var(--glide-error)",
-                  }}
-                >
-                  {hideBalance
-                    ? "••• today"
-                    : netTodayZero
-                      ? "No change today"
-                      : `${USD_FORMATTER.format(Math.abs(netToday))} today`}
-                </span>
-              </div>
-            </div>
-          </div>
+          {showDelta ? (
+            <p
+              className="mt-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums"
+              style={{
+                background: netTodayPositive
+                  ? "var(--glide-success-container)"
+                  : "color-mix(in srgb, var(--glide-error) 12%, transparent)",
+                color: netTodayPositive ? "var(--glide-success)" : "var(--glide-error)",
+              }}
+            >
+              {netTodayPositive ? (
+                <ArrowUp className="h-3 w-3" strokeWidth={2.5} aria-hidden />
+              ) : (
+                <ArrowDown className="h-3 w-3" strokeWidth={2.5} aria-hidden />
+              )}
+              {USD_FORMATTER.format(Math.abs(netToday))} today
+            </p>
+          ) : null}
         </section>
 
-        {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
-        <SavingsCard className="mt-4" onChange={() => void refresh()} />
-
-        {/* AUTOMATION FLAGSHIP */}
-        <AutomationShowcase />
-
         {/* QUICK ACTIONS */}
-        <nav
-          aria-label="Quick actions"
-          className="mt-6 grid grid-cols-4 gap-2"
-        >
-          {QUICK_ACTIONS.map(({ href, label, icon: Icon }) => (
+        <nav aria-label="Quick actions" className="mt-7 grid shrink-0 grid-cols-4 gap-2">
+          {QUICK_ACTIONS.map(({ href, label, icon }) => (
             <Link
               key={href}
               href={href}
               prefetch
-              className="glide-tap group flex flex-col items-center gap-2 transition-transform active:scale-95"
+              className="glide-tap flex flex-col items-center gap-2 active:scale-95"
             >
-              <span
-                className="flex h-14 w-14 items-center justify-center rounded-full transition-colors"
-                style={{
-                  background: "var(--glide-surface-elevated)",
-                  border: "1px solid var(--glide-elevated-border)",
-                  color: "var(--glide-on-elevated)",
-                }}
-              >
-                <Icon className="h-5 w-5" strokeWidth={2.25} />
-              </span>
-              <span className="text-[11px] font-semibold text-[var(--glide-text)]">
+              <ActionCircle icon={icon} />
+              <span className="text-[12px] font-semibold text-[var(--glide-text)]">
                 {label}
               </span>
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            className="glide-tap flex flex-col items-center gap-2 active:scale-95"
+          >
+            <ActionCircle icon={MoreHorizontal} />
+            <span className="text-[12px] font-semibold text-[var(--glide-text)]">
+              More
+            </span>
+          </button>
         </nav>
 
-        {/* ASSETS — token balances list (USDC / EURC / cirBTC) */}
-        <div className="mt-8">
+        {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
+        <SavingsCard className="mt-7" onChange={() => void refresh()} />
+
+        {/* ASSETS */}
+        <div className="mt-7 shrink-0">
           <TokenBalances tokens={tokens} loading={loading} />
         </div>
 
         {/* TRANSACTIONS */}
-        <section className="mt-8 flex-1 pb-4">
-          <div className="mb-3 flex items-center justify-between">
+        <section className="mt-7 shrink-0 pb-4">
+          <div className="mb-2 flex items-center justify-between px-1">
             <h2 className="text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
               Transactions
             </h2>
             <Link
               href="/activity"
               prefetch
-              className="glide-tap text-[13px] font-semibold transition-opacity hover:opacity-80"
+              className="glide-tap text-[13px] font-semibold"
               style={{ color: "var(--glide-accent)" }}
             >
               See all
             </Link>
           </div>
-
-          <div
-            className="-mx-5 mb-3 flex gap-2 overflow-x-auto px-5 pb-1"
-            style={{ scrollbarWidth: "none" }}
-          >
-            {FILTERS.map((f) => {
-              const isActive = filter === f.id;
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setFilter(f.id)}
-                  aria-pressed={isActive}
-                  className={`glide-tap shrink-0 rounded-full px-4 py-2.5 text-[13px] font-semibold transition-all duration-200 active:scale-95 ${
-                    isActive ? "glow-brand" : ""
-                  }`}
-                  style={
-                    isActive
-                      ? {
-                          background: "var(--glide-primary)",
-                          color: "var(--glide-on-primary)",
-                          border: "1px solid transparent",
-                        }
-                      : {
-                          background: "transparent",
-                          color: "var(--glide-text)",
-                          border:
-                            "1px solid color-mix(in srgb, var(--glide-text) 14%, transparent)",
-                        }
-                  }
-                >
-                  {f.label}
-                </button>
-              );
-            })}
-          </div>
-
           <TransactionList
-            transactions={visibleTransactions}
+            transactions={recentTransactions}
             loading={transactionsLoading}
-            emptyMessage={
-              filter === "all"
-                ? "Your activity will show up here"
-                : "No matching transactions"
-            }
+            emptyMessage="Your activity will show up here"
           />
         </section>
       </div>
+
+      {moreOpen ? <MoreActionsSheet onClose={closeMore} /> : null}
     </>
   );
 }
 
+function ActionCircle({ icon: Icon }: { icon: LucideIcon }) {
+  return (
+    <span
+      className="flex h-14 w-14 items-center justify-center rounded-full"
+      style={{
+        background: "var(--glide-surface-container-high)",
+        color: "var(--glide-text)",
+      }}
+    >
+      <Icon className="h-[22px] w-[22px]" strokeWidth={2.25} aria-hidden />
+    </span>
+  );
+}

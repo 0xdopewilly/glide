@@ -34,7 +34,7 @@ export function ActivityFeed({
     <div className="mt-4 flex flex-col gap-6 pb-2">
       {groups.map((group) => (
         <section key={group.label}>
-          <h2 className="glide-label-mono mb-2.5 px-0.5 text-[11px] font-bold text-[var(--glide-muted)]">
+          <h2 className="mb-2 px-1 text-[13px] font-semibold text-[var(--glide-muted)]">
             {group.label}
           </h2>
           <TransactionList transactions={group.items} showTime grouped />

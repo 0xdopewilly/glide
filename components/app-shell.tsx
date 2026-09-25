@@ -5,7 +5,20 @@ import { GlideGradient } from "@/components/glide-gradient";
 import { PinGate } from "@/components/pin-gate";
 import { usePathname } from "next/navigation";
 
-const FULL_BLEED_ROUTES = ["/send", "/receive", "/swap", "/bridge", "/request", "/pay"];
+// Flows and pushed screens (back arrow, no tab bar). Tabs: /, /payments,
+// /automations, /ask.
+const FULL_BLEED_ROUTES = [
+  "/send",
+  "/receive",
+  "/swap",
+  "/bridge",
+  "/request",
+  "/pay",
+  "/profile",
+  "/activity",
+  "/contacts",
+  "/notifications",
+];
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
 
