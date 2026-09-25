@@ -5,11 +5,11 @@ import { navDirection } from "@/lib/nav-direction";
 describe("navDirection", () => {
   it("keeps tab switches instant, even via browser back", () => {
     expect(navDirection("/", "/payments", false)).toBe("tab");
-    expect(navDirection("/ask", "/", true)).toBe("tab");
+    expect(navDirection("/profile", "/", true)).toBe("tab");
   });
 
   it("pushes when opening a screen", () => {
-    expect(navDirection("/", "/profile", false)).toBe("push");
+    expect(navDirection("/", "/ask", false)).toBe("push");
     expect(navDirection("/profile", "/profile/details", false)).toBe("push");
     expect(navDirection("/payments", "/send", false)).toBe("push");
   });

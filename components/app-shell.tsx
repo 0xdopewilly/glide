@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 // Flows and pushed screens (back arrow, no tab bar). Tabs: /, /payments,
-// /automations, /ask.
+// /automations, /profile.
 const FULL_BLEED_ROUTES = [
   "/send",
   "/receive",
@@ -16,11 +16,13 @@ const FULL_BLEED_ROUTES = [
   "/bridge",
   "/request",
   "/pay",
-  "/profile",
+  "/profile/details",
+  "/profile/about",
   "/activity",
   "/contacts",
   "/notifications",
   "/search",
+  "/ask",
 ];
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
@@ -75,15 +77,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="glide-app-frame relative flex h-dvh w-full max-w-md flex-col overflow-hidden md:h-[85vh] md:rounded-[var(--glide-radius-xl)] md:shadow-2xl md:ring-1 md:ring-black/5 dark:md:ring-white/10">
         <GlideGradient className="opacity-100" />
         <div
-          className={`relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden ${
-            hideNav ? "" : "glide-shell-with-nav"
-          }`}
+          className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden"
           style={{ fontFamily: jakarta }}
         >
           {children}
         </div>
         {!hideNav ? (
-          <div className="relative z-10 mt-auto w-full shrink-0">
+          <div className="relative z-10 w-full shrink-0" style={{ fontFamily: jakarta }}>
             <BottomNav />
           </div>
         ) : null}

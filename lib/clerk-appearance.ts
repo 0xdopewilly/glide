@@ -69,45 +69,9 @@ const lightAppearance = {
   },
 };
 
-const darkAppearance = {
-  variables: {
-    colorBackground: "#0C1840",
-    colorInputBackground: "#0A1433",
-    colorInputText: "#FFFFFF",
-    colorText: "#FFFFFF",
-    colorTextSecondary: "#9FB0D6",
-    colorPrimary: "#3D6DFF",
-    colorDanger: "#F87171",
-    colorSuccess: "#16C784",
-    colorNeutral: "rgba(61, 109, 255, 0.18)",
-    borderRadius: "0.85rem",
-    fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
-  },
-  elements: {
-    ...baseElements,
-    headerTitle: `${baseElements.headerTitle} !text-white`,
-    headerSubtitle: `${baseElements.headerSubtitle} !text-[#9FB0D6]`,
-    socialButtonsBlockButton:
-      "!bg-[#0A1433] !border-[rgba(140,170,255,0.12)] !text-white hover:!bg-[#172A5E]",
-    socialButtonsBlockButtonText: "!text-white",
-    formFieldInput:
-      "!bg-[#0A1433] !border-[rgba(140,170,255,0.12)] !text-white placeholder:!text-[#9FB0D6]",
-    formFieldLabel: "!text-[#9FB0D6]",
-    formButtonPrimary:
-      "!bg-[#3D6DFF] !text-white hover:!bg-[#2F5BEA] !shadow-none !rounded-full py-3 h-auto text-sm font-semibold normal-case glow-green",
-    otpCodeFieldInput:
-      "!bg-[#0A1433] !border-[rgba(140,170,255,0.12)] !text-white caret-[#3D6DFF]",
-    footerActionLink: "!text-[#7C9CFF] !font-semibold",
-    footerActionText: "!text-[#9FB0D6]",
-    dividerLine: "!bg-[rgba(140,170,255,0.12)]",
-    dividerText: "!text-[#9FB0D6]",
-    identityPreviewEditButton: "!text-[#7C9CFF]",
-    identityPreviewText: "!text-white",
-    formResendCodeLink: "!text-[#7C9CFF]",
-    alternativeMethodsBlockButton: "!text-[#7C9CFF]",
-    navbarButton: "!text-white",
-  },
-};
+/** The violet dark theme puts content on white cards, so the sign-in card is
+ * the white one in both themes. */
+const darkAppearance = lightAppearance;
 
 export function getClerkAppearance(theme: "light" | "dark") {
   return theme === "dark" ? darkAppearance : lightAppearance;

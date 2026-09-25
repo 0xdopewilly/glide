@@ -1,193 +1,144 @@
 "use client";
 
-import { OnboardingBackButton } from "@/components/onboarding/onboarding-back-button";
-import { OnboardingContinueButton } from "@/components/onboarding/onboarding-continue-button";
-import { OnboardingDots } from "@/components/onboarding/onboarding-dots";
-import { OnboardingHeroVisual } from "@/components/onboarding/onboarding-hero-visual";
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/context/auth-context";
-import { AnimatePresence, motion } from "framer-motion";
+import { Instrument_Serif } from "next/font/google";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 
-const SLIDES = [
-  {
-    tag: "Freedom Unlocked",
-    title: "Your gateway to borderless money.",
-    body: "Take full control of your USDC on Arc with a wallet built for seamless global payments.",
-  },
-  {
-    tag: "Built for Trust",
-    title: "Security that feels invisible.",
-    body: "No seed phrases. Email or Google sign-in, and glidepay handles the wallet for you.",
-  },
-  {
-    tag: "Limitless Potential",
-    title: "More than just a wallet app.",
-    body: "Send, receive, and move money like a text. All from one clean app.",
-  },
-] as const;
+// Display serif for the headline, per the reference design (onboarding only).
+const serif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  style: ["normal", "italic"],
+  display: "swap",
+});
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, ready } = useAuth();
-  const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState<"forward" | "back">("forward");
-
-  const isLast = step === SLIDES.length - 1;
-  const slide = SLIDES[step];
 
   useEffect(() => {
     if (ready && user) router.replace("/");
   }, [ready, user, router]);
 
-  const goNext = useCallback(() => {
-    if (isLast) {
-      router.push("/sign-up");
-      return;
-    }
-    setDirection("forward");
-    setStep((s) => Math.min(s + 1, SLIDES.length - 1));
-  }, [isLast, router]);
-
-  const goBack = useCallback(() => {
-    setDirection("back");
-    setStep((s) => Math.max(s - 1, 0));
-  }, []);
-
   return (
     <OnboardingShell>
       <div
-        className="grid h-full min-h-0 flex-1 grid-rows-[auto_1fr_auto] overflow-hidden"
+        className="glide-onboarding flex h-full min-h-0 flex-1 flex-col overflow-hidden px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))]"
         style={{ fontFamily: jakarta }}
       >
-        <motion.header
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.46, ease: [0.32, 0.72, 0, 1] }}
-          className="flex items-center justify-between px-6 pb-2 pt-[max(1.25rem,env(safe-area-inset-top))]"
-        >
-          <ThemeToggle />
-          <button
-            type="button"
-            onClick={() => router.push("/sign-in")}
-            className="glide-tap text-[15px] font-medium text-[var(--glide-muted)] transition-colors hover:text-[var(--glide-text)]"
-          >
-            Login
-          </button>
-        </motion.header>
+        <p className="text-[20px] font-bold tracking-tight text-white">glidepay</p>
 
-        <div className="relative flex min-h-0 flex-col justify-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{
-                opacity: 0,
-                x: direction === "forward" ? 32 : -32,
-              }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{
-                opacity: 0,
-                x: direction === "forward" ? -24 : 24,
-              }}
-              transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
-              className="flex flex-col"
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 24, scale: 0.94 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{
-                  duration: 0.5,
-                  ease: [0.34, 1.4, 0.4, 1],
-                  delay: 0.04,
-                }}
-              >
-                <OnboardingHeroVisual step={step} />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.36,
-                  ease: [0.32, 0.72, 0, 1],
-                  delay: 0.12,
-                }}
-                className="px-6 pt-2"
-              >
-                <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
-                  {slide.tag}
-                </span>
-              </motion.div>
-              <motion.h1
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.36,
-                  ease: [0.32, 0.72, 0, 1],
-                  delay: 0.18,
-                }}
-                className="mt-4 px-6 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-[var(--glide-text)]"
-              >
-                {slide.title}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.36,
-                  ease: [0.32, 0.72, 0, 1],
-                  delay: 0.24,
-                }}
-                className="mt-3.5 max-w-[19.5rem] px-6 text-[15px] leading-[1.6] text-[var(--glide-muted)]"
-              >
-                {slide.body}
-              </motion.p>
-            </motion.div>
-          </AnimatePresence>
+        {/* Hero: floating balance cards */}
+        <div className="relative mx-auto mt-4 h-[300px] w-full max-w-[340px] shrink-0">
+          <svg
+            viewBox="0 0 340 300"
+            className="absolute inset-0 h-full w-full"
+            fill="none"
+            aria-hidden
+          >
+            <path
+              d="M18 120 C 60 40, 110 190, 150 110 S 230 20, 250 70"
+              stroke="rgba(255,255,255,0.55)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+          <BalanceCard
+            className="absolute right-0 top-2 w-[196px] rotate-[6deg]"
+            currency="Euro"
+            code="EURC"
+            amount="€1,280.40"
+            last4="4410"
+          />
+          <BalanceCard
+            className="absolute left-2 top-[92px] w-[206px] -rotate-[5deg]"
+            currency="US Dollar"
+            code="USDC"
+            amount="$2,420.39"
+            last4="9934"
+          />
+          <span
+            className="absolute bottom-6 right-6 rotate-[8deg] rounded-full px-3.5 py-2 text-[13px] font-semibold text-white"
+            style={{
+              background: "rgba(255,255,255,0.2)",
+              border: "1px solid rgba(255,255,255,0.3)",
+            }}
+          >
+            ↙ Request
+          </span>
         </div>
 
-        <motion.footer
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.5,
-            ease: [0.32, 0.72, 0, 1],
-            delay: 0.32,
-          }}
-          className="px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4"
-        >
-          <div className="space-y-3">
-            <div
-              className={`flex gap-3 transition-[gap] duration-150 ${
-                step === 0 ? "flex-col" : "flex-row items-stretch"
-              }`}
-            >
-              {step > 0 ? <OnboardingBackButton onClick={goBack} /> : null}
-              <div className={step === 0 ? "w-full" : "min-w-0 flex-1"}>
-                <OnboardingContinueButton
-                  label={isLast ? "Create account" : "Continue"}
-                  step={step}
-                  onClick={goNext}
-                />
-              </div>
-            </div>
+        <div className="mt-auto">
+          <h1 className={`${serif.className} text-[46px] leading-[1.02] text-white`}>
+            <span className="italic">Your Guide To</span>
+            <br />
+            <span className="font-bold italic">Smarter Money</span>
+          </h1>
+          <p className="mt-4 max-w-[20rem] text-[15px] leading-relaxed text-white/80">
+            Send, save and automate your dollars on Arc. No seed phrases, no
+            jargon — just pay by @tag.
+          </p>
 
-            {step === 0 ? (
-              <button
-                type="button"
-                onClick={() => router.push("/sign-in")}
-                className="glide-tap w-full py-2.5 text-center text-sm font-semibold text-[var(--glide-muted)] transition-colors hover:text-[var(--glide-accent)]"
-              >
-                I already have an account
-              </button>
-            ) : null}
+          <div className="mt-8 space-y-3">
+            <button
+              type="button"
+              onClick={() => router.push("/sign-in")}
+              className="glide-tap h-[54px] w-full rounded-full text-[16px] font-semibold text-white"
+              style={{ border: "1.5px solid rgba(255,255,255,0.55)" }}
+            >
+              Log In
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push("/sign-up")}
+              className="glide-tap h-[54px] w-full rounded-full text-[16px] font-semibold text-white"
+              style={{
+                background: "linear-gradient(135deg, #8B6CF6 0%, #6A4AF0 100%)",
+                boxShadow: "0 12px 30px -10px rgba(40, 20, 140, 0.6)",
+              }}
+            >
+              Sign Up
+            </button>
           </div>
-          <OnboardingDots total={SLIDES.length} current={step} />
-        </motion.footer>
+        </div>
       </div>
     </OnboardingShell>
+  );
+}
+
+function BalanceCard({
+  className,
+  currency,
+  code,
+  amount,
+  last4,
+}: {
+  className: string;
+  currency: string;
+  code: string;
+  amount: string;
+  last4: string;
+}) {
+  return (
+    <div
+      className={`rounded-3xl p-4 text-white ${className}`}
+      style={{
+        background: "linear-gradient(150deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.12) 100%)",
+        border: "1px solid rgba(255,255,255,0.32)",
+        boxShadow: "0 20px 40px -18px rgba(30, 15, 110, 0.55)",
+      }}
+      aria-hidden
+    >
+      <span className="inline-flex rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold">
+        {currency} · {code}
+      </span>
+      <p className="mt-3 text-[11px] text-white/75">Your balance</p>
+      <p className="text-[22px] font-bold tracking-tight">{amount}</p>
+      <p className="mt-2 text-[11px] text-white/70">Account •••• {last4}</p>
+    </div>
   );
 }

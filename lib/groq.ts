@@ -42,7 +42,7 @@ export async function groqChat(
   };
 
   if (!res.ok) {
-    throw new Error(data.error?.message ?? "Glide assistant is temporarily unavailable.");
+    throw new Error(data.error?.message ?? "Billy is temporarily unavailable.");
   }
 
   const content = data.choices?.[0]?.message?.content?.trim();

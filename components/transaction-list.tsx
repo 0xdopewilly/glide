@@ -91,9 +91,12 @@ function buildTitle(tx: GlideTransaction): string {
   return "Activity";
 }
 
-function TransactionSkeleton() {
+function TransactionSkeleton({ bare = false }: { bare?: boolean }) {
   return (
-    <div className="glide-surface-card overflow-hidden rounded-2xl py-1" aria-hidden>
+    <div
+      className={bare ? "py-1" : "glide-surface-card overflow-hidden rounded-2xl py-1"}
+      aria-hidden
+    >
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex items-center gap-3 px-4 py-3">
           <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-[color:var(--glide-surface-container)]" />
@@ -116,6 +119,7 @@ export function TransactionList({
   // compiling — the row visual is the same on both pages.
   showTime: _showTime = false,
   grouped = false,
+  header,
   footer,
 }: {
   transactions: GlideTransaction[];
@@ -123,16 +127,26 @@ export function TransactionList({
   emptyMessage?: string;
   showTime?: boolean;
   grouped?: boolean;
+  /** Rendered inside the same card, above the rows (e.g. a title). */
+  header?: ReactNode;
   /** Rendered inside the same card, under the rows (e.g. "See all"). */
   footer?: ReactNode;
 }) {
   if (loading && transactions.length === 0) {
-    return <TransactionSkeleton />;
+    return header ? (
+      <div className="glide-surface-card overflow-hidden rounded-3xl">
+        {header}
+        <TransactionSkeleton bare />
+      </div>
+    ) : (
+      <TransactionSkeleton />
+    );
   }
 
   if (transactions.length === 0 && !grouped) {
     return (
-      <div className="glide-surface-card overflow-hidden rounded-2xl">
+      <div className={`glide-surface-card overflow-hidden ${header ? "rounded-3xl" : "rounded-2xl"}`}>
+        {header}
         <p className="px-4 py-8 text-center text-sm text-[var(--glide-muted)]">
           {emptyMessage}
         </p>
@@ -147,9 +161,12 @@ export function TransactionList({
     </li>
   ));
 
-  if (footer) {
+  if (header || footer) {
     return (
-      <div className="glide-surface-card overflow-hidden rounded-2xl pt-1">
+      <div
+        className={`glide-surface-card overflow-hidden ${header ? "rounded-3xl pb-1" : "rounded-2xl pt-1"}`}
+      >
+        {header}
         <ul>{rows}</ul>
         {footer}
       </div>

@@ -2,7 +2,6 @@
 
 import { headerIconButtonClassName } from "@/components/header-icon-button";
 import { NotificationBell } from "@/components/notification-bell";
-import { UserAvatar } from "@/components/user-avatar";
 import { useGoBack } from "@/lib/use-go-back";
 import { ChevronLeft } from "lucide-react";
 import Image from "next/image";
@@ -84,8 +83,7 @@ export function AppHeader({
       )}
     </Link>
   ) : (
-    // Tab screens: your avatar top-left opens Settings, Revolut style.
-    <UserAvatar size="sm" linked />
+    <span className="h-10 w-10 shrink-0" aria-hidden />
   );
 
   return (

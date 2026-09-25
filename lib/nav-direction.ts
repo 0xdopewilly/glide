@@ -9,7 +9,7 @@ export const TAB_ROOTS: ReadonlySet<string> = new Set([
   "/",
   "/payments",
   "/automations",
-  "/ask",
+  "/profile",
 ]);
 
 export function navDirection(

@@ -50,7 +50,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <PageHeader title="Settings" backHref="/" />
+      <PageHeader title="Profile" />
       <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
         {error ? (
           <div

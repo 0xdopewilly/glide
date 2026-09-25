@@ -1,64 +1,54 @@
 "use client";
 
+import { useProfile } from "@/context/wallet-context";
+import { haptics } from "@/lib/haptics";
+import { ArrowLeftRight, Home, Zap } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeftRight, Home, Sparkles, Zap } from "lucide-react";
-import { haptics } from "@/lib/haptics";
 
-// Four tabs, Revolut style. Profile/settings opens from the avatar on Home
-// and Activity from "See all" — both are pushed screens, not tabs.
-const SLOTS = [
+// Four tabs, per the reference design: Home · Payments · Automate · Profile.
+// Billy lives on Home (Smart Assistant card); other screens are pushed.
+const SLOTS: { href: string; label: string; icon?: LucideIcon }[] = [
   { href: "/", icon: Home, label: "Home" },
   { href: "/payments", icon: ArrowLeftRight, label: "Payments" },
   { href: "/automations", icon: Zap, label: "Automate" },
-  { href: "/ask", icon: Sparkles, label: "Billy" },
-] as const;
+  { href: "/profile", label: "Profile" },
+];
 
+/** White tab bar in the page flow (not fixed): content ends exactly at its
+ * top edge, and it carries the iPhone home-indicator inset itself. */
 export function BottomNav() {
   const pathname = usePathname();
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t bg-[color:var(--glide-surface-container)] pb-[max(env(safe-area-inset-bottom),0px)]"
-      style={{ borderColor: "var(--glide-elevated-border)" }}
+      className="relative z-40 shrink-0 rounded-t-[26px] px-2 pt-1.5 pb-[max(env(safe-area-inset-bottom),8px)]"
+      style={{
+        background: "var(--glide-nav-surface)",
+        boxShadow: "0 -10px 30px rgba(24, 16, 80, 0.14)",
+      }}
     >
-      <div className="mx-auto flex max-w-md items-stretch justify-around px-2 pt-2 pb-1">
+      <div className="mx-auto flex max-w-md items-stretch justify-around">
         {SLOTS.map(({ href, icon: Icon, label }) => {
-          const active =
-            href === "/" ? pathname === "/" : pathname?.startsWith(href);
+          const active = href === "/" ? pathname === "/" : pathname?.startsWith(href);
+          const color = active ? "var(--glide-nav-active)" : "var(--glide-nav-inactive)";
           return (
             <Link
               key={href}
               href={href}
               aria-label={label}
+              aria-current={active ? "page" : undefined}
               onClick={() => {
                 if (!active) haptics.light();
               }}
-              className="group relative flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-2 transition-transform active:scale-95"
+              className="flex min-h-[50px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 transition-transform active:scale-95"
             >
-              {active && (
-                <span
-                  aria-hidden
-                  className="absolute inset-x-1 inset-y-0.5 -z-10 rounded-2xl"
-                  style={{ backgroundColor: "var(--glide-primary-container)" }}
-                />
+              {Icon ? (
+                <Icon className="h-[22px] w-[22px]" style={{ color }} strokeWidth={active ? 2.5 : 2} />
+              ) : (
+                <ProfileTabIcon active={Boolean(active)} />
               )}
-              <Icon
-                className={`h-5 w-5 ${active ? "" : "opacity-70"}`}
-                style={{
-                  color: active
-                    ? "var(--glide-primary)"
-                    : "var(--glide-on-surface-variant)",
-                }}
-                strokeWidth={active ? 2.5 : 2}
-              />
-              <span
-                className="whitespace-nowrap text-[10px] font-semibold tracking-wide"
-                style={{
-                  color: active
-                    ? "var(--glide-primary)"
-                    : "var(--glide-on-surface-variant)",
-                }}
-              >
+              <span className="whitespace-nowrap text-[11px] font-semibold" style={{ color }}>
                 {label}
               </span>
             </Link>
@@ -66,5 +56,29 @@ export function BottomNav() {
         })}
       </div>
     </nav>
+  );
+}
+
+function ProfileTabIcon({ active }: { active: boolean }) {
+  const { profile } = useProfile();
+  const initial = (profile.displayName?.trim().charAt(0) || "G").toUpperCase();
+  return (
+    <span
+      className="relative flex h-[24px] w-[24px] items-center justify-center overflow-hidden rounded-full text-[11px] font-bold text-white"
+      style={{
+        background: "linear-gradient(135deg, #8B6CF6 0%, #5B3DF5 100%)",
+        boxShadow: active
+          ? "0 0 0 2px var(--glide-nav-surface), 0 0 0 4px var(--glide-nav-active)"
+          : undefined,
+      }}
+      aria-hidden
+    >
+      {profile.avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" />
+      ) : (
+        initial
+      )}
+    </span>
   );
 }

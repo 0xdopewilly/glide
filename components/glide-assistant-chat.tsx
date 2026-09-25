@@ -23,7 +23,9 @@ import {
 } from "@/lib/chat-cache";
 import { useAppAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
-import { ArrowUp, Sparkles } from "lucide-react";
+import { ArrowUp, ChevronLeft, Sparkles } from "lucide-react";
+import { headerIconButtonClassName } from "@/components/header-icon-button";
+import { useGoBack } from "@/lib/use-go-back";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   FormEvent,
@@ -104,6 +106,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isPage = variant === "page";
+  const goBack = useGoBack("/");
   const userId = user?.id;
 
   const quickPrompts = useMemo(() => {
@@ -908,8 +911,16 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
       }
     >
       {isPage ? (
-        <header className="shrink-0 px-5 pb-3 pt-4">
+        <header className="shrink-0 px-5 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={goBack}
+              className={headerIconButtonClassName()}
+              aria-label="Back"
+            >
+              <ChevronLeft className="h-5 w-5" strokeWidth={2.25} />
+            </button>
             <span
               className="flex h-10 w-10 items-center justify-center rounded-2xl"
               style={{

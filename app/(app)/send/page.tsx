@@ -20,7 +20,22 @@ import {
   normalizeUsername,
 } from "@/lib/validation";
 import { useBalance, useWalletActions } from "@/context/wallet-context";
-import { AtSign, Check, ChevronDown, QrCode, ShieldAlert, User, Wallet } from "lucide-react";
+import {
+  AtSign,
+  CalendarClock,
+  Check,
+  ChevronDown,
+  Delete,
+  QrCode,
+  ShieldAlert,
+  StickyNote,
+  User,
+  Wallet,
+} from "lucide-react";
+import Link from "next/link";
+import { BottomSheet } from "@/components/bottom-sheet";
+import { SettingsRow } from "@/components/settings-list";
+import { haptics } from "@/lib/haptics";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
@@ -28,7 +43,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ChangeEvent,
 } from "react";
 
 type Step = "amount" | "review" | "success";
@@ -78,11 +92,11 @@ export default function SendPage() {
   const [scanOpen, setScanOpen] = useState(
     () => searchParams.get("scan") === "1",
   );
+  const [tokenSheetOpen, setTokenSheetOpen] = useState(false);
   const [amount, setAmount] = useState("0");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const amountInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (searchParams.get("scan") === "1") setScanOpen(true);
@@ -136,6 +150,15 @@ export default function SendPage() {
     if (fromTokens > 0) return fromTokens;
     return token === "USDC" ? balance : 0;
   }, [customToken, tokens, token, balance]);
+
+  // Display only (grouped: "$1,240.50"). Stored labels keep formatActive.
+  const formatBalancePill = (value: number) =>
+    customToken
+      ? formatTokenUnits(value, customToken.symbol, Math.min(customDecimals, 6))
+      : `${currencyPrefixForToken(token)}${new Intl.NumberFormat("en-US", {
+          minimumFractionDigits: token === "cirBTC" ? 0 : 2,
+          maximumFractionDigits: token === "cirBTC" ? 8 : 2,
+        }).format(value)}`;
 
   const formatActive = useCallback(
     (value: number) =>
@@ -212,11 +235,13 @@ export default function SendPage() {
   // token uses its own decimals.
   const maxDecimals = customToken ? customDecimals : token === "cirBTC" ? 8 : 2;
 
-  const handleAmountChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const raw = e.target.value;
+  /** Normalises a typed or keypad amount: digits and one dot, at most
+   * `maxDecimals` places, no redundant leading zeros, "0" when empty. */
+  const applyAmount = useCallback(
+    (raw: string) => {
       // strip anything that isn't a digit or dot
       let cleaned = raw.replace(/[^0-9.]/g, "");
+      if (maxDecimals === 0) cleaned = cleaned.replace(/\./g, "");
       // only one decimal point allowed
       const firstDot = cleaned.indexOf(".");
       if (firstDot !== -1) {
@@ -227,7 +252,7 @@ export default function SendPage() {
       // enforce decimal places
       if (cleaned.includes(".")) {
         const [intPart, decPart = ""] = cleaned.split(".");
-        cleaned = `${intPart}.${decPart.slice(0, maxDecimals)}`;
+        cleaned = `${intPart || "0"}.${decPart.slice(0, maxDecimals)}`;
       }
       // collapse to "0" when empty, but allow "0.5" / leading "0."
       if (cleaned === "") {
@@ -238,10 +263,38 @@ export default function SendPage() {
       if (/^0\d/.test(cleaned)) {
         cleaned = cleaned.replace(/^0+/, "") || "0";
       }
+      // keep the number readable on the keypad screen
+      if (cleaned.replace(".", "").length > 15) return;
       setAmount(cleaned);
     },
     [maxDecimals],
   );
+
+  const pressKey = useCallback(
+    (key: string) => {
+      haptics.light();
+      if (key === "back") {
+        applyAmount(amount.length > 1 ? amount.slice(0, -1) : "0");
+        return;
+      }
+      applyAmount(amount === "0" && key !== "." ? key : amount + key);
+    },
+    [amount, applyAmount],
+  );
+
+  // A hardware keyboard drives the keypad too (desktop), unless a text field
+  // (recipient, note) has focus.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el?.closest("input, textarea, select, [contenteditable]")) return;
+      if (/^[0-9]$/.test(e.key)) pressKey(e.key);
+      else if (e.key === "." || e.key === ",") pressKey(".");
+      else if (e.key === "Backspace") pressKey("back");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pressKey]);
 
   const parsed = parseFloat(amount) || 0;
   const recipientOk = resolveState === "ok";
@@ -473,7 +526,7 @@ export default function SendPage() {
 
   const kindLabel =
     kind === "wallet"
-      ? "Wallet address"
+      ? "Wallet"
       : kind === "username"
         ? "Pay tag"
         : kind === "contact"
@@ -487,135 +540,71 @@ export default function SendPage() {
     : TOKENS_FULL;
 
   const submitDisabled = !canContinue;
+  const hintIsError = Boolean(hint && (resolveState === "fail" || overBalance));
 
   return (
-    <FlowPage title="Send" backFallback="/">
+    <FlowPage title="Send money" backFallback="/">
       <SendScanSheet open={scanOpen} onClose={() => setScanOpen(false)} />
-      <div className="flex min-h-0 flex-1 flex-col px-5 pb-6">
-        {/* AMOUNT CARD --------------------------------------------------- */}
-        <div className="mt-2 rounded-3xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] p-6 text-[color:var(--glide-on-elevated)]">
-          <div className="flex items-start justify-between gap-3">
-            <label
-              htmlFor="send-amount"
-              className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]"
-            >
-              Amount
-            </label>
+      {tokenSheetOpen ? (
+        <BottomSheet title="Pay with" onClose={() => setTokenSheetOpen(false)}>
+          {(close) => (
+            <>
+              {tokenOptions.map((t) => (
+                <SettingsRow
+                  key={t}
+                  icon={Wallet}
+                  title={t}
+                  subtitle={`Balance ${formatStableAmount(
+                    t === "USDC" && tokenAmountFromBalances(tokens, t) === 0
+                      ? balance
+                      : tokenAmountFromBalances(tokens, t),
+                    t,
+                  )}`}
+                  value={customAddress === null && t === token ? "Selected" : undefined}
+                  onClick={() => {
+                    setToken(t);
+                    setCustomAddress(null);
+                    close();
+                  }}
+                />
+              ))}
+              {!requestCode
+                ? sendableCustom.map((ct) => (
+                    <SettingsRow
+                      key={ct.tokenAddress}
+                      icon={Wallet}
+                      title={ct.symbol}
+                      subtitle={`Unverified · ${formatTokenUnits(ct.amount, ct.symbol, 4)}`}
+                      value={customAddress === ct.tokenAddress ? "Selected" : undefined}
+                      onClick={() => {
+                        setCustomAddress(ct.tokenAddress ?? null);
+                        close();
+                      }}
+                    />
+                  ))
+                : null}
+            </>
+          )}
+        </BottomSheet>
+      ) : null}
 
-            {/* Token pills */}
-            <div
-              className="flex items-center gap-1 rounded-full border border-[color:var(--glide-elevated-border)] p-1"
-              role="tablist"
-              aria-label="Token"
-            >
-              {tokenOptions.map((t) => {
-                const active = customAddress === null && t === token;
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => {
-                      setToken(t);
-                      setCustomAddress(null);
-                    }}
-                    className={`glide-tap rounded-full px-3 py-1.5 text-[11px] font-bold tracking-tight transition-colors ${
-                      active
-                        ? "bg-[var(--glide-primary)] text-[var(--glide-on-primary)]"
-                        : "border border-[color:var(--glide-elevated-border)] bg-transparent text-[color:var(--glide-on-elevated)]"
-                    }`}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
-              {!requestCode && sendableCustom.length > 0 ? (
-                <span className="relative">
-                  <span
-                    className={`glide-tap inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold tracking-tight ${
-                      customAddress !== null
-                        ? "bg-[var(--glide-primary)] text-[var(--glide-on-primary)]"
-                        : "border border-[color:var(--glide-elevated-border)] bg-transparent text-[color:var(--glide-on-elevated)]"
-                    }`}
-                  >
-                    {customToken ? customToken.symbol : "Other"}
-                    <ChevronDown className="h-3 w-3" strokeWidth={2.5} aria-hidden />
-                  </span>
-                  <select
-                    aria-label="Other tokens"
-                    value={customAddress ?? ""}
-                    onChange={(e) => setCustomAddress(e.target.value || null)}
-                    className="absolute inset-0 cursor-pointer opacity-0"
-                  >
-                    <option value="" disabled>
-                      Other tokens
-                    </option>
-                    {sendableCustom.map((ct) => (
-                      <option key={ct.tokenAddress} value={ct.tokenAddress}>
-                        {ct.symbol} · {formatTokenUnits(ct.amount, ct.symbol, 4)}
-                      </option>
-                    ))}
-                  </select>
-                </span>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-[36px] font-bold leading-none text-[color:var(--glide-on-elevated-variant)]">
-              {amountPrefix}
-            </span>
-            <input
-              ref={amountInputRef}
-              id="send-amount"
-              value={formatAmountDisplay(amount)}
-              onChange={handleAmountChange}
-              onFocus={(e) => {
-                if (e.currentTarget.value === "0") {
-                  // tap selects so user can overwrite the placeholder zero
-                  e.currentTarget.select();
-                }
-              }}
-              inputMode="decimal"
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              aria-label="Amount"
-              className="w-full min-w-0 bg-transparent text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums text-[color:var(--glide-on-elevated)] caret-[var(--glide-primary)] focus:outline-none"
-            />
-          </div>
-
-          <p
-            className={`mt-3 text-[12px] font-semibold ${
-              hint && (resolveState === "fail" || overBalance)
-                ? "text-[var(--glide-error)]"
-                : hint && recipientOk && !overBalance
-                  ? "text-[var(--glide-success)]"
-                  : "text-[color:var(--glide-on-elevated-variant)]"
-            }`}
-          >
-            {hint ??
-              (customMissing
-                ? loading
-                  ? "Loading this token…"
-                  : "You don't hold this token"
-                : `Balance ${formatActive(tokenBalance)}`)}
-          </p>
-        </div>
-
-        {/* RECIPIENT FIELD ---------------------------------------------- */}
-        <label
-          htmlFor="send-recipient"
-          className="glide-label-mono mt-6 block text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]"
-        >
-          To
-        </label>
+      <div className="flex min-h-0 flex-1 flex-col px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {/* TO ----------------------------------------------------------- */}
         <div
-          className={`mt-2 flex items-center gap-2 rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-3 py-2 text-[color:var(--glide-on-elevated)] transition-all ${recipientBorderClass}`}
+          className={`mt-1 flex shrink-0 items-center gap-2 rounded-full py-1 pl-4 pr-1 transition-shadow ${recipientBorderClass}`}
+          style={{
+            background: "var(--glide-surface-container-high)",
+            border: "1px solid var(--glide-border)",
+          }}
         >
+          <label
+            htmlFor="send-recipient"
+            className="shrink-0 text-[14px] font-semibold text-[color:var(--glide-on-surface-variant)]"
+          >
+            To
+          </label>
           {(kind === "username" || (inputLooksLikeUsername && !kind)) ? (
-            <span className="shrink-0 pl-1 text-[18px] font-bold text-[color:var(--glide-on-elevated-variant)]">
+            <span className="-mr-1 shrink-0 text-[16px] font-bold text-[color:var(--glide-on-surface-variant)]">
               @
             </span>
           ) : null}
@@ -631,7 +620,7 @@ export default function SendPage() {
             autoCorrect="off"
             spellCheck={false}
             aria-label="Recipient"
-            className={`min-w-0 flex-1 bg-transparent py-2 text-[15px] font-semibold tracking-tight text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none ${
+            className={`min-w-0 flex-1 bg-transparent py-2 text-[15px] font-semibold tracking-tight text-[color:var(--glide-on-surface)] placeholder:font-medium placeholder:text-[color:var(--glide-on-surface-variant)] focus:outline-none ${
               kind === "wallet" || isValidWalletAddress(recipient.trim())
                 ? "font-mono text-[13px]"
                 : ""
@@ -639,17 +628,14 @@ export default function SendPage() {
           />
           {recipientOk && kindLabel ? (
             <span
-              className="glide-label-mono inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold"
-              style={{
-                background: "var(--glide-success-container)",
-                color: "var(--glide-success)",
-              }}
+              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold"
+              style={{ background: "var(--glide-success-container)", color: "var(--glide-success)" }}
             >
               <KindIcon className="h-3 w-3" strokeWidth={2.5} />
               {kindLabel}
             </span>
           ) : resolveState === "checking" ? (
-            <span className="glide-label-mono shrink-0 text-[10px] font-bold text-[color:var(--glide-on-elevated-variant)]">
+            <span className="shrink-0 text-[11px] font-semibold text-[color:var(--glide-on-surface-variant)]">
               Checking…
             </span>
           ) : null}
@@ -657,72 +643,142 @@ export default function SendPage() {
             type="button"
             onClick={() => setScanOpen(true)}
             aria-label="Scan QR"
-            className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--glide-elevated-border)] text-[color:var(--glide-on-elevated)]"
+            className="glide-tap flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            style={{ background: "var(--glide-surface-container-high)", color: "var(--glide-on-surface)" }}
           >
             <QrCode className="h-4 w-4" strokeWidth={2.25} />
           </button>
         </div>
 
-        {/* NOTE FIELD --------------------------------------------------- */}
-        <div className="mt-5 flex items-baseline justify-between">
-          <label
-            htmlFor="send-note-inline"
-            className="glide-label-mono block text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]"
+        {/* AMOUNT ------------------------------------------------------- */}
+        <div className="flex min-h-[150px] flex-1 flex-col items-center justify-center text-center">
+          <p
+            className="flex items-baseline justify-center font-bold leading-none tracking-[-0.03em] tabular-nums text-[color:var(--glide-on-surface)]"
+            style={{ fontSize: amount.length > 9 ? 44 : 60 }}
+            aria-live="polite"
+            aria-label={`Amount ${formatActive(parsed)}`}
           >
-            Note (optional)
-          </label>
-          <span
-            className={`glide-label-mono text-[10px] font-semibold ${
-              note.length > 130 ? "text-[var(--glide-error)]" : "text-[color:var(--glide-on-elevated-variant)]"
-            }`}
+            {amountPrefix}
+            {formatAmountDisplay(amount)}
+            <span className="glide-caret ml-0.5 inline-block w-[3px] self-stretch rounded-full bg-current" aria-hidden />
+            {customToken ? (
+              <span className="ml-2 text-[22px] font-semibold opacity-70">{customToken.symbol}</span>
+            ) : null}
+          </p>
+          <p
+            className="mt-3 text-[13px] font-semibold"
+            style={{
+              color: hintIsError
+                ? "var(--glide-error)"
+                : "var(--glide-on-surface-variant)",
+            }}
           >
-            {note.length}/140
-          </span>
+            {hint ??
+              (customMissing
+                ? loading
+                  ? "Loading this token…"
+                  : "You don't hold this token"
+                : "Arrives in seconds")}
+          </p>
+          <button
+            type="button"
+            onClick={() => setTokenSheetOpen(true)}
+            disabled={Boolean(requestCode)}
+            aria-haspopup="dialog"
+            className="glide-tap mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-semibold text-[color:var(--glide-on-surface)] disabled:opacity-80"
+            style={{
+              background: "var(--glide-surface-container-high)",
+              border: "1px solid var(--glide-border)",
+            }}
+          >
+            {customToken ? customToken.symbol : token} · {formatBalancePill(tokenBalance)}
+            {!requestCode ? <ChevronDown className="h-4 w-4 opacity-80" strokeWidth={2.5} /> : null}
+          </button>
         </div>
-        <input
-          id="send-note-inline"
-          value={note}
-          onChange={(e) => setNote(e.target.value.slice(0, 140))}
-          placeholder="Dinner, rent, thanks"
-          maxLength={140}
-          className="mt-2 w-full rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[16px] font-medium text-[color:var(--glide-on-elevated)] placeholder:font-medium placeholder:text-[color:var(--glide-on-elevated-variant)] focus:outline-none focus:ring-2 focus:ring-[var(--glide-primary)]/40"
-        />
 
-        {/* SUBMIT ------------------------------------------------------- */}
-        <div className="mt-auto pt-6">
+        {/* NOTE --------------------------------------------------------- */}
+        <label
+          className="flex shrink-0 items-center gap-2 rounded-2xl px-4"
+          style={{
+            background: "var(--glide-surface-container-high)",
+            border: "1px solid var(--glide-border)",
+          }}
+        >
+          <input
+            id="send-note-inline"
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, 140))}
+            placeholder="Add note"
+            maxLength={140}
+            aria-label="Note (optional)"
+            className="min-w-0 flex-1 bg-transparent py-3.5 text-[16px] font-medium text-[color:var(--glide-on-surface)] placeholder:text-[color:var(--glide-on-surface-variant)] focus:outline-none"
+          />
+          <StickyNote className="h-5 w-5 shrink-0 text-[color:var(--glide-on-surface-variant)]" strokeWidth={2} aria-hidden />
+        </label>
+
+        {/* SCHEDULE + SEND ---------------------------------------------- */}
+        <div className="mt-3 flex shrink-0 items-center gap-3">
+          <Link
+            href="/scheduled"
+            aria-label="Schedule a payment"
+            className="glide-tap flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-full"
+            style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
+          >
+            <CalendarClock className="h-5 w-5" strokeWidth={2.25} />
+          </Link>
           <button
             type="button"
             disabled={submitDisabled}
             onClick={() => setStep("review")}
-            className="glide-tap w-full rounded-full px-6 text-[15px] font-bold transition-opacity"
+            className="glide-tap h-[54px] flex-1 rounded-full px-6 text-[16px] font-bold transition-opacity"
             style={{
               background: "var(--glide-primary)",
               color: "var(--glide-on-primary)",
-              height: "56px",
-              opacity: submitDisabled ? 0.45 : 1,
-              boxShadow: submitDisabled ? "none" : undefined,
+              opacity: submitDisabled ? 0.55 : 1,
             }}
           >
-            {`Send ${activeSymbol}`}
+            Send
           </button>
+        </div>
 
-          {localError || error ? (
-            <div
-              className="mt-3 rounded-2xl px-4 py-3 text-center text-sm font-medium"
+        {localError || error ? (
+          <div
+            className="mt-3 shrink-0 rounded-2xl px-4 py-3 text-center text-sm font-medium"
+            style={{
+              background: "color-mix(in srgb, var(--glide-error) 14%, transparent)",
+              color: "var(--glide-error)",
+            }}
+          >
+            {localError ?? error}
+          </div>
+        ) : null}
+
+        {/* KEYPAD ------------------------------------------------------- */}
+        <div className="mt-3 grid shrink-0 grid-cols-3 gap-2" role="group" aria-label="Keypad">
+          {KEYS.map((k) => (
+            <button
+              key={k}
+              type="button"
+              data-key={k === "back" ? "<" : k}
+              onClick={() => pressKey(k)}
+              disabled={k === "." && maxDecimals === 0}
+              aria-label={k === "back" ? "Delete" : k === "." ? "Decimal point" : k}
+              className="glide-tap flex h-[52px] items-center justify-center rounded-2xl text-[22px] font-semibold text-[color:var(--glide-on-surface)] active:scale-95 disabled:opacity-40"
               style={{
-                background: "color-mix(in srgb, var(--glide-error) 12%, transparent)",
-                border: "1px solid color-mix(in srgb, var(--glide-error) 28%, transparent)",
-                color: "var(--glide-error)",
+                background: "var(--glide-surface-container)",
+                border: "1px solid var(--glide-border)",
               }}
             >
-              {localError ?? error}
-            </div>
-          ) : null}
+              {k === "back" ? <Delete className="h-6 w-6" strokeWidth={2} /> : k}
+            </button>
+          ))}
         </div>
       </div>
     </FlowPage>
   );
 }
+
+const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "back"] as const;
 
 /** Renders an inline "Save {name} to contacts?" card on the success screen
  * after a real wallet-address send. Mirrors what Billy offers in chat so the

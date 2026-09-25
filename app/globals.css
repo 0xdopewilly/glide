@@ -33,6 +33,8 @@
   --glide-surface-container: #FFFFFF;
   --glide-surface-container-high: #FFFFFF;
   --glide-nav-surface: #FFFFFF;
+  --glide-nav-active: #5B3DF5;
+  --glide-nav-inactive: #8A94A8;
   --glide-primary-container: rgba(91, 61, 245, 0.10);
   --glide-success-container: rgba(22, 199, 132, 0.14);
 
@@ -79,59 +81,95 @@
 .dark,
 [data-theme="dark"] {
   color-scheme: dark;
-  /* glidepay dark — royal blue. A deep blue page (glow at the top fading to
-     near-black, see .glide-bg-wash), deep royal cards, vivid royal-blue
-     accent, white text, #9FB0D6 secondary text. */
+  /* glidepay dark — violet (the reference design the user picked,
+     2026-09-25): a lavender-to-indigo gradient page (.glide-bg-wash), white
+     content cards, frosted-glass controls, a white tab bar. Text on the
+     gradient is white; inside white cards the tokens are rescoped (see
+     "White cards on the violet theme" below). */
 
-  /* New semantic tokens */
-  --glide-primary: #3D6DFF;
-  --glide-primary-hover: #2F5BEA;
-  --glide-on-primary: #FFFFFF;
+  /* Filled buttons on the gradient are white with violet text. */
+  --glide-primary: #FFFFFF;
+  --glide-primary-hover: #F1EDFF;
+  --glide-on-primary: #2E1F86;
   --glide-on-surface: #FFFFFF;
-  --glide-on-surface-variant: #9FB0D6;
-  --glide-on-surface-elevated: #FFFFFF;
-  --glide-on-elevated: #FFFFFF;
-  --glide-on-elevated-variant: #9FB0D6;
-  --glide-elevated-border: rgba(140, 170, 255, 0.12);
-  --glide-outline: rgba(140, 170, 255, 0.12);
-  --glide-error: #F87171;
+  --glide-on-surface-variant: rgba(255, 255, 255, 0.76);
+  --glide-on-surface-elevated: #17153B;
+  --glide-on-elevated: #17153B;
+  --glide-on-elevated-variant: #6F6C90;
+  --glide-elevated-border: rgba(23, 21, 59, 0.06);
+  --glide-outline: rgba(255, 255, 255, 0.22);
+  --glide-error: #FF7A7A;
 
   /* Surfaces */
-  --glide-bg: #040A1C;
-  --glide-shell: #040A1C;
-  --glide-surface: #040A1C;
-  --glide-surface-elevated: #0C1840;
-  --glide-surface-container: #0A1433;
-  --glide-surface-container-high: #172A5E;
-  --glide-nav-surface: #050C22;
-  --glide-primary-container: rgba(61, 109, 255, 0.2);
-  --glide-success-container: rgba(22, 199, 132, 0.18);
+  --glide-bg: #3A2A9C;
+  --glide-shell: #3A2A9C;
+  --glide-surface: #3A2A9C;
+  --glide-surface-elevated: #FFFFFF;
+  --glide-surface-container: rgba(255, 255, 255, 0.14);
+  --glide-surface-container-high: rgba(255, 255, 255, 0.2);
+  --glide-nav-surface: #FFFFFF;
+  --glide-nav-active: #6B4CF2;
+  --glide-nav-inactive: #9C99B8;
+  --glide-primary-container: rgba(255, 255, 255, 0.2);
+  --glide-success-container: rgba(61, 220, 151, 0.2);
 
   /* Decorative mesh / waveform tint (used by hero sound-wave SVG, etc.) */
   --glide-mesh-wave: rgba(255, 255, 255, 0.22);
 
   /* Legacy tokens — remapped */
   --glide-text: #FFFFFF;
-  --glide-muted: #9FB0D6;
-  --glide-border: rgba(140, 170, 255, 0.12);
-  --glide-input: #0A1433;
-  --glide-accent: #3D6DFF;
-  --glide-accent-hover: #2F5BEA;
-  --glide-success: #16C784;
-  --glide-on-nav-inactive: #6478A8;
+  --glide-muted: rgba(255, 255, 255, 0.76);
+  --glide-border: rgba(255, 255, 255, 0.2);
+  --glide-input: rgba(255, 255, 255, 0.14);
+  --glide-accent: #FFFFFF;
+  --glide-accent-hover: #F1EDFF;
+  --glide-success: #3DDC97;
+  --glide-on-nav-inactive: #9C99B8;
+  --glide-violet: #6B4CF2;
 
-  --glide-accent-warm: #2F5BEA;
+  --glide-accent-warm: #FFB3C7;
 
-  /* Hero cards (Savings, Automate) */
-  --glide-hero-gradient: linear-gradient(150deg, #4F80FF 0%, #2F5BEA 52%, #1A3AB8 100%);
+  /* Hero cards (Savings) — frosted glass on the gradient */
+  --glide-hero-gradient: linear-gradient(150deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.1) 100%);
 
-  /* Royal-blue wash */
-  --glide-gradient-from: rgba(61, 109, 255, 0.35);
-  --glide-gradient-to: #040A1C;
+  --glide-gradient-from: rgba(186, 160, 255, 0.45);
+  --glide-gradient-to: #3A2A9C;
   --glide-glow-primary: transparent;
   --glide-glow-secondary: transparent;
   --glide-glow-accent: transparent;
   --glide-glow-warm: transparent;
+}
+
+/* White cards on the violet theme: anything drawn on --glide-surface-elevated
+   (white) gets dark text and violet accents, so pills, switches, icon tiles
+   and links inside it stay visible. Matches by the token name in the class
+   or inline style, so every existing card is covered. */
+.dark :is(.glide-surface-card, [class*="surface-elevated"], [style*="surface-elevated"]) {
+  --glide-text: #17153B;
+  --glide-muted: #6F6C90;
+  --glide-on-surface: #17153B;
+  --glide-on-surface-variant: #6F6C90;
+  --glide-surface-container: #F4F2FF;
+  --glide-surface-container-high: #EEEAFF;
+  --glide-border: rgba(23, 21, 59, 0.09);
+  --glide-elevated-border: rgba(23, 21, 59, 0.06);
+  --glide-input: #F4F2FF;
+  --glide-primary: #6B4CF2;
+  --glide-primary-hover: #5A3BE0;
+  --glide-on-primary: #FFFFFF;
+  --glide-primary-container: rgba(107, 76, 242, 0.12);
+  --glide-accent: #6B4CF2;
+  --glide-accent-hover: #5A3BE0;
+  --glide-success: #0E9F6E;
+  --glide-success-container: rgba(14, 159, 110, 0.12);
+  --glide-error: #E5484D;
+}
+
+/* Under the iOS status bar and behind the tab bar: match the gradient top
+   and the white bar, so no strip of page background ever shows. */
+html.dark,
+html.dark body {
+  background: linear-gradient(180deg, #7A5CF0 0%, #7A5CF0 50%, #FFFFFF 50%, #FFFFFF 100%);
 }
 
 body {
@@ -167,9 +205,6 @@ body {
    on routes where the nav is rendered (see app-shell.tsx). Padding goes on
    the children wrapper itself so it shifts ALL bottom content (scroll
    regions, sticky forms, footers) above the fixed nav uniformly. */
-.glide-shell-with-nav {
-  padding-bottom: calc(100px + env(safe-area-inset-bottom));
-}
 
 @media (prefers-reduced-motion: reduce) {
   .glide-scroll {
@@ -190,22 +225,14 @@ body {
   opacity: 1;
 }
 
-/* Royal blue, Revolut-style: a bright blue glow behind the balance, easing
-   through deep royal blue into near-black. Static (no blur, no animation). */
+/* Violet, per the reference: lavender light at the top, deepening to indigo,
+   with a soft pink glow low on the left. Static (no blur, no animation). */
 .dark .glide-bg-wash {
   background:
-    radial-gradient(
-      ellipse 110% 55% at 50% -8%,
-      rgba(70, 120, 255, 0.55) 0%,
-      rgba(40, 80, 220, 0.22) 38%,
-      transparent 72%
-    ),
-    radial-gradient(
-      ellipse 70% 40% at 85% 18%,
-      rgba(90, 70, 255, 0.16) 0%,
-      transparent 70%
-    ),
-    linear-gradient(180deg, #0B1F66 0%, #071440 32%, #050C26 62%, #040A1C 100%);
+    radial-gradient(ellipse 90% 45% at 12% 0%, rgba(196, 176, 255, 0.55) 0%, transparent 62%),
+    radial-gradient(ellipse 75% 40% at 100% 28%, rgba(125, 95, 255, 0.45) 0%, transparent 70%),
+    radial-gradient(ellipse 85% 45% at 0% 100%, rgba(255, 150, 200, 0.22) 0%, transparent 70%),
+    linear-gradient(180deg, #7A5CF0 0%, #5E43DA 38%, #4B33BF 72%, #3A2A9C 100%);
 }
 
 /* Brand glow utility — apply sparingly to the user's primary focal points
@@ -220,9 +247,9 @@ body {
 
 .dark .glow-brand {
   box-shadow:
-    0 0 0 1px rgba(61, 109, 255, 0.24),
-    0 20px 60px -20px rgba(61, 109, 255, 0.55),
-    0 0 80px -20px rgba(61, 109, 255, 0.4);
+    0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 20px 60px -20px rgba(40, 20, 120, 0.45),
+    0 0 80px -20px rgba(255, 255, 255, 0.25);
 }
 
 /* Backwards-compat alias — older components reference .glow-green. The
@@ -1312,6 +1339,13 @@ body {
     color: var(--glide-text);
   }
 
+  /* Violet theme: header buttons are frosted-glass circles (reference). */
+  .dark .glide-m3-icon-btn {
+    background: var(--glide-surface-container-high);
+    border: 1px solid var(--glide-border);
+    color: var(--glide-text);
+  }
+
   .dark .glide-m3-icon-btn:hover {
     background: var(--glide-surface-container-high);
     color: var(--glide-text);
@@ -1510,11 +1544,11 @@ html[data-splash] .glide-splash {
   background:
     radial-gradient(
       ellipse 90% 55% at 50% 42%,
-      rgba(90, 140, 255, 0.5) 0%,
-      rgba(40, 80, 220, 0.22) 42%,
+      rgba(200, 180, 255, 0.5) 0%,
+      rgba(125, 95, 255, 0.25) 42%,
       transparent 75%
     ),
-    linear-gradient(180deg, #0B1F66 0%, #071440 50%, #040A1C 100%);
+    linear-gradient(180deg, #7A5CF0 0%, #5E43DA 45%, #3A2A9C 100%);
 }
 html[data-splash="leaving"] .glide-splash {
   pointer-events: none;
@@ -1562,4 +1596,15 @@ html[data-splash="leaving"] .glide-splash {
   html[data-splash="leaving"] .glide-splash {
     animation-duration: 1ms;
   }
+}
+
+/* Send keypad: blinking amount cursor (opacity only). */
+.glide-caret {
+  animation: glide-caret-blink 1.05s steps(1) infinite;
+}
+@keyframes glide-caret-blink {
+  50% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glide-caret { animation: none; }
 }

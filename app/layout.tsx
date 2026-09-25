@@ -36,7 +36,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F7F9FC" },
-    { media: "(prefers-color-scheme: dark)", color: "#0B1F66" },
+    { media: "(prefers-color-scheme: dark)", color: "#7A5CF0" },
   ],
 };
 
@@ -124,7 +124,9 @@ export default function RootLayout({
         >
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
+            // Violet (the "dark" theme) is the brand look; Light and Auto stay
+            // available under Profile → Appearance.
+            defaultTheme="dark"
             enableSystem
             enableColorScheme
             storageKey="glide-theme"
