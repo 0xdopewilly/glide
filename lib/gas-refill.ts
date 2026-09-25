@@ -63,6 +63,14 @@ export function gasWalletEnvVar(circleBlockchain: string): string {
   return `GLIDE_GAS_WALLET_${circleBlockchain.replace(/-/g, "_")}`;
 }
 
+/** Whether a gas service wallet is configured for the chain. Universal
+ * Receive is only offered where it is: without one a deposit can't be bridged
+ * to Arc (the bridge needs native gas in the user's source wallet) and would
+ * sit on the source chain. */
+export function hasGasWallet(circleBlockchain: string): boolean {
+  return Boolean(process.env[gasWalletEnvVar(circleBlockchain)]?.trim());
+}
+
 /** Refill config for the active network, keyed by Circle blockchain id. */
 const REFILL_CONFIG: Record<
   string,

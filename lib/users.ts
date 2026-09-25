@@ -3,6 +3,7 @@ import {
   RECEIVE_CHAINS,
   type ReceiveChainKey,
 } from "@/lib/circle";
+import { hasGasWallet } from "@/lib/gas-refill";
 import { addressesEqual } from "@/lib/tokens";
 import {
   createGlideWallet,
@@ -141,6 +142,8 @@ export type ReceiveAddress = {
   circleBlockchain: string;
   walletId: string;
   address: string;
+  /** False when the chain has no gas service wallet (see hasGasWallet). */
+  enabled?: boolean;
 };
 
 /** Lazily provision a Circle SCA on the given receive chain for this user,
@@ -183,12 +186,29 @@ export async function getOrCreateReceiveAddress(
   };
 }
 
-/** All Universal Receive addresses for a user, creating them if missing. */
+/** Universal Receive addresses for a user: created if missing on every chain
+ * with a gas service wallet. Addresses already created on other chains are
+ * returned too (never created anew), flagged enabled: false, so the caller
+ * can still surface funds sent there. */
 export async function getReceiveAddresses(
   userId: string,
 ): Promise<ReceiveAddress[]> {
-  const chains = Object.keys(RECEIVE_CHAINS) as ReceiveChainKey[];
-  return Promise.all(chains.map((chain) => getOrCreateReceiveAddress(userId, chain)));
+  const existing = await prisma.walletAddress.findMany({
+    where: { userId },
+    select: { chain: true },
+  });
+  const provisioned = new Set(existing.map((row) => row.chain));
+  const chains = (Object.keys(RECEIVE_CHAINS) as ReceiveChainKey[]).filter(
+    (chain) =>
+      hasGasWallet(RECEIVE_CHAINS[chain].circleBlockchain) ||
+      provisioned.has(RECEIVE_CHAINS[chain].circleBlockchain),
+  );
+  return Promise.all(
+    chains.map(async (chain) => ({
+      ...(await getOrCreateReceiveAddress(userId, chain)),
+      enabled: hasGasWallet(RECEIVE_CHAINS[chain].circleBlockchain),
+    })),
+  );
 }
 
 /** Reverse lookup: which Glide user owns this address on the given Circle

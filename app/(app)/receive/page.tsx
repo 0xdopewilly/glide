@@ -26,7 +26,6 @@ type ChainTab = {
   address: string;
   hint: string;
   usdcBalance?: number;
-  pending?: boolean;
 };
 
 const STATIC_EXTRA_TABS: { key: string; label: string }[] = [
@@ -131,9 +130,9 @@ export default function ReceivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arcAddress]);
 
-  // Tabs render IMMEDIATELY from static config + cache. The address is filled
-  // in once /api/receive-addresses resolves — until then the address shows a
-  // skeleton instead of blocking the whole panel.
+  // Arc renders immediately; the other chains come from the cache, then from
+  // /api/receive-addresses, which lists only the chains glidepay can bridge
+  // from right now.
   const tabs: ChainTab[] = useMemo(() => {
     const extraByKey = new Map(extras.map((e) => [e.chain, e]));
     return [
@@ -143,16 +142,18 @@ export default function ReceivePage() {
         address: arcAddress,
         hint: "USDC or EURC on Arc",
       },
-      ...STATIC_EXTRA_TABS.map((s) => {
+      ...STATIC_EXTRA_TABS.flatMap((s) => {
         const hit = extraByKey.get(s.key);
-        return {
-          key: s.key,
-          label: s.label,
-          address: hit?.address ?? "",
-          hint: `USDC on ${s.label} — auto-bridges to Arc`,
-          usdcBalance: hit?.usdcBalance,
-          pending: !hit,
-        };
+        if (!hit) return [];
+        return [
+          {
+            key: s.key,
+            label: s.label,
+            address: hit.address,
+            hint: `USDC on ${s.label} — auto-bridges to Arc`,
+            usdcBalance: hit.usdcBalance,
+          },
+        ];
       }),
     ];
   }, [arcAddress, extras]);

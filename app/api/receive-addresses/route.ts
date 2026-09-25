@@ -8,9 +8,11 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
-/** GET — return all per-chain receive addresses for Universal Receive,
+/** GET — return the per-chain receive addresses for Universal Receive,
  * lazily provisioning Circle wallets on first call. Each entry includes the
- * current USDC balance on that chain so the UI can offer a manual sweep. */
+ * current USDC balance on that chain so the UI can offer a manual sweep.
+ * Chains without a gas service wallet are left out unless USDC already sits
+ * there, so no one is offered an address whose deposits can't reach Arc. */
 export async function GET() {
   try {
     const session = await requireSessionUser();
@@ -26,7 +28,9 @@ export async function GET() {
         return { ...a, usdcBalance };
       }),
     );
-    return NextResponse.json({ addresses: enriched });
+    return NextResponse.json({
+      addresses: enriched.filter((a) => a.enabled !== false || a.usdcBalance > 0),
+    });
   } catch (err) {
     console.error("[Glide] receive-addresses:", err);
     return NextResponse.json({ error: safeApiError(err) }, { status: 502 });
