@@ -166,6 +166,12 @@ body {
   background-color: var(--glide-chrome);
 }
 
+/* Fixed full-screen shells: stretch past a viewport that iOS sizes short of
+   the screen (case B in lib/viewport-script.ts). 0 everywhere else. */
+.glide-full-screen {
+  bottom: calc(-1 * var(--glide-shell-extend, 0px));
+}
+
 body {
   color: var(--glide-text);
   -webkit-font-smoothing: antialiased;
@@ -1534,6 +1540,7 @@ html[data-splash] .glide-splash {
   display: flex;
   align-items: center;
   justify-content: center;
+  bottom: calc(-1 * var(--glide-shell-extend, 0px));
   background-color: #0A2F5C; /* sampled by iOS for the bars */
   background-image:
     radial-gradient(

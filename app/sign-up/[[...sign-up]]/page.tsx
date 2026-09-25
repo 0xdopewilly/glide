@@ -16,7 +16,7 @@ const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-se
 export default function SignUpPage() {
   return (
     <div
-      className="fixed inset-0 flex w-full flex-col overflow-y-auto overflow-x-hidden"
+      className="glide-full-screen fixed inset-0 flex w-full flex-col overflow-y-auto overflow-x-hidden"
       style={{
         fontFamily: jakarta,
         backgroundColor: "var(--glide-chrome)",
