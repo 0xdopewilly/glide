@@ -82,104 +82,76 @@
 .dark,
 [data-theme="dark"] {
   color-scheme: dark;
-  /* glidepay dark — violet (the reference design the user picked,
-     2026-09-25): a lavender-to-indigo gradient page (.glide-bg-wash), white
-     content cards, frosted-glass controls, a white tab bar. Text on the
-     gradient is white; inside white cards the tokens are rescoped (see
-     "White cards on the violet theme" below). */
+  /* glidepay dark — the navy from glidepay.cash (the user asked for it,
+     2026-09-25): #062448 page, #0A2F5C / #0D3568 cards, #5B3DF5 accent,
+     white text, #A9B7D0 secondary text. Layout stays the reference one. */
 
-  /* Filled buttons on the gradient are white with violet text. */
-  --glide-primary: #FFFFFF;
-  --glide-primary-hover: #F1EDFF;
-  --glide-on-primary: #2E1F86;
+  --glide-primary: #5B3DF5;
+  --glide-primary-hover: #4A2EE0;
+  --glide-on-primary: #FFFFFF;
   --glide-on-surface: #FFFFFF;
-  --glide-on-surface-variant: rgba(255, 255, 255, 0.76);
-  --glide-on-surface-elevated: #17153B;
-  --glide-on-elevated: #17153B;
-  --glide-on-elevated-variant: #6F6C90;
-  --glide-elevated-border: rgba(23, 21, 59, 0.06);
-  --glide-outline: rgba(255, 255, 255, 0.22);
-  --glide-error: #FF7A7A;
+  --glide-on-surface-variant: #A9B7D0;
+  --glide-on-surface-elevated: #FFFFFF;
+  --glide-on-elevated: #FFFFFF;
+  --glide-on-elevated-variant: #A9B7D0;
+  --glide-elevated-border: rgba(255, 255, 255, 0.08);
+  --glide-outline: rgba(255, 255, 255, 0.08);
+  --glide-error: #F87171;
 
   /* Surfaces */
-  --glide-bg: #3A2A9C;
-  --glide-shell: #3A2A9C;
-  --glide-surface: #3A2A9C;
-  --glide-surface-elevated: #FFFFFF;
-  --glide-surface-container: rgba(255, 255, 255, 0.14);
-  --glide-surface-container-high: rgba(255, 255, 255, 0.2);
-  --glide-nav-surface: #FFFFFF;
-  --glide-nav-active: #6B4CF2;
-  --glide-nav-inactive: #9C99B8;
-  --glide-balance-cents: #B9A6FF;
-  --glide-primary-container: rgba(255, 255, 255, 0.2);
-  --glide-success-container: rgba(61, 220, 151, 0.2);
+  --glide-bg: #062448;
+  --glide-shell: #062448;
+  --glide-surface: #062448;
+  --glide-surface-elevated: #0D3568;
+  --glide-surface-container: rgba(255, 255, 255, 0.07);
+  --glide-surface-container-high: rgba(255, 255, 255, 0.11);
+  --glide-nav-surface: #0A2F5C;
+  --glide-nav-active: #9D86FF;
+  --glide-nav-inactive: #7C8AA8;
+  --glide-balance-cents: #7C8AA8;
+  --glide-primary-container: rgba(91, 61, 245, 0.18);
+  --glide-success-container: rgba(22, 199, 132, 0.18);
 
   /* Decorative mesh / waveform tint (used by hero sound-wave SVG, etc.) */
-  --glide-mesh-wave: rgba(255, 255, 255, 0.22);
+  --glide-mesh-wave: rgba(255, 255, 255, 0.12);
 
   /* Legacy tokens — remapped */
   --glide-text: #FFFFFF;
-  --glide-muted: rgba(255, 255, 255, 0.76);
-  --glide-border: rgba(255, 255, 255, 0.2);
-  --glide-input: rgba(255, 255, 255, 0.14);
-  --glide-accent: #FFFFFF;
-  --glide-accent-hover: #F1EDFF;
-  --glide-success: #3DDC97;
-  --glide-on-nav-inactive: #9C99B8;
-  --glide-violet: #6B4CF2;
+  --glide-muted: #A9B7D0;
+  --glide-border: rgba(255, 255, 255, 0.08);
+  --glide-input: #0A2F5C;
+  --glide-accent: #9D86FF;
+  --glide-accent-hover: #B3A1FF;
+  --glide-success: #16C784;
+  --glide-on-nav-inactive: #7C8AA8;
+  --glide-violet: #5B3DF5;
 
-  --glide-accent-warm: #FFB3C7;
+  --glide-accent-warm: #4A2EE0;
 
-  /* Hero cards (Savings) — frosted glass on the gradient */
-  --glide-hero-gradient: linear-gradient(150deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.1) 100%);
+  /* Hero cards (Savings) — brand purple on navy */
+  --glide-hero-gradient: linear-gradient(150deg, #7C5CFF 0%, #5B3DF5 55%, #4A2EE0 100%);
 
-  --glide-gradient-from: rgba(186, 160, 255, 0.45);
-  --glide-gradient-to: #3A2A9C;
+  --glide-gradient-from: rgba(91, 61, 245, 0.18);
+  --glide-gradient-to: #062448;
   --glide-glow-primary: transparent;
   --glide-glow-secondary: transparent;
   --glide-glow-accent: transparent;
   --glide-glow-warm: transparent;
 }
 
-/* White cards on the violet theme: anything drawn on --glide-surface-elevated
-   (white) gets dark text and violet accents, so pills, switches, icon tiles
-   and links inside it stay visible. Matches by the token name in the class
-   or inline style, so every existing card is covered. */
-.dark :is(.glide-surface-card, .glide-light-sheet, [class*="surface-elevated"], [style*="surface-elevated"]) {
-  --glide-text: #17153B;
-  --glide-muted: #6F6C90;
-  --glide-on-surface: #17153B;
-  --glide-on-surface-variant: #6F6C90;
-  --glide-surface-container: #F4F2FF;
-  --glide-surface-container-high: #EEEAFF;
-  --glide-border: rgba(23, 21, 59, 0.09);
-  --glide-elevated-border: rgba(23, 21, 59, 0.06);
-  --glide-input: #F4F2FF;
-  --glide-primary: #6B4CF2;
-  --glide-primary-hover: #5A3BE0;
-  --glide-on-primary: #FFFFFF;
-  --glide-primary-container: rgba(107, 76, 242, 0.12);
-  --glide-accent: #6B4CF2;
-  --glide-accent-hover: #5A3BE0;
-  --glide-success: #0E9F6E;
-  --glide-success-container: rgba(14, 159, 110, 0.12);
-  --glide-error: #E5484D;
-}
+
 
 /* Under the iOS status bar and behind the tab bar: match the gradient top
    and the white bar, so no strip of page background ever shows. */
-/* Home's lower half, per the reference: a light lavender sheet that starts
-   behind the middle of the Smart Assistant card. Tokens are rescoped above
-   (dark text); the Savings card turns solid violet on it. */
+/* Home's lower half, per the reference: a sheet that starts behind the
+   middle of the Smart Assistant card. On navy it's a slightly lifted navy. */
 .dark .glide-light-sheet {
-  background: linear-gradient(180deg, transparent 0, transparent 72px, #F3EFFF 72px);
-  --glide-hero-gradient: linear-gradient(150deg, #9B7CFF 0%, #6B4CF2 55%, #5238D6 100%);
+  background: linear-gradient(180deg, transparent 0, transparent 72px, #08294F 72px);
 }
 
 html.dark,
 html.dark body {
-  background: linear-gradient(180deg, #22105A 0%, #22105A 50%, #FFFFFF 50%, #FFFFFF 100%);
+  background: linear-gradient(180deg, #0A2F5C 0%, #0A2F5C 50%, #0A2F5C 50%, #0A2F5C 100%);
 }
 
 body {
@@ -235,14 +207,13 @@ body {
   opacity: 1;
 }
 
-/* Deep violet, per the reference: dark indigo-purple at the top, a violet
-   glow behind the balance, a warm glow low on the left. Static. */
+/* glidepay.cash navy: a lifted navy top with a soft brand-purple glow behind
+   the balance, settling into #062448. Static. */
 .dark .glide-bg-wash {
   background:
-    radial-gradient(ellipse 85% 42% at 50% 36%, rgba(146, 96, 255, 0.58) 0%, transparent 70%),
-    radial-gradient(ellipse 70% 38% at 100% 6%, rgba(120, 80, 240, 0.35) 0%, transparent 70%),
-    radial-gradient(ellipse 90% 45% at 0% 100%, rgba(255, 140, 130, 0.22) 0%, transparent 70%),
-    linear-gradient(180deg, #22105A 0%, #371B86 38%, #4726AC 70%, #3A1E8E 100%);
+    radial-gradient(ellipse 85% 42% at 50% 30%, rgba(91, 61, 245, 0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 38% at 100% 4%, rgba(91, 61, 245, 0.14) 0%, transparent 70%),
+    linear-gradient(180deg, #0A2F5C 0%, #083063 26%, #062448 62%, #062448 100%);
 }
 
 /* Brand glow utility — apply sparingly to the user's primary focal points
@@ -1554,11 +1525,11 @@ html[data-splash] .glide-splash {
   background:
     radial-gradient(
       ellipse 90% 55% at 50% 42%,
-      rgba(200, 180, 255, 0.5) 0%,
-      rgba(125, 95, 255, 0.25) 42%,
+      rgba(91, 61, 245, 0.35) 0%,
+      rgba(91, 61, 245, 0.12) 42%,
       transparent 75%
     ),
-    linear-gradient(180deg, #22105A 0%, #3A1C8C 50%, #4726AC 100%);
+    linear-gradient(180deg, #0A2F5C 0%, #062448 60%, #062448 100%);
 }
 html[data-splash="leaving"] .glide-splash {
   pointer-events: none;

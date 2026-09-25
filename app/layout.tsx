@@ -36,7 +36,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F7F9FC" },
-    { media: "(prefers-color-scheme: dark)", color: "#22105A" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A2F5C" },
   ],
 };
 
@@ -59,6 +59,12 @@ export const metadata: Metadata = {
     title: "glidepay",
     capable: true,
     statusBarStyle: "black-translucent",
+  },
+  // Next emits only the generic `mobile-web-app-capable`; iOS still keys the
+  // full-screen web app (drawing under the status bar and home indicator,
+  // instead of black bars) off Apple's legacy tag.
+  other: {
+    "apple-mobile-web-app-capable": "yes",
   },
   openGraph: {
     type: "website",

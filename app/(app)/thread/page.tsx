@@ -184,7 +184,7 @@ function Bubble({ item }: { item: ThreadItem }) {
         className={`max-w-[78%] overflow-hidden rounded-3xl ${mine ? "rounded-br-lg" : "rounded-bl-lg"}`}
         style={
           mine
-            ? { background: "linear-gradient(150deg, #9B7CFF 0%, #6B4CF2 100%)", color: "#FFFFFF" }
+            ? { background: "linear-gradient(150deg, #7C5CFF 0%, #5B3DF5 100%)", color: "#FFFFFF" }
             : {
                 background: "var(--glide-surface-container-high)",
                 border: "1px solid var(--glide-border)",

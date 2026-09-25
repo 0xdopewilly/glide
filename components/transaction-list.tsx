@@ -25,7 +25,7 @@ const KIND_VISUALS: Record<
   swap: {
     Icon: ArrowLeftRight,
     iconBg: "var(--glide-primary-container)",
-    iconColor: "var(--glide-primary)",
+    iconColor: "var(--glide-accent)",
   },
   bridge: {
     Icon: Link2,
@@ -225,7 +225,7 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
       ? "var(--glide-success)"
       : tx.variant === "debit"
         ? "var(--glide-error)"
-        : "var(--glide-primary)";
+        : "var(--glide-accent)";
 
   const title = buildTitle(tx);
   const subtitle = buildSubtitle(tx);

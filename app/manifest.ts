@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
-    // Violet: the OS launch screen blends into the animated splash.
-    background_color: "#371B86",
+    // Navy: the OS launch screen blends into the animated splash.
+    background_color: "#062448",
     theme_color: "#F7F9FC",
     icons: [
       {
