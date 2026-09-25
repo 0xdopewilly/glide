@@ -29,11 +29,12 @@ export async function createGlideWallet(): Promise<GlideWallet> {
   return createWalletOnChain(GLIDE_BLOCKCHAIN);
 }
 
-/** Create a Circle SCA on any supported blockchain. Used by Universal Receive
- * to spin up Base/Eth/Polygon/Arbitrum wallets for the same wallet set so the
- * user has one identity across chains. */
+/** Create a Circle wallet (an SCA by default) on any supported blockchain.
+ * Used by Universal Receive to spin up Base/Eth/Polygon/Arbitrum wallets for
+ * the same wallet set so the user has one identity across chains. */
 export async function createWalletOnChain(
   blockchain: string,
+  accountType: "SCA" | "EOA" = "SCA",
 ): Promise<GlideWallet> {
   const initialized = createCircleClient();
   if ("error" in initialized) throw new Error(initialized.error);
@@ -45,7 +46,7 @@ export async function createWalletOnChain(
     walletSetId,
     blockchains: [blockchain as Blockchain],
     count: 1,
-    accountType: "SCA",
+    accountType,
   });
 
   const wallet = walletsResponse.data?.wallets?.[0];

@@ -41,6 +41,29 @@ export async function upsertUserFromClerk(input: {
   });
 }
 
+/** Moves a user row, with its wallets and history, to a new id (a Clerk
+ * instance move gives every returning user a new id). Relations follow via
+ * ON UPDATE CASCADE; the user-id columns that aren't relations move here, in
+ * the same transaction. */
+export async function relinkUser(fromId: string, toId: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: fromId }, data: { id: toId } }),
+    prisma.paymentRequest.updateMany({
+      where: { paidByUserId: fromId },
+      data: { paidByUserId: toId },
+    }),
+    prisma.paymentRequest.updateMany({
+      where: { targetUserId: fromId },
+      data: { targetUserId: toId },
+    }),
+    prisma.automationRun.updateMany({
+      where: { userId: fromId },
+      data: { userId: toId },
+    }),
+    prisma.$executeRaw`UPDATE "Transaction" SET "metadata" = jsonb_set("metadata", '{fromUserId}', to_jsonb(${toId}::text)) WHERE "metadata"->>'fromUserId' = ${fromId}`,
+  ]);
+}
+
 export async function getUserById(userId: string): Promise<GlideDbUser | null> {
   return prisma.user.findUnique({ where: { id: userId } });
 }

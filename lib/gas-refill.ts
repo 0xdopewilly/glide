@@ -57,8 +57,9 @@ const REFILL_BY_CHAIN: Record<
 
 /** Env var holding the Glide-operated gas service wallet id for a chain,
  * e.g. GLIDE_GAS_WALLET_BASE_SEPOLIA (testnet) or GLIDE_GAS_WALLET_BASE
- * (mainnet). The wallet is a Circle SCA holding native gas for refills;
- * provision it via /api/admin/gas-wallet and fund it. */
+ * (mainnet). The wallet is a Circle wallet holding native gas for refills
+ * (the admin tool creates an EOA); provision it via /api/admin/gas-wallet
+ * and fund it. */
 export function gasWalletEnvVar(circleBlockchain: string): string {
   return `GLIDE_GAS_WALLET_${circleBlockchain.replace(/-/g, "_")}`;
 }

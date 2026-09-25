@@ -34,8 +34,10 @@ const SUPPORTED: Record<string, { envVar: string; funding: string }> =
     }),
   );
 
-/** One-time admin tool: provisions a new Circle SCA on the given chain to
- * use as the Universal Receive gas service wallet. Returns the wallet id +
+/** One-time admin tool: provisions a new Circle EOA on the given chain to
+ * use as the Universal Receive gas service wallet. An EOA, not an SCA: it
+ * only ever sends native gas, pays its own fees from that balance, and so
+ * doesn't depend on a Gas Station policy for the chain. Returns the wallet id +
  * address. The id should be set as the matching env var on Vercel; the
  * address must be funded with native gas (faucet on testnet, real funds on
  * mainnet) so it can refill user
@@ -89,7 +91,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const wallet = await createWalletOnChain(chain);
+  const wallet = await createWalletOnChain(chain, "EOA");
 
   return NextResponse.json({
     chain,
