@@ -21,20 +21,22 @@ const config: CapacitorConfig = {
     cleartext: false,
     androidScheme: "https",
   },
-  backgroundColor: "#F7F9FC",
+  backgroundColor: "#062448",
   ios: {
-    contentInset: "always",
-    backgroundColor: "#F7F9FC",
+    // Edge to edge: the web app draws under the status bar and home
+    // indicator itself (viewport-fit=cover + safe-area padding).
+    contentInset: "never",
+    backgroundColor: "#062448",
   },
   android: {
-    backgroundColor: "#F7F9FC",
+    backgroundColor: "#062448",
     allowMixedContent: false,
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 1200,
       launchAutoHide: true,
-      backgroundColor: "#F7F9FC",
+      backgroundColor: "#062448",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
@@ -45,9 +47,9 @@ const config: CapacitorConfig = {
       presentationOptions: ["badge", "sound", "alert"],
     },
     StatusBar: {
-      backgroundColor: "#F7F9FC",
-      style: "LIGHT",
-      overlaysWebView: false,
+      backgroundColor: "#062448",
+      style: "DARK",
+      overlaysWebView: true,
     },
   },
 };

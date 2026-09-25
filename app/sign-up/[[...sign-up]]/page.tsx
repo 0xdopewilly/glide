@@ -4,12 +4,19 @@ import { ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+// Pre-rendered at build so it opens instantly from the CDN; Clerk's later
+// steps (/sign-up/factor-one, …) still render on demand.
+export const dynamicParams = true;
+export function generateStaticParams() {
+  return [{ "sign-up": [] }];
+}
+
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
 
 export default function SignUpPage() {
   return (
     <div
-      className="relative flex min-h-dvh w-full flex-col overflow-hidden"
+      className="fixed inset-0 flex w-full flex-col overflow-y-auto overflow-x-hidden"
       style={{
         fontFamily: jakarta,
         background: "var(--glide-bg)",
