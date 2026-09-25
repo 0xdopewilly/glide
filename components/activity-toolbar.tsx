@@ -37,13 +37,7 @@ export function ActivityToolbar({
   refreshing?: boolean;
 }) {
   return (
-    <div
-      className="sticky top-0 z-10 -mx-6 border-b px-6 pb-3 pt-1"
-      style={{
-        borderColor: "var(--glide-border)",
-        background: "var(--glide-bg)",
-      }}
-    >
+    <div className="pb-2 pt-1">
       <div className="flex gap-2 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {KIND_FILTERS.map((f) => (
           <FilterChip
@@ -86,7 +80,7 @@ export function ActivityToolbar({
         </button>
       </div>
 
-      <p className="glide-label-mono mt-2 text-[10px] font-bold tabular-nums text-[var(--glide-muted)]">
+      <p className="mt-3 px-1 text-[13px] font-medium tabular-nums text-[var(--glide-muted)]">
         {count === 0
           ? "No transactions"
           : count === 1

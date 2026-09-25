@@ -40,6 +40,11 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  experimental: {
+    // Native push/pop screen transitions via React <ViewTransition>
+    // (app/(app)/template.tsx). Unsupported browsers just switch screens.
+    viewTransition: true,
+  },
   async redirects() {
     return [
       { source: "/privacy", destination: "https://glidepay.cash/privacy", permanent: true },

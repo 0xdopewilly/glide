@@ -107,7 +107,7 @@ export function SavingsCard({
       className={`shrink-0 overflow-hidden rounded-3xl border p-5 ${className}`}
       style={{
         background:
-          "linear-gradient(150deg, #7C5CFF 0%, #5B3DF5 55%, #4A2EE0 100%)",
+          "var(--glide-hero-gradient)",
         borderColor: "transparent",
       }}
     >

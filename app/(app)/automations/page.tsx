@@ -249,7 +249,7 @@ export default function AutomationsPage() {
             className="mt-4 rounded-3xl border p-5"
             style={{
               background:
-                "linear-gradient(150deg, #7C5CFF 0%, #5B3DF5 55%, #4A2EE0 100%)",
+                "var(--glide-hero-gradient)",
               borderColor: "transparent",
             }}
           >
@@ -329,7 +329,7 @@ export default function AutomationsPage() {
         {/* Pending approvals */}
         {approvals.length > 0 ? (
           <>
-            <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+            <p className="mt-6 px-1 text-[13px] font-semibold text-[var(--glide-muted)]">
               Needs your approval
             </p>
             <ul className="mt-3 space-y-2">
@@ -373,7 +373,7 @@ export default function AutomationsPage() {
         ) : null}
 
         {/* Active rules */}
-        <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+        <p className="mt-6 px-1 text-[13px] font-semibold text-[var(--glide-muted)]">
           Active
         </p>
         {activeRules.length > 0 ? (
@@ -416,7 +416,7 @@ export default function AutomationsPage() {
         )}
 
         {/* Templates */}
-        <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+        <p className="mt-6 px-1 text-[13px] font-semibold text-[var(--glide-muted)]">
           Start from a template
         </p>
         <div className="mt-3 grid grid-cols-2 gap-3">
@@ -449,7 +449,7 @@ export default function AutomationsPage() {
         {/* Paused rules */}
         {pausedRules.length > 0 ? (
           <>
-            <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+            <p className="mt-6 px-1 text-[13px] font-semibold text-[var(--glide-muted)]">
               Paused
             </p>
             <ul className="mt-3 space-y-2">
@@ -478,7 +478,7 @@ export default function AutomationsPage() {
         ) : null}
 
         {/* Permissions & approvals policy */}
-        <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+        <p className="mt-6 px-1 text-[13px] font-semibold text-[var(--glide-muted)]">
           Permissions
         </p>
         <div className="mt-3 rounded-2xl border p-4" style={cardStyle}>
@@ -526,7 +526,7 @@ export default function AutomationsPage() {
         </div>
 
         {/* Run history */}
-        <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+        <p className="mt-6 px-1 text-[13px] font-semibold text-[var(--glide-muted)]">
           Recent activity
         </p>
         {runs.length > 0 ? (

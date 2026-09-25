@@ -1,5 +1,5 @@
 self.addEventListener("push", (event) => {
-  let data = { title: "Glide", body: "You have a new update", url: "/" };
+  let data = { title: "glidepay", body: "You have a new update", url: "/" };
   try {
     if (event.data) data = { ...data, ...event.data.json() };
   } catch {
@@ -10,7 +10,7 @@ self.addEventListener("push", (event) => {
     Promise.all([
       self.registration.showNotification(data.title, {
         body: data.body,
-        icon: "/logo-mark.png",
+        icon: "/icon-192.png",
         badge: "/logo-mark.png",
         data: { url: data.url },
       }),

@@ -4,6 +4,8 @@ import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorReporter } from "@/components/error-reporter";
+import { LaunchSplash } from "@/components/launch-splash";
+import { SPLASH_BOOT_SCRIPT } from "@/lib/splash-script";
 import { AuthProvider } from "@/context/auth-context";
 import { WalletProvider } from "@/context/wallet-context";
 
@@ -34,7 +36,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#F7F9FC" },
-    { media: "(prefers-color-scheme: dark)", color: "#062448" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B1F66" },
   ],
 };
 
@@ -94,7 +96,12 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable} h-full`}
     >
+      <head>
+        {/* Runs before first paint: see components/launch-splash.tsx. */}
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_BOOT_SCRIPT }} />
+      </head>
       <body className="h-full font-sans antialiased" suppressHydrationWarning>
+        <LaunchSplash />
         <ErrorReporter />
         <ClerkProvider
           signInUrl="/sign-in"

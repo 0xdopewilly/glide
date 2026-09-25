@@ -2,8 +2,10 @@
 
 import { useAuth } from "@/context/auth-context";
 import { SettingsRow, SettingsSwitch } from "@/components/settings-list";
-import { Bell, BellOff } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Bell, BellOff, BellRing } from "lucide-react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+
+const noopSubscribe = () => () => {};
 
 function urlBase64ToUint8Array(base64: string) {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -18,18 +20,17 @@ export function PushNotificationsToggle() {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [supported, setSupported] = useState(false);
+  /** null = idle, "sending", "sent", or an error message. */
+  const [testState, setTestState] = useState<string | null>(null);
 
   const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-
-  useEffect(() => {
-    setSupported(
-      typeof window !== "undefined" &&
-        "serviceWorker" in navigator &&
-        "PushManager" in window &&
-        Boolean(vapidPublic),
-    );
-  }, [vapidPublic]);
+  // Read synchronously on the client (server snapshot: false), so opening
+  // Settings doesn't flash "Not available in this browser" first.
+  const supported = useSyncExternalStore(
+    noopSubscribe,
+    () => "serviceWorker" in navigator && "PushManager" in window && Boolean(vapidPublic),
+    () => false,
+  );
 
   const subscribe = useCallback(async () => {
     if (!user || !vapidPublic) return false;
@@ -101,15 +102,42 @@ export function PushNotificationsToggle() {
     })();
   };
 
+  const sendTest = () => {
+    setTestState("sending");
+    void fetch("/api/push/test", { method: "POST" })
+      .then(async (res) => {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setTestState(res.ok ? "sent" : (data.error ?? "Couldn't send the test alert."));
+      })
+      .catch(() => setTestState("Couldn't send the test alert."));
+  };
+
   return (
-    <SettingsRow
-      icon={enabled ? Bell : BellOff}
-      title="Payment alerts"
-      subtitle="Get notified when money arrives"
-      trailing={<SettingsSwitch checked={enabled} />}
-      onClick={toggle}
-      disabled={busy}
-      switchChecked={enabled}
-    />
+    <>
+      <SettingsRow
+        icon={enabled ? Bell : BellOff}
+        title="Payment alerts"
+        subtitle="Get notified when money arrives"
+        trailing={<SettingsSwitch checked={enabled} />}
+        onClick={toggle}
+        disabled={busy}
+        switchChecked={enabled}
+      />
+      {enabled ? (
+        <SettingsRow
+          icon={BellRing}
+          title="Send a test alert"
+          subtitle={
+            testState === "sending"
+              ? "Sending…"
+              : testState === "sent"
+                ? "Sent — check your notifications"
+                : testState ?? "Check alerts reach this device"
+          }
+          onClick={sendTest}
+          disabled={testState === "sending"}
+        />
+      ) : null}
+    </>
   );
 }

@@ -3,7 +3,9 @@
 import { BottomNav } from "@/components/bottom-nav";
 import { GlideGradient } from "@/components/glide-gradient";
 import { PinGate } from "@/components/pin-gate";
+import { navDirection } from "@/lib/nav-direction";
 import { usePathname } from "next/navigation";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 // Flows and pushed screens (back arrow, no tab bar). Tabs: /, /payments,
 // /automations, /ask.
@@ -18,6 +20,7 @@ const FULL_BLEED_ROUTES = [
   "/activity",
   "/contacts",
   "/notifications",
+  "/search",
 ];
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
@@ -27,9 +30,42 @@ function isFullBleedRoute(pathname: string, route: string) {
   return pathname === route || pathname.startsWith(`${route}/`);
 }
 
+/** Sets <html data-nav="push|pop|tab"> for each navigation, read by the
+ * screen-transition CSS. It runs as a layout effect, inside the commit the
+ * view transition wraps, so the direction is in place before the browser
+ * animates. It's cleared shortly after, so an unrelated later transition
+ * (e.g. a data refresh) never replays a slide. */
+function useNavDirection(pathname: string) {
+  const prevRef = useRef(pathname);
+  const poppedRef = useRef(false);
+  const clearRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    const onPop = () => {
+      poppedRef.current = true;
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  useLayoutEffect(() => {
+    const dir = navDirection(prevRef.current, pathname, poppedRef.current);
+    prevRef.current = pathname;
+    poppedRef.current = false;
+    if (!dir) return;
+    const root = document.documentElement;
+    root.dataset.nav = dir;
+    window.clearTimeout(clearRef.current);
+    clearRef.current = window.setTimeout(() => {
+      delete root.dataset.nav;
+    }, 600);
+  }, [pathname]);
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const hideNav = FULL_BLEED_ROUTES.some((r) => isFullBleedRoute(pathname, r));
+  useNavDirection(pathname);
 
   return (
     <div

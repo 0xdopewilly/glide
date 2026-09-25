@@ -1,10 +1,11 @@
 "use client";
 
-import { AppHeader } from "@/components/app-header";
 import { MoreActionsSheet } from "@/components/more-actions-sheet";
+import { NotificationBell } from "@/components/notification-bell";
 import { SavingsCard } from "@/components/savings-card";
 import { TokenBalances } from "@/components/token-balances";
 import { TransactionList } from "@/components/transaction-list";
+import { UserAvatar } from "@/components/user-avatar";
 import { usePrivacy } from "@/context/privacy-context";
 import { useWallet } from "@/context/wallet-context";
 import { netFlowUsd } from "@/lib/tokens";
@@ -15,6 +16,7 @@ import {
   Eye,
   EyeOff,
   MoreHorizontal,
+  Search,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
@@ -66,7 +68,23 @@ export default function HomePage() {
 
   return (
     <>
-      <AppHeader showNotifications />
+      {/* Revolut-style header: avatar → Settings, search, alerts. */}
+      <header className="relative z-10 flex shrink-0 items-center gap-3 px-5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <UserAvatar size="sm" linked />
+        <Link
+          href="/search"
+          prefetch
+          className="glide-tap flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full px-4 text-[15px] font-medium"
+          style={{
+            background: "color-mix(in srgb, var(--glide-surface-container-high) 78%, transparent)",
+            color: "var(--glide-on-surface-variant)",
+          }}
+        >
+          <Search className="h-[18px] w-[18px] shrink-0" strokeWidth={2.25} aria-hidden />
+          <span className="truncate">Search</span>
+        </Link>
+        <NotificationBell />
+      </header>
 
       <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6">
         {error ? (
@@ -79,15 +97,20 @@ export default function HomePage() {
         ) : null}
 
         {/* BALANCE */}
-        <section className="mt-6 flex shrink-0 flex-col items-center text-center">
+        <section className="mt-10 flex shrink-0 flex-col items-center text-center">
           <button
             type="button"
             onClick={() => setHideBalance(!hideBalance)}
             aria-label={hideBalance ? "Show balance" : "Hide balance"}
             aria-pressed={hideBalance}
-            className="glide-tap inline-flex items-center gap-1.5 text-[13px] font-medium text-[color:var(--glide-on-surface-variant)]"
+            className="glide-tap inline-flex items-center gap-1.5 text-[14px] font-medium text-[color:var(--glide-on-surface-variant)]"
           >
-            Spendable
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ background: "var(--glide-success)" }}
+              aria-hidden
+            />
+            Main · USD
             {hideBalance ? (
               <EyeOff className="h-3.5 w-3.5" strokeWidth={2.25} aria-hidden />
             ) : (
@@ -96,8 +119,8 @@ export default function HomePage() {
           </button>
 
           <p
-            className="font-display mt-2 text-[44px] font-bold leading-none tracking-tight text-[color:var(--glide-on-surface)] tabular-nums"
-            style={{ minHeight: "2.75rem" }}
+            className="font-display mt-3 text-[52px] font-bold leading-none tracking-[-0.03em] text-[color:var(--glide-on-surface)] tabular-nums"
+            style={{ minHeight: "3.25rem" }}
           >
             {hideBalance ? "••••" : formattedTotalUsd}
           </p>
@@ -123,7 +146,7 @@ export default function HomePage() {
         </section>
 
         {/* QUICK ACTIONS */}
-        <nav aria-label="Quick actions" className="mt-7 grid shrink-0 grid-cols-4 gap-2">
+        <nav aria-label="Quick actions" className="mt-10 grid shrink-0 grid-cols-4 gap-2">
           {QUICK_ACTIONS.map(({ href, label, icon }) => (
             <Link
               key={href}
@@ -151,35 +174,31 @@ export default function HomePage() {
           </button>
         </nav>
 
-        {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
-        <SavingsCard className="mt-7" onChange={() => void refresh()} />
-
-        {/* ASSETS */}
-        <div className="mt-7 shrink-0">
-          <TokenBalances tokens={tokens} loading={loading} />
-        </div>
-
-        {/* TRANSACTIONS */}
-        <section className="mt-7 shrink-0 pb-4">
-          <div className="mb-2 flex items-center justify-between px-1">
-            <h2 className="text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
-              Transactions
-            </h2>
-            <Link
-              href="/activity"
-              prefetch
-              className="glide-tap text-[13px] font-semibold"
-              style={{ color: "var(--glide-accent)" }}
-            >
-              See all
-            </Link>
-          </div>
+        {/* TRANSACTIONS — card with See all inside, Revolut style */}
+        <section className="mt-8 shrink-0" aria-label="Transactions">
           <TransactionList
             transactions={recentTransactions}
             loading={transactionsLoading}
             emptyMessage="Your activity will show up here"
+            footer={
+              <Link
+                href="/activity"
+                prefetch
+                className="glide-tap block px-4 pb-4 pt-2 text-center text-[15px] font-semibold text-[var(--glide-text)]"
+              >
+                See all
+              </Link>
+            }
           />
         </section>
+
+        {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
+        <SavingsCard className="mt-6" onChange={() => void refresh()} />
+
+        {/* ASSETS */}
+        <div className="mt-6 shrink-0 pb-4">
+          <TokenBalances tokens={tokens} loading={loading} />
+        </div>
       </div>
 
       {moreOpen ? <MoreActionsSheet onClose={closeMore} /> : null}

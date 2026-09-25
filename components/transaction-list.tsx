@@ -4,6 +4,7 @@ import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
 import { ArrowDown, ArrowLeftRight, ArrowUp, Link2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 const KIND_VISUALS: Record<
   TransactionKind,
@@ -115,12 +116,15 @@ export function TransactionList({
   // compiling — the row visual is the same on both pages.
   showTime: _showTime = false,
   grouped = false,
+  footer,
 }: {
   transactions: GlideTransaction[];
   loading?: boolean;
   emptyMessage?: string;
   showTime?: boolean;
   grouped?: boolean;
+  /** Rendered inside the same card, under the rows (e.g. "See all"). */
+  footer?: ReactNode;
 }) {
   if (loading && transactions.length === 0) {
     return <TransactionSkeleton />;
@@ -128,21 +132,31 @@ export function TransactionList({
 
   if (transactions.length === 0 && !grouped) {
     return (
-      <div className="glide-surface-card rounded-2xl px-4 py-8 text-center text-sm text-[var(--glide-muted)]">
-        {emptyMessage}
+      <div className="glide-surface-card overflow-hidden rounded-2xl">
+        <p className="px-4 py-8 text-center text-sm text-[var(--glide-muted)]">
+          {emptyMessage}
+        </p>
+        {footer}
       </div>
     );
   }
 
-  return (
-    <ul className="glide-surface-card overflow-hidden rounded-2xl py-1">
-      {transactions.map((tx) => (
-        <li key={`${tx.id}-${tx.createdAt ?? ""}`}>
-          <TransactionRow tx={tx} />
-        </li>
-      ))}
-    </ul>
-  );
+  const rows = transactions.map((tx) => (
+    <li key={`${tx.id}-${tx.createdAt ?? ""}`}>
+      <TransactionRow tx={tx} />
+    </li>
+  ));
+
+  if (footer) {
+    return (
+      <div className="glide-surface-card overflow-hidden rounded-2xl pt-1">
+        <ul>{rows}</ul>
+        {footer}
+      </div>
+    );
+  }
+
+  return <ul className="glide-surface-card overflow-hidden rounded-2xl py-1">{rows}</ul>;
 }
 
 function TransactionRow({ tx }: { tx: GlideTransaction }) {

@@ -1,5 +1,11 @@
 import { claimIncoming, completeSweep, isInboundUsdc } from "@/lib/cctp-receive";
-import { getReceiveChainByCircleBlockchain, RECEIVE_CHAINS } from "@/lib/circle";
+import {
+  getReceiveChainByCircleBlockchain,
+  GLIDE_BLOCKCHAIN,
+  RECEIVE_CHAINS,
+} from "@/lib/circle";
+import { syncCircleTransactionsToDb } from "@/lib/circle-transactions";
+import { prisma } from "@/lib/db";
 import { verifyCircleWebhook } from "@/lib/webhook-signature";
 import { after } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,7 +15,8 @@ export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 /**
- * Circle notification webhook for Universal Receive.
+ * Circle notification webhook: Universal Receive sweeps, and instant alerts
+ * for money arriving on Arc.
  *
  * Two-phase: (1) claim the event atomically via a unique-constrained
  * Transaction row, returning 200 to Circle in <1s so they don't retry; then
@@ -78,6 +85,30 @@ export async function POST(request: NextRequest) {
       ignored: "missing required fields",
       seen: { chain, destinationAddress, amount, sourceTxHash },
     });
+  }
+
+  // Money arriving on Arc itself (from an exchange or any outside wallet):
+  // sync that user's activity now, which records the payment, sends the
+  // push alert and runs their auto-save rules — instead of waiting until
+  // they next open the app. The sync only credits verified tokens, so
+  // airdropped spam stays silent.
+  if (chain === GLIDE_BLOCKCHAIN) {
+    const owner = await prisma.user.findFirst({
+      where: { circleWalletAddress: { equals: destinationAddress, mode: "insensitive" } },
+      select: { id: true, circleWalletId: true },
+    });
+    if (!owner?.circleWalletId) {
+      return NextResponse.json({ ok: true, ignored: "not a glidepay wallet" });
+    }
+    const { id: userId, circleWalletId } = owner;
+    after(async () => {
+      try {
+        await syncCircleTransactionsToDb(userId, circleWalletId);
+      } catch (err) {
+        console.error("[Glide webhook] arc receive sync:", err);
+      }
+    });
+    return NextResponse.json({ ok: true, status: "syncing" });
   }
 
   // Universal Receive sweeps USDC only. Circle notifies for any token that

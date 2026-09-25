@@ -21,14 +21,18 @@ export function configureWebPush() {
   return true;
 }
 
+/** Sends to every device the user enabled alerts on. Returns how many
+ * deliveries the push services accepted. Subscriptions the push service
+ * reports gone (404/410: app uninstalled, alerts revoked) are deleted so
+ * they stop failing on every payment. */
 export async function sendPushToUser(
   userId: string,
   payload: { title: string; body: string; url?: string },
-) {
-  if (!configureWebPush()) return;
+): Promise<{ sent: number; devices: number }> {
+  if (!configureWebPush()) return { sent: 0, devices: 0 };
 
   const subs = await prisma.pushSubscription.findMany({ where: { userId } });
-  if (subs.length === 0) return;
+  if (subs.length === 0) return { sent: 0, devices: 0 };
 
   const body = JSON.stringify({
     title: payload.title,
@@ -36,7 +40,7 @@ export async function sendPushToUser(
     url: payload.url ?? "/notifications",
   });
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     subs.map((sub) =>
       webpush.sendNotification(
         {
@@ -44,9 +48,28 @@ export async function sendPushToUser(
           keys: { p256dh: sub.p256dh, auth: sub.auth },
         },
         body,
+        { TTL: 24 * 60 * 60, urgency: "high" },
       ),
     ),
   );
+
+  const gone: string[] = [];
+  results.forEach((r, i) => {
+    if (r.status === "rejected") {
+      const code = (r.reason as { statusCode?: number })?.statusCode;
+      if (code === 404 || code === 410) gone.push(subs[i].id);
+      else console.warn("[Glide] push delivery failed:", code ?? r.reason);
+    }
+  });
+  if (gone.length) {
+    await prisma.pushSubscription
+      .deleteMany({ where: { id: { in: gone } } })
+      .catch((err) => console.warn("[Glide] push cleanup:", err));
+  }
+  return {
+    sent: results.filter((r) => r.status === "fulfilled").length,
+    devices: subs.length,
+  };
 }
 
 async function notifyUser(
