@@ -72,22 +72,31 @@ export function addressesEqual(a?: string | null, b?: string | null): boolean {
   return a.toLowerCase() === b.toLowerCase();
 }
 
+/** Balance of a verified token by symbol. Unverified tokens are skipped: a
+ * fake "USDC" must never be read as the user's USDC. */
 export function tokenAmountFromBalances(
-  tokens: { symbol: string; amount: number }[],
+  tokens: { symbol: string; amount: number; verified?: boolean }[],
   symbol?: string | null,
 ): number {
   const target = normalizeTokenSymbol(symbol);
-  const row = tokens.find((t) => normalizeTokenSymbol(t.symbol) === target);
+  const row = tokens.find(
+    (t) => t.verified !== false && normalizeTokenSymbol(t.symbol) === target,
+  );
   return row?.amount ?? 0;
 }
 
+/** Dollar total of the wallet. Only verified tokens with a real market value
+ * count: an unverified token (a meme, an airdrop, a fake "USDC") or a token
+ * whose price is unavailable adds nothing. Never falls back to counting one
+ * token as one dollar. */
 export function totalUsdFromTokens(
-  tokens: { usdValue: number; amount: number }[],
+  tokens: { usdValue: number; verified?: boolean }[],
 ): number {
-  return tokens.reduce((sum, t) => {
-    const v = t.usdValue > 0 ? t.usdValue : t.amount > 0 ? t.amount : 0;
-    return sum + v;
-  }, 0);
+  return tokens.reduce(
+    (sum, t) =>
+      t.verified === false || !(t.usdValue > 0) ? sum : sum + t.usdValue,
+    0,
+  );
 }
 
 /** Sum completed credits minus debits from activity (fallback when Circle lags). */
@@ -130,6 +139,9 @@ export function netFlowUsd(
     if (!tx.createdAt) continue;
     const t = new Date(tx.createdAt).getTime();
     if (Number.isNaN(t) || t < since) continue;
+    // Currency-sign rows only ("+$5", "−€3"). An unverified token's label
+    // carries its symbol ("−1,000,000 PEPE") and is not money we can value.
+    if (/[A-Za-z]/.test(tx.amount)) continue;
     const n = parseSignedUsdAmount(tx.amount);
     if (n === null) continue;
     const mag = Math.abs(n);
@@ -141,7 +153,7 @@ export function netFlowUsd(
 
 /** Prefer on-chain totals; fall back to USDC balance, then recent activity. */
 export function resolveWalletTotalUsd(
-  tokens: { usdValue: number; amount: number }[],
+  tokens: { usdValue: number; verified?: boolean }[],
   usdcBalance = 0,
   activityFallback?: number,
 ): number {

@@ -25,7 +25,7 @@ import {
 import { readCachedWallet, writeCachedWallet } from "@/lib/wallet-cache";
 import { playSuccessChime } from "@/lib/success-chime";
 import { haptics } from "@/lib/haptics";
-import { formatStableAmount } from "@/lib/currency-format";
+import { formatStableAmount, formatTokenUnits } from "@/lib/currency-format";
 import { newIdempotencyKey } from "@/lib/format";
 import { requirePin } from "@/lib/pin-gate";
 
@@ -127,6 +127,7 @@ type WalletContextValue = {
       requestCode?: string;
       token?: string;
       idempotencyKey?: string;
+      tokenAddress?: string;
     },
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   swapMoney: (
@@ -501,6 +502,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
          * (PIN prompt re-post, or the user retrying after a timeout with the
          * same key) can never pay twice. */
         idempotencyKey?: string;
+        /** Unverified token: its contract address (the server re-reads the
+         * balance, decimals and symbol from Circle). */
+        tokenAddress?: string;
       },
     ) => {
       if (!wallet) return { ok: false as const, error: "Wallet not ready" };
@@ -518,7 +522,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         const optimistic: GlideTransaction = {
           id: pendingId,
           title: "Sending…",
-          amount: `−${formatStableAmount(value, token)}`,
+          amount: options?.tokenAddress
+            ? `−${formatTokenUnits(value, token)}`
+            : `−${formatStableAmount(value, token)}`,
           variant: "debit",
           meta: "",
           kind: "send",
@@ -542,6 +548,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             note: options?.note,
             requestCode: options?.requestCode,
             idempotencyKey: options?.idempotencyKey ?? newIdempotencyKey(),
+            tokenAddress: options?.tokenAddress,
           },
         );
         if (!res.ok) {

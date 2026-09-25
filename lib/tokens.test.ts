@@ -5,6 +5,8 @@ import {
   ARC_USDC_ERC20_ADDRESS,
   classifyArcToken,
   netFlowUsd,
+  tokenAmountFromBalances,
+  totalUsdFromTokens,
 } from "@/lib/tokens";
 
 const iso = (msAgo: number) => new Date(Date.now() - msAgo).toISOString();
@@ -62,6 +64,38 @@ describe("netFlowUsd", () => {
       netFlowUsd([{ variant: "credit", amount: "+€10.00", createdAt: iso(HOUR) }]),
     ).toBeCloseTo(10, 5);
   });
+
+  it("ignores unverified token amounts", () => {
+    expect(
+      netFlowUsd([
+        { variant: "debit", amount: "−1,000,000 PEPE", createdAt: iso(MIN) },
+        { variant: "credit", amount: "+$5.00", createdAt: iso(MIN) },
+      ]),
+    ).toBeCloseTo(5, 5);
+  });
+});
+
+// The balance is money: unverified tokens and unpriced tokens add nothing,
+// and one token is never assumed to be worth one dollar.
+describe("totalUsdFromTokens", () => {
+  it("sums verified, priced values", () => {
+    expect(
+      totalUsdFromTokens([
+        { usdValue: 100, verified: true },
+        { usdValue: 11.4 },
+      ]),
+    ).toBeCloseTo(111.4, 6);
+  });
+
+  it("ignores unverified tokens and missing prices", () => {
+    expect(
+      totalUsdFromTokens([
+        { usdValue: 50, verified: true },
+        { usdValue: 1_000_000, verified: false },
+        { usdValue: 0, verified: true },
+      ]),
+    ).toBe(50);
+  });
 });
 
 // Tokens must be identified by contract address: anyone can deploy a token
@@ -92,5 +126,18 @@ describe("classifyArcToken", () => {
   it("rejects a non-native token with no address", () => {
     expect(classifyArcToken({ isNative: false })).toBeNull();
     expect(classifyArcToken({})).toBeNull();
+  });
+});
+
+describe("tokenAmountFromBalances", () => {
+  it("never reads an unverified look-alike as the real token", () => {
+    const tokens = [
+      { symbol: "USDC", amount: 1_000_000, verified: false },
+      { symbol: "USDC", amount: 12, verified: true },
+    ];
+    expect(tokenAmountFromBalances(tokens, "USDC")).toBe(12);
+    expect(
+      tokenAmountFromBalances([{ symbol: "USDC", amount: 9, verified: false }], "USDC"),
+    ).toBe(0);
   });
 });

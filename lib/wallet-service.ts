@@ -12,9 +12,15 @@ import {
   addressesEqual,
   classifyArcToken,
   isEurcToken,
-  isUsdcToken,
   normalizeTokenSymbol,
 } from "@/lib/tokens";
+import { getTokenPrices } from "@/lib/prices";
+import {
+  isSuspiciousToken,
+  sanitizeTokenText,
+  TOKEN_NAME_MAX,
+  TOKEN_SYMBOL_MAX,
+} from "@/lib/token-safety";
 import type { GlideTokenBalance, GlideWallet } from "@/lib/types";
 
 const ARC_CHAIN = CHAIN_META["arc-testnet"];
@@ -123,40 +129,133 @@ async function fetchTokenRows(
   return [...byAddress.values(), ...anonymous];
 }
 
-export async function fetchWalletTokenBalances(
-  walletId: string,
-): Promise<GlideTokenBalance[]> {
+/** Amounts of the verified Arc tokens (USDC, EURC, cirBTC), by symbol. No
+ * prices: balance checks on the send path don't need them. */
+async function fetchVerifiedAmounts(walletId: string): Promise<Map<string, number>> {
   const rows = await fetchTokenRows(walletId, classifyArcToken);
   const amounts = new Map<string, number>();
-
   for (const row of rows) {
     if (Number.isNaN(row.amount) || row.amount <= 0) continue;
     const symbol = normalizeTokenSymbol(row.symbol);
     amounts.set(symbol, (amounts.get(symbol) ?? 0) + row.amount);
   }
+  return amounts;
+}
 
-  const balances: GlideTokenBalance[] = ARC_DISPLAY_TOKENS.map((symbol) => ({
-    symbol,
-    amount: amounts.get(symbol) ?? 0,
-    usdValue: amounts.get(symbol) ?? 0,
-    chainId: ARC_CHAIN.id,
-    chainLabel: ARC_CHAIN.label,
-  }));
+/** The verified tokens with USD values: USDC 1:1, EURC and cirBTC at live
+ * prices (0 and `priced: false` when no price is available). */
+export async function fetchWalletTokenBalances(
+  walletId: string,
+): Promise<GlideTokenBalance[]> {
+  const amounts = await fetchVerifiedAmounts(walletId);
+  const needsPrices = (amounts.get("EURC") ?? 0) > 0 || (amounts.get("cirBTC") ?? 0) > 0;
+  const prices = needsPrices ? await getTokenPrices() : null;
 
-  for (const [symbol, amount] of amounts) {
-    if (ARC_DISPLAY_TOKENS.includes(symbol as (typeof ARC_DISPLAY_TOKENS)[number])) {
-      continue;
-    }
-    balances.push({
+  return ARC_DISPLAY_TOKENS.map((symbol) => {
+    const amount = amounts.get(normalizeTokenSymbol(symbol)) ?? 0;
+    const price =
+      symbol === "USDC" ? 1 : symbol === "EURC" ? prices?.EURC : prices?.cirBTC;
+    return {
       symbol,
       amount,
-      usdValue: amount,
+      usdValue: price ? amount * price : 0,
+      priced: symbol === "USDC" || Boolean(price),
+      verified: true,
       chainId: ARC_CHAIN.id,
       chainLabel: ARC_CHAIN.label,
-    });
-  }
+    };
+  });
+}
 
-  return balances;
+const MAX_UNVERIFIED = 50;
+
+type RawBalance = {
+  amount?: string;
+  token?: {
+    tokenAddress?: string;
+    isNative?: boolean;
+    blockchain?: string;
+    standard?: string;
+    symbol?: string;
+    name?: string;
+    decimals?: number;
+  };
+};
+
+function toUnverified(entry: RawBalance): GlideTokenBalance | null {
+  const token = entry.token;
+  const address = token?.tokenAddress?.toLowerCase();
+  const amount = parseFloat(entry.amount ?? "0");
+  if (!token || !address || token.isNative) return null;
+  if (token.blockchain !== GLIDE_BLOCKCHAIN) return null;
+  if (token.standard && token.standard !== "ERC20") return null; // NFTs
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  if (classifyArcToken({ tokenAddress: address, isNative: false })) return null;
+
+  const symbol = sanitizeTokenText(token.symbol, TOKEN_SYMBOL_MAX);
+  const name = sanitizeTokenText(token.name, TOKEN_NAME_MAX) || symbol;
+  return {
+    symbol: symbol || "Unknown",
+    name,
+    amount,
+    usdValue: 0,
+    priced: false,
+    verified: false,
+    suspicious: isSuspiciousToken({ symbol, name }),
+    tokenAddress: address,
+    decimals: typeof token.decimals === "number" ? token.decimals : undefined,
+    chainId: ARC_CHAIN.id,
+    chainLabel: ARC_CHAIN.label,
+  };
+}
+
+/** Every other token the wallet holds on Arc (memes, airdrops, anything).
+ * Display and sending only: never counted in the balance, never shown to the
+ * assistant, never fed to automations. */
+export async function fetchUnverifiedArcTokens(
+  walletId: string,
+): Promise<GlideTokenBalance[]> {
+  const initialized = createCircleClient();
+  if ("error" in initialized) throw new Error(initialized.error);
+  const res = await initialized.client.getWalletTokenBalance({
+    id: walletId,
+    includeAll: true,
+  });
+  const out: GlideTokenBalance[] = [];
+  const seen = new Set<string>();
+  for (const entry of (res.data?.tokenBalances ?? []) as RawBalance[]) {
+    const row = toUnverified(entry);
+    if (!row || seen.has(row.tokenAddress!)) continue;
+    seen.add(row.tokenAddress!);
+    out.push(row);
+  }
+  out.sort(
+    (a, b) =>
+      Number(Boolean(a.suspicious)) - Number(Boolean(b.suspicious)) ||
+      a.symbol.localeCompare(b.symbol),
+  );
+  return out.slice(0, MAX_UNVERIFIED);
+}
+
+/** One unverified token the wallet holds, by contract address — the send
+ * route's source of truth for balance, decimals and the (sanitized) symbol. */
+export async function fetchUnverifiedTokenHolding(
+  walletId: string,
+  tokenAddress: string,
+): Promise<GlideTokenBalance | null> {
+  const target = tokenAddress.toLowerCase();
+  const initialized = createCircleClient();
+  if ("error" in initialized) throw new Error(initialized.error);
+  const res = await initialized.client.getWalletTokenBalance({
+    id: walletId,
+    includeAll: true,
+    tokenAddresses: [tokenAddress],
+  });
+  for (const entry of (res.data?.tokenBalances ?? []) as RawBalance[]) {
+    const row = toUnverified(entry);
+    if (row?.tokenAddress === target) return row;
+  }
+  return null;
 }
 
 export async function fetchAllWalletTokenBalances(
@@ -176,8 +275,7 @@ export async function fetchAllWalletTokenBalances(
 }
 
 export async function fetchUsdcBalance(walletId: string): Promise<number> {
-  const tokens = await fetchWalletTokenBalances(walletId);
-  return tokens.find((t) => isUsdcToken(t.symbol))?.amount ?? 0;
+  return fetchTokenBalance(walletId, "USDC");
 }
 
 /** Raw USDC balance on any-chain wallet (returns 0 if no USDC token found).
@@ -204,11 +302,8 @@ export async function fetchTokenBalance(
   walletId: string,
   symbol: string,
 ): Promise<number> {
-  const tokens = await fetchWalletTokenBalances(walletId);
-  const normalized = normalizeTokenSymbol(symbol);
-  return (
-    tokens.find((t) => normalizeTokenSymbol(t.symbol) === normalized)?.amount ?? 0
-  );
+  const amounts = await fetchVerifiedAmounts(walletId);
+  return amounts.get(normalizeTokenSymbol(symbol)) ?? 0;
 }
 
 export async function fetchWalletBalance(walletId: string): Promise<number> {

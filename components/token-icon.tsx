@@ -36,11 +36,33 @@ export function TokenIcon({
   symbol,
   size = 40,
   className,
+  unverified = false,
 }: {
   symbol: string;
   size?: number;
   className?: string;
+  /** Unverified tokens get a plain letter badge: a fake "USDC" must never
+   * borrow the real token's look, which is picked by symbol. */
+  unverified?: boolean;
 }) {
+  if (unverified) {
+    const letter = (symbol.match(/[A-Za-z0-9]/)?.[0] ?? "?").toUpperCase();
+    return (
+      <span
+        className={`inline-flex shrink-0 items-center justify-center rounded-full font-bold ${className ?? ""}`}
+        style={{
+          width: size,
+          height: size,
+          fontSize: size * 0.42,
+          background: "var(--glide-surface-container-high)",
+          color: "var(--glide-text)",
+        }}
+        aria-hidden
+      >
+        {letter}
+      </span>
+    );
+  }
   const { bg, Icon } = resolveVisual(symbol);
   return (
     <span

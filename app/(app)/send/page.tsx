@@ -8,6 +8,7 @@ import { newIdempotencyKey, shortenAddress } from "@/lib/format";
 import {
   currencyPrefixForToken,
   formatStableAmount,
+  formatTokenUnits,
   stableTokenFromSymbol,
   type StableToken,
 } from "@/lib/currency-format";
@@ -19,7 +20,7 @@ import {
   normalizeUsername,
 } from "@/lib/validation";
 import { useBalance, useWalletActions } from "@/context/wallet-context";
-import { AtSign, Check, QrCode, User, Wallet } from "lucide-react";
+import { AtSign, Check, ChevronDown, QrCode, ShieldAlert, User, Wallet } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
@@ -45,6 +46,13 @@ type ResolvedMeta = {
 };
 
 const TOKENS_FULL: readonly StableToken[] = ["USDC", "EURC", "cirBTC"];
+const TOKEN_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;
+
+/** A ?token= value that is a contract address selects an unverified token. */
+function addressParam(value: string | null): string | null {
+  const v = value?.trim() ?? "";
+  return TOKEN_ADDRESS_RE.test(v) ? v.toLowerCase() : null;
+}
 
 export default function SendPage() {
   const router = useRouter();
@@ -54,6 +62,10 @@ export default function SendPage() {
   const requestCode = searchParams.get("request")?.trim() || undefined;
   const [token, setToken] = useState<StableToken>(() =>
     stableTokenFromSymbol(searchParams.get("token")),
+  );
+  // Unverified token (memes etc.), by contract address. Null = verified token.
+  const [customAddress, setCustomAddress] = useState<string | null>(() =>
+    addressParam(searchParams.get("token")),
   );
   const [step, setStep] = useState<Step>("amount");
   const [recipient, setRecipient] = useState(
@@ -80,8 +92,13 @@ export default function SendPage() {
     const to = searchParams.get("to")?.trim();
     if (to) setRecipient(to);
     const t = searchParams.get("token")?.trim();
-    const linkToken = t ? stableTokenFromSymbol(t) : undefined;
-    if (linkToken) setToken(linkToken);
+    const linkAddress = addressParam(t ?? null);
+    const linkToken = t && !linkAddress ? stableTokenFromSymbol(t) : undefined;
+    if (linkAddress) setCustomAddress(linkAddress);
+    else if (linkToken) {
+      setToken(linkToken);
+      setCustomAddress(null);
+    }
     const amt = searchParams.get("amount")?.trim();
     if (amt) {
       const n = parseFloat(amt);
@@ -93,11 +110,40 @@ export default function SendPage() {
     if (n) setNote(n);
   }, [searchParams]);
 
+  // Unverified tokens the user can send: held, and not flagged as a fake or
+  // spam (those stay hidden).
+  const sendableCustom = useMemo(
+    () =>
+      tokens.filter(
+        (t) => t.verified === false && !t.suspicious && t.amount > 0 && t.tokenAddress,
+      ),
+    [tokens],
+  );
+  const customToken = customAddress
+    ? (sendableCustom.find((t) => t.tokenAddress === customAddress) ?? null)
+    : null;
+  // A linked token that isn't (yet) in the wallet must never fall back to
+  // sending USDC: block until it loads, or say it isn't held.
+  const customMissing = customAddress !== null && !customToken;
+  const activeSymbol = customToken?.symbol ?? token;
+  const customDecimals = customToken
+    ? Math.min(Math.max(customToken.decimals ?? 18, 0), 18)
+    : 0;
+
   const tokenBalance = useMemo(() => {
+    if (customToken) return customToken.amount;
     const fromTokens = tokenAmountFromBalances(tokens, token);
     if (fromTokens > 0) return fromTokens;
     return token === "USDC" ? balance : 0;
-  }, [tokens, token, balance]);
+  }, [customToken, tokens, token, balance]);
+
+  const formatActive = useCallback(
+    (value: number) =>
+      customToken
+        ? formatTokenUnits(value, customToken.symbol, customDecimals)
+        : formatStableAmount(value, token),
+    [customToken, customDecimals, token],
+  );
 
   useEffect(() => {
     const t = recipient.trim();
@@ -162,8 +208,9 @@ export default function SendPage() {
     };
   }, [recipient]);
 
-  // cirBTC needs up to 8 decimal places; USDC/EURC are 2.
-  const maxDecimals = token === "cirBTC" ? 8 : 2;
+  // cirBTC needs up to 8 decimal places; USDC/EURC are 2; an unverified
+  // token uses its own decimals.
+  const maxDecimals = customToken ? customDecimals : token === "cirBTC" ? 8 : 2;
 
   const handleAmountChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -204,8 +251,8 @@ export default function SendPage() {
   );
   const overBalance = parsed > tokenBalance;
   const canContinue =
-    parsed > 0 && recipientOk && wallet != null && !overBalance;
-  const amountPrefix = currencyPrefixForToken(token);
+    parsed > 0 && recipientOk && wallet != null && !overBalance && !customMissing;
+  const amountPrefix = customToken ? "" : currencyPrefixForToken(token);
 
   // One idempotency key per intended payment: kept across retries (e.g.
   // after a timeout) so Circle can't pay twice, reset when the payment
@@ -213,7 +260,7 @@ export default function SendPage() {
   const payKeyRef = useRef<string | null>(null);
   useEffect(() => {
     payKeyRef.current = null;
-  }, [recipient, amount, token]);
+  }, [recipient, amount, token, customAddress]);
 
   const handlePay = async () => {
     if (!wallet || !canContinue) return;
@@ -223,8 +270,9 @@ export default function SendPage() {
     payKeyRef.current ??= newIdempotencyKey();
     const result = await sendMoney(recipient.trim(), amount, {
       note: note.trim() || undefined,
-      requestCode,
-      token,
+      requestCode: customToken ? undefined : requestCode,
+      token: activeSymbol,
+      tokenAddress: customToken?.tokenAddress,
       idempotencyKey: payKeyRef.current,
     });
     setSubmitting(false);
@@ -241,7 +289,7 @@ export default function SendPage() {
     if (resolveState === "checking") return "Checking recipient…";
     if (resolveState === "fail" && resolveMessage) return resolveMessage;
     if (overBalance) {
-      return `You only have ${formatStableAmount(tokenBalance, token)}`;
+      return `You only have ${formatActive(tokenBalance)}`;
     }
     if (recipientOk) return null;
     return "Use a wallet address (0x…), pay tag, or contact name";
@@ -252,7 +300,7 @@ export default function SendPage() {
     recipientOk,
     overBalance,
     tokenBalance,
-    token,
+    formatActive,
   ]);
 
   const recipientBorderClass = useMemo(() => {
@@ -297,7 +345,7 @@ export default function SendPage() {
             className="mt-2 text-[56px] font-bold leading-none tracking-[-0.03em]"
             style={{ color: "var(--glide-success)" }}
           >
-            {formatStableAmount(parsed, token)}
+            {formatActive(parsed)}
           </p>
           <p className="mt-4 text-[18px] font-semibold text-[var(--glide-text)]">
             {recipientLabel}
@@ -342,7 +390,28 @@ export default function SendPage() {
               {amountPrefix}
               {formatAmountDisplay(amount)}
             </p>
+            {customToken ? (
+              <p className="mt-2 text-[15px] font-semibold text-[color:var(--glide-on-elevated-variant)]">
+                {customToken.symbol}
+              </p>
+            ) : null}
           </div>
+
+          {customToken ? (
+            <div
+              className="mt-4 flex items-start gap-2.5 rounded-2xl px-4 py-3 text-[13px] leading-snug"
+              style={{
+                background: "color-mix(in srgb, #F59E0B 12%, transparent)",
+                color: "var(--glide-text)",
+              }}
+            >
+              <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" style={{ color: "#F59E0B" }} />
+              <span>
+                {customToken.name || customToken.symbol} is an unverified token. glidepay
+                can&apos;t tell you what it&apos;s worth. Payments can&apos;t be reversed.
+              </span>
+            </div>
+          ) : null}
 
           <div className="mt-6 flex items-baseline justify-between">
             <label
@@ -372,7 +441,7 @@ export default function SendPage() {
             <span className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
               From
             </span>
-            <span className="text-sm font-bold">glidepay · {token}</span>
+            <span className="text-sm font-bold">glidepay · {activeSymbol}</span>
           </div>
 
           {(localError || error) ? (
@@ -440,14 +509,17 @@ export default function SendPage() {
               aria-label="Token"
             >
               {tokenOptions.map((t) => {
-                const active = t === token;
+                const active = customAddress === null && t === token;
                 return (
                   <button
                     key={t}
                     type="button"
                     role="tab"
                     aria-selected={active}
-                    onClick={() => setToken(t)}
+                    onClick={() => {
+                      setToken(t);
+                      setCustomAddress(null);
+                    }}
                     className={`glide-tap rounded-full px-3 py-1.5 text-[11px] font-bold tracking-tight transition-colors ${
                       active
                         ? "bg-[var(--glide-primary)] text-[var(--glide-on-primary)]"
@@ -458,6 +530,35 @@ export default function SendPage() {
                   </button>
                 );
               })}
+              {!requestCode && sendableCustom.length > 0 ? (
+                <span className="relative">
+                  <span
+                    className={`glide-tap inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold tracking-tight ${
+                      customAddress !== null
+                        ? "bg-[var(--glide-primary)] text-[var(--glide-on-primary)]"
+                        : "border border-[color:var(--glide-elevated-border)] bg-transparent text-[color:var(--glide-on-elevated)]"
+                    }`}
+                  >
+                    {customToken ? customToken.symbol : "Other"}
+                    <ChevronDown className="h-3 w-3" strokeWidth={2.5} aria-hidden />
+                  </span>
+                  <select
+                    aria-label="Other tokens"
+                    value={customAddress ?? ""}
+                    onChange={(e) => setCustomAddress(e.target.value || null)}
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                  >
+                    <option value="" disabled>
+                      Other tokens
+                    </option>
+                    {sendableCustom.map((ct) => (
+                      <option key={ct.tokenAddress} value={ct.tokenAddress}>
+                        {ct.symbol} · {formatTokenUnits(ct.amount, ct.symbol, 4)}
+                      </option>
+                    ))}
+                  </select>
+                </span>
+              ) : null}
             </div>
           </div>
 
@@ -494,7 +595,12 @@ export default function SendPage() {
                   : "text-[color:var(--glide-on-elevated-variant)]"
             }`}
           >
-            {hint ?? `Balance ${formatStableAmount(tokenBalance, token)}`}
+            {hint ??
+              (customMissing
+                ? loading
+                  ? "Loading this token…"
+                  : "You don't hold this token"
+                : `Balance ${formatActive(tokenBalance)}`)}
           </p>
         </div>
 
@@ -597,7 +703,7 @@ export default function SendPage() {
               boxShadow: submitDisabled ? "none" : undefined,
             }}
           >
-            {`Send ${token}`}
+            {`Send ${activeSymbol}`}
           </button>
 
           {localError || error ? (

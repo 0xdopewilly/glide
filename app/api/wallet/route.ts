@@ -3,6 +3,7 @@ import { CHAIN_META } from "@/lib/chain-meta";
 import { resolveWalletTotalUsd } from "@/lib/tokens";
 import {
   fetchAllWalletTokenBalances,
+  fetchUnverifiedArcTokens,
   fetchWalletById,
 } from "@/lib/wallet-service";
 import { getOrCreateWalletForUser, userOwnsWallet } from "@/lib/users";
@@ -14,6 +15,13 @@ async function walletPayload(
   options?: { includeOffArc?: boolean },
 ) {
   const includeOffArc = options?.includeOffArc ?? false;
+  // Every other token on Arc, for display and sending — fetched in parallel,
+  // listed after the verified ones, never in the total, and a failure here
+  // can't break the wallet.
+  const unverifiedPromise = fetchUnverifiedArcTokens(walletId).catch((err) => {
+    console.warn("[Glide] unverified tokens skipped:", err);
+    return [];
+  });
   let tokens: Awaited<ReturnType<typeof fetchAllWalletTokenBalances>> = [];
 
   try {
@@ -34,10 +42,12 @@ async function walletPayload(
 
   const totalUsd = resolveWalletTotalUsd(tokens, balance);
 
+  const unverified = await unverifiedPromise;
+
   return {
     wallet: { id: walletId, address },
     balance,
-    tokens,
+    tokens: [...tokens, ...unverified],
     totalUsd,
   };
 }

@@ -108,7 +108,8 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
 
   const quickPrompts = useMemo(() => {
     const hasEurc = !!tokens.find(
-      (t) => t.symbol?.toUpperCase() === "EURC" && t.amount > 0,
+      (t) =>
+        t.verified !== false && t.symbol?.toUpperCase() === "EURC" && t.amount > 0,
     );
     return selectQuickPrompts({ balance: balance ?? 0, hasEurc });
   }, [balance, tokens]);

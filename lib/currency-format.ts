@@ -52,3 +52,18 @@ export function formatStableAmountWithCode(
   const n = typeof amount === "string" ? parseFloat(amount) : amount;
   return `${currencyPrefixForToken(token)}${formatNumber(n, decimalsForToken(token))} ${token}`;
 }
+
+/** Unverified tokens have no currency sign: "1,000,000 PEPE". */
+export function formatTokenUnits(
+  amount: string | number,
+  symbol: string,
+  maxDecimals = 6,
+): string {
+  const n = typeof amount === "string" ? parseFloat(amount) : amount;
+  const text = Number.isFinite(n)
+    ? new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: Math.min(Math.max(maxDecimals, 0), 20),
+      }).format(n)
+    : "0";
+  return `${text} ${symbol}`;
+}

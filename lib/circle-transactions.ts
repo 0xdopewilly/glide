@@ -53,6 +53,54 @@ async function resolveArcToken(tokenId: string): Promise<ArcToken | null> {
   }
 }
 
+/** True only when the token lookup succeeded and it is an Arc token that is
+ * not USDC / EURC / cirBTC (a meme, an airdrop). Lookup failures are not
+ * "unverified" — they're retried by the next sync. */
+async function isUnverifiedArcToken(tokenId: string): Promise<boolean> {
+  try {
+    const info = await resolveCircleToken(tokenId);
+    return (
+      !!info &&
+      info.blockchain === GLIDE_BLOCKCHAIN &&
+      !info.isNative &&
+      classifyArcToken(info) === null
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Sends of unverified tokens aren't an activity source (inbound airdrops
+ * must never appear, notify, or trigger automations), but the row /api/send
+ * wrote for the user's own send still has to settle. This only updates that
+ * existing row's status — it never creates one. */
+async function settleUnverifiedSends(userId: string, txs: CircleTx[]) {
+  const outbound: CircleTx[] = [];
+  for (const tx of txs) {
+    if (!tx.tokenId || inferKind(tx) !== "send") continue;
+    if (await isUnverifiedArcToken(tx.tokenId)) outbound.push(tx);
+  }
+  if (outbound.length === 0) return;
+  const rows = await prisma.transaction.findMany({
+    where: { userId, circleTransactionId: { in: outbound.map((t) => t.id) } },
+    select: { id: true, circleTransactionId: true, status: true, txHash: true },
+  });
+  const byId = new Map(rows.map((r) => [r.circleTransactionId, r]));
+  for (const tx of outbound) {
+    const row = byId.get(tx.id);
+    if (!row) continue;
+    const txHash = tx.txHash ?? row.txHash ?? undefined;
+    if (row.status === tx.state && row.txHash === (txHash ?? null)) continue;
+    await prisma.transaction.update({
+      where: { id: row.id },
+      data: {
+        status: tx.state,
+        ...(txHash ? { txHash, explorerUrl: arcExplorerUrl(txHash) } : {}),
+      },
+    });
+  }
+}
+
 export function mapCircleTransaction(
   tx: CircleTx,
   token: ArcToken,
@@ -170,6 +218,11 @@ export async function syncCircleTransactionsToDb(
       return token ? [{ tx, token, mapped: mapCircleTransaction(tx, token) }] : [];
     })
     .sort((a, b) => (a.tx.createDate ?? "").localeCompare(b.tx.createDate ?? ""));
+
+  await settleUnverifiedSends(
+    userId,
+    circleTxs.filter((tx) => tx.tokenId && tokenById.get(tx.tokenId) === null),
+  ).catch((err) => console.warn("[Glide] unverified send settle:", err));
   if (items.length === 0) return [];
 
   const circleIds = items.map((i) => i.tx.id);

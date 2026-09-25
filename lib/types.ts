@@ -15,10 +15,25 @@ export type GlideWallet = {
 export type GlideTokenBalance = {
   symbol: string;
   amount: number;
-  /** Display value in USD (1:1 for USDC/EURC on Arc). */
+  /** Market value in USD: USDC 1:1, EURC and cirBTC at live prices. 0 when
+   * there is no price, and always 0 for unverified tokens. */
   usdValue: number;
   chainId: GlideChainKey;
   chainLabel: string;
+  /** False for any Arc token other than USDC / EURC / cirBTC (identified by
+   * contract address). Unverified tokens never count toward the balance.
+   * Missing means verified (older payloads). */
+  verified?: boolean;
+  /** usdValue is a real market value (false when a price feed is down). */
+  priced?: boolean;
+  /** Unverified only: token-supplied name (untrusted, display only). */
+  name?: string;
+  /** Unverified only: Arc contract address — the token's real identity. */
+  tokenAddress?: string;
+  decimals?: number;
+  /** Unverified only: looks like spam or a fake of a real token. Hidden by
+   * default and not offered for sending. */
+  suspicious?: boolean;
 };
 
 export type TransactionKind = "send" | "receive" | "swap" | "bridge";
