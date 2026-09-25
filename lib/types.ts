@@ -55,6 +55,8 @@ export type GlideTransaction = {
   createdAt?: string;
   /** "@khadee", display name, or 0xab…cd — shown as "To"/"From" on the receipt. */
   counterparty?: string;
+  /** The other side's wallet address (payments only) — opens the thread. */
+  counterpartyAddress?: string;
   /** Source chain when funds arrived via Universal Receive CCTP sweep. */
   originChain?: string | null;
 };

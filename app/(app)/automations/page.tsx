@@ -1,6 +1,7 @@
 "use client";
 
 import { inputClassName } from "@/components/form-field";
+import { PaperHeroArt } from "@/components/illustrations";
 import { PageHeader } from "@/components/page-header";
 import { AUTOMATION_TEMPLATES } from "@/lib/automation-templates";
 import { fetchWithPin, requirePin } from "@/lib/pin-gate";
@@ -407,12 +408,19 @@ export default function AutomationsPage() {
             ))}
           </ul>
         ) : (
-          <p
-            className="mt-3 rounded-2xl border border-dashed px-4 py-6 text-center text-sm text-[var(--glide-muted)]"
+          <div
+            className="mt-3 flex flex-col items-center rounded-2xl border border-dashed px-4 py-5 text-center text-sm text-[var(--glide-muted)]"
             style={{ borderColor: "var(--glide-border)" }}
           >
-            {loading ? "Loading…" : "No active automations. Start from a template below."}
-          </p>
+            {loading ? (
+              "Loading…"
+            ) : (
+              <>
+                <PaperHeroArt className="h-32 w-auto" />
+                <p className="mt-2">No active automations. Start from a template below.</p>
+              </>
+            )}
+          </div>
         )}
 
         {/* Templates */}

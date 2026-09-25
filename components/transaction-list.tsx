@@ -2,7 +2,9 @@
 
 import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
-import { ArrowDown, ArrowLeftRight, ArrowUp, Link2 } from "lucide-react";
+import { PaperHeroArt } from "@/components/illustrations";
+import { ArrowDown, ArrowLeftRight, ArrowUp, Clock, Link2 } from "lucide-react";
+import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -121,6 +123,8 @@ export function TransactionList({
   grouped = false,
   header,
   footer,
+  separate = false,
+  emptyArt = false,
 }: {
   transactions: GlideTransaction[];
   loading?: boolean;
@@ -131,7 +135,37 @@ export function TransactionList({
   header?: ReactNode;
   /** Rendered inside the same card, under the rows (e.g. "See all"). */
   footer?: ReactNode;
+  /** Each row as its own white card, with a gap (reference Home style). */
+  separate?: boolean;
+  /** Show the line-art illustration in the empty state. */
+  emptyArt?: boolean;
 }) {
+  if (separate) {
+    if (loading && transactions.length === 0) return <TransactionSkeleton />;
+    if (transactions.length === 0) {
+      return (
+        <div className="glide-surface-card flex flex-col items-center rounded-3xl px-4 pb-6 pt-4 text-center">
+          {emptyArt ? <PaperHeroArt className="h-36 w-auto" /> : null}
+          <p className="mt-2 text-[15px] font-semibold text-[var(--glide-text)]">{emptyMessage}</p>
+          {emptyArt ? (
+            <p className="mt-1 text-[13px] text-[var(--glide-muted)]">
+              Send, receive or swap and it lands here.
+            </p>
+          ) : null}
+        </div>
+      );
+    }
+    return (
+      <ul className="flex flex-col gap-2.5">
+        {transactions.map((tx) => (
+          <li key={`${tx.id}-${tx.createdAt ?? ""}`} className="glide-surface-card overflow-hidden rounded-2xl">
+            <TransactionRow tx={tx} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
   if (loading && transactions.length === 0) {
     return header ? (
       <div className="glide-surface-card overflow-hidden rounded-3xl">
@@ -147,7 +181,12 @@ export function TransactionList({
     return (
       <div className={`glide-surface-card overflow-hidden ${header ? "rounded-3xl" : "rounded-2xl"}`}>
         {header}
-        <p className="px-4 py-8 text-center text-sm text-[var(--glide-muted)]">
+        {emptyArt ? (
+          <div className="flex justify-center pt-4">
+            <PaperHeroArt className="h-32 w-auto" />
+          </div>
+        ) : null}
+        <p className={`px-4 text-center text-sm text-[var(--glide-muted)] ${emptyArt ? "pb-6 pt-2" : "py-8"}`}>
           {emptyMessage}
         </p>
         {footer}
@@ -193,7 +232,12 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
   const relativeTime = formatRelativeTime(tx.createdAt);
   const isPending = tx.status === "pending";
 
-  return (
+  const threadHref =
+    tx.counterpartyAddress && (tx.kind === "send" || tx.kind === "receive")
+      ? `/thread?with=${tx.counterpartyAddress}`
+      : null;
+
+  const row = (
     <article
       className={`flex items-center gap-3 px-4 py-3 ${isPending ? "opacity-80" : ""}`}
     >
@@ -236,11 +280,21 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
             Pending
           </p>
         ) : relativeTime ? (
-          <p className="mt-0.5 text-xs text-[color:var(--glide-on-elevated-variant)]">
+          <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-[color:var(--glide-on-elevated-variant)]">
+            <Clock className="h-3 w-3" strokeWidth={2.25} aria-hidden />
             {relativeTime}
           </p>
         ) : null}
       </div>
     </article>
+  );
+
+  // Payments open the thread with that person.
+  return threadHref ? (
+    <Link href={threadHref} prefetch={false} className="glide-tap block">
+      {row}
+    </Link>
+  ) : (
+    row
   );
 }

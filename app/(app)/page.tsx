@@ -10,14 +10,14 @@ import { TransactionList } from "@/components/transaction-list";
 import { usePrivacy } from "@/context/privacy-context";
 import { useProfile, useWallet } from "@/context/wallet-context";
 import {
-  ArrowDown,
   ArrowLeftRight,
-  ArrowUp,
   Eye,
   EyeOff,
   LayoutGrid,
   ScanLine,
   Sparkles,
+  SquareArrowDown,
+  SquareArrowOutUpRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
@@ -33,8 +33,8 @@ const USD_FORMATTER = new Intl.NumberFormat("en-US", {
 });
 
 const QUICK_ACTIONS = [
-  { href: "/send", label: "Send", icon: ArrowUp },
-  { href: "/receive", label: "Receive", icon: ArrowDown },
+  { href: "/send", label: "Send", icon: SquareArrowOutUpRight },
+  { href: "/receive", label: "Receive", icon: SquareArrowDown },
   { href: "/swap", label: "Swap", icon: ArrowLeftRight },
 ] as const;
 
@@ -93,7 +93,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-6">
+      <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5">
         {error ? (
           <div className="mt-3 rounded-2xl bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 dark:text-red-200">
             <span className="truncate">{error}</span>
@@ -129,7 +129,7 @@ export default function HomePage() {
             ) : (
               <>
                 {whole}
-                <span className="opacity-60">{cents}</span>
+                <span style={{ color: "var(--glide-balance-cents)" }}>{cents}</span>
               </>
             )}
           </p>
@@ -177,60 +177,63 @@ export default function HomePage() {
           </button>
         </nav>
 
-        {/* SMART ASSISTANT — Billy */}
-        <Link
-          href="/ask"
-          prefetch
-          className="glide-tap glide-surface-card mt-7 flex shrink-0 items-center gap-3 overflow-hidden rounded-3xl p-4"
-        >
-          <div className="min-w-0 flex-1">
-            <p className="text-[16px] font-bold tracking-tight text-[var(--glide-text)]">
-              Smart Assistant
-            </p>
-            <p className="mt-0.5 text-[13px] text-[var(--glide-muted)]">
-              Money made simple with Billy
-            </p>
-            <span
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold"
-              style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
-            >
-              <Sparkles className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-              Ask Billy
-            </span>
+        {/* LOWER HALF — the light sheet, per the reference */}
+        <div className="glide-light-sheet -mx-5 mt-7 flex flex-1 flex-col px-5 pb-6">
+          {/* SMART ASSISTANT — Billy */}
+          <Link
+            href="/ask"
+            prefetch
+            className="glide-tap glide-surface-card flex shrink-0 items-center gap-3 overflow-hidden rounded-3xl p-4"
+            style={{ boxShadow: "0 18px 40px -22px rgba(40, 20, 120, 0.55)" }}
+          >
+            <div className="min-w-0 flex-1">
+              <p className="text-[16px] font-bold tracking-tight text-[var(--glide-text)]">
+                Smart Assistant
+              </p>
+              <p className="mt-0.5 text-[13px] text-[var(--glide-muted)]">
+                Money made simple with Billy
+              </p>
+              <span
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold"
+                style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
+              >
+                <Sparkles className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                Help with Billy
+              </span>
+            </div>
+            <BillyArt />
+          </Link>
+
+          {/* LAST TRANSACTIONS — each its own card */}
+          <section className="mt-6 shrink-0" aria-label="Transactions">
+            <div className="mb-3 flex items-center justify-between px-1">
+              <h2 className="text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
+                Last Transactions
+              </h2>
+              <Link
+                href="/activity"
+                prefetch
+                className="glide-tap text-[14px] font-medium text-[var(--glide-muted)]"
+              >
+                Show all
+              </Link>
+            </div>
+            <TransactionList
+              transactions={recentTransactions}
+              loading={transactionsLoading}
+              emptyMessage="No transactions yet"
+              separate
+              emptyArt
+            />
+          </section>
+
+          {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
+          <SavingsCard className="mt-6" onChange={() => void refresh()} />
+
+          {/* ASSETS */}
+          <div className="mt-6 shrink-0">
+            <TokenBalances tokens={tokens} loading={loading} />
           </div>
-          <BillyArt />
-        </Link>
-
-        {/* LAST TRANSACTIONS */}
-        <section className="mt-5 shrink-0" aria-label="Transactions">
-          <TransactionList
-            transactions={recentTransactions}
-            loading={transactionsLoading}
-            emptyMessage="Your activity will show up here"
-            header={
-              <div className="flex items-center justify-between px-4 pb-1 pt-3">
-                <h2 className="text-[16px] font-bold tracking-tight text-[var(--glide-text)]">
-                  Last transactions
-                </h2>
-                <Link
-                  href="/activity"
-                  prefetch
-                  className="glide-tap text-[13px] font-semibold"
-                  style={{ color: "var(--glide-accent)" }}
-                >
-                  Show all
-                </Link>
-              </div>
-            }
-          />
-        </section>
-
-        {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
-        <SavingsCard className="mt-5" onChange={() => void refresh()} />
-
-        {/* ASSETS */}
-        <div className="mt-5 shrink-0 pb-2">
-          <TokenBalances tokens={tokens} loading={loading} />
         </div>
       </div>
 
@@ -242,11 +245,11 @@ export default function HomePage() {
   );
 }
 
-/** Frosted-glass rounded square, as in the reference. */
+/** Frosted-glass circle, as in the reference. */
 function ActionTile({ icon: Icon }: { icon: LucideIcon }) {
   return (
     <span
-      className="flex h-[58px] w-[58px] items-center justify-center rounded-[20px]"
+      className="flex h-[58px] w-[58px] items-center justify-center rounded-full"
       style={{
         background: "var(--glide-surface-container-high)",
         border: "1px solid var(--glide-border)",

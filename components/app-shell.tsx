@@ -23,6 +23,7 @@ const FULL_BLEED_ROUTES = [
   "/notifications",
   "/search",
   "/ask",
+  "/thread",
 ];
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";

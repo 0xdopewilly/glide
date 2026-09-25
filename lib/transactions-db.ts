@@ -177,6 +177,16 @@ function metadataCounterparty(
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function metadataCounterpartyAddress(
+  metadata: unknown,
+  kind: string,
+): string | undefined {
+  if (!metadata || typeof metadata !== "object") return undefined;
+  const m = metadata as { recipientAddress?: unknown; fromAddress?: unknown };
+  const value = kind === "receive" ? m.fromAddress : kind === "send" ? m.recipientAddress : undefined;
+  return typeof value === "string" && /^0x[0-9a-fA-F]{40}$/.test(value) ? value : undefined;
+}
+
 function rowToGlide(row: {
   id: string;
   kind: string;
@@ -203,6 +213,7 @@ function rowToGlide(row: {
     txHash: row.txHash ?? undefined,
     explorerUrl: row.explorerUrl ?? undefined,
     counterparty: metadataCounterparty(row.metadata, row.kind),
+    counterpartyAddress: metadataCounterpartyAddress(row.metadata, row.kind),
     originChain: row.originChain ?? undefined,
   };
 }

@@ -23,7 +23,6 @@ import { useBalance, useWalletActions } from "@/context/wallet-context";
 import {
   AtSign,
   CalendarClock,
-  Check,
   ChevronDown,
   Delete,
   QrCode,
@@ -34,6 +33,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { BottomSheet } from "@/components/bottom-sheet";
+import { CardHeroArt } from "@/components/illustrations";
 import { SettingsRow } from "@/components/settings-list";
 import { haptics } from "@/lib/haptics";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -381,17 +381,8 @@ export default function SendPage() {
           <h1 className="glide-label-mono text-[14px] font-bold text-[var(--glide-muted)]">
             Sent
           </h1>
-          <div
-            className="glide-pop mt-10 flex h-28 w-28 items-center justify-center rounded-full"
-            style={{ background: "var(--glide-primary)" }}
-          >
-            <Check
-              className="h-14 w-14"
-              strokeWidth={2.5}
-              style={{ color: "var(--glide-on-primary)" }}
-            />
-          </div>
-          <p className="glide-label-mono mt-10 text-[11px] font-semibold text-[var(--glide-muted)]">
+          <CardHeroArt className="glide-pop mt-6 h-52 w-auto" />
+          <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
             You paid
           </p>
           <p

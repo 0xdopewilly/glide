@@ -2,7 +2,8 @@
 
 import { PageHeader } from "@/components/page-header";
 import { shortenAddress } from "@/lib/format";
-import { UserPlus } from "lucide-react";
+import { PaperHeroArt } from "@/components/illustrations";
+import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -50,12 +51,7 @@ export default function ContactsPage() {
               borderColor: "var(--glide-elevated-border)",
             }}
           >
-            <div
-              className="flex h-12 w-12 items-center justify-center rounded-full"
-              style={{ background: "var(--glide-primary-container)" }}
-            >
-              <UserPlus className="h-5 w-5 text-[var(--glide-text)]" />
-            </div>
+            <PaperHeroArt className="h-36 w-auto" />
             <p className="mt-3 text-[15px] font-semibold text-[var(--glide-text)]">
               No contacts yet
             </p>
@@ -72,7 +68,7 @@ export default function ContactsPage() {
                   type="button"
                   onClick={() =>
                     router.push(
-                      `/send?to=${encodeURIComponent(c.walletAddress)}`,
+                      `/thread?with=${encodeURIComponent(c.walletAddress)}`,
                     )
                   }
                   className="glide-tap glide-on-elevated-surface flex w-full items-center justify-between rounded-2xl border px-4 py-3.5 text-left transition-colors"
@@ -89,9 +85,7 @@ export default function ContactsPage() {
                       {shortenAddress(c.walletAddress)}
                     </span>
                   </span>
-                  <span className="text-sm font-semibold text-[var(--glide-accent)]">
-                    Send
-                  </span>
+                  <ChevronRight className="h-5 w-5 text-[var(--glide-muted)]" strokeWidth={2} aria-hidden />
                 </button>
               </li>
             ))}

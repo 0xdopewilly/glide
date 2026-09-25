@@ -6,6 +6,7 @@ import { StableTokenSegment } from "@/components/stable-token-segment";
 import { IS_MAINNET } from "@/lib/network";
 import { PLACEHOLDER_GLIDE_TAG } from "@/lib/placeholders";
 import { GlideButton } from "@/components/glide-button";
+import { PaperHeroArt } from "@/components/illustrations";
 import { NumericKeypad } from "@/components/numeric-keypad";
 import { copyText } from "@/lib/clipboard";
 import {
@@ -17,6 +18,7 @@ import { useProfile } from "@/context/wallet-context";
 import { Copy, Mail, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 
 type Mode = "person" | "link";
@@ -42,7 +44,11 @@ export default function RequestPage() {
   const [token, setToken] = useState<StableToken>("USDC");
   const [amount, setAmount] = useState("0");
   const [note, setNote] = useState("");
-  const [glideTag, setGlideTag] = useState("");
+  // ?from=@tag (e.g. "Request money" in a payment thread) prefills the tag.
+  const searchParams = useSearchParams();
+  const [glideTag, setGlideTag] = useState(
+    () => searchParams.get("from")?.trim().replace(/^@+/, "") ?? "",
+  );
   const [email, setEmail] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(false);
@@ -271,7 +277,9 @@ export default function RequestPage() {
               </p>
             ) : null}
 
-            {qrSrc ? (
+            {result.targetOnGlide ? (
+              <PaperHeroArt className="glide-pop h-48 w-auto" />
+            ) : qrSrc ? (
               <div className="rounded-3xl bg-white p-4 ring-1 ring-black/5">
                 <Image
                   src={qrSrc}

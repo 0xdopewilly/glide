@@ -164,9 +164,9 @@ export default function SearchPage() {
           <SettingsSection title="On glidepay">
             <SettingsRow
               icon={AtSign}
-              title={`Pay @${tagResult.label}`}
-              subtitle="Send money to this pay tag"
-              href={`/send?to=${encodeURIComponent(`@${tagResult.tag}`)}`}
+              title={`@${tagResult.label}`}
+              subtitle="Open your payments together"
+              href={`/thread?with=${encodeURIComponent(`@${tagResult.tag}`)}`}
             />
           </SettingsSection>
         ) : null}
@@ -179,7 +179,7 @@ export default function SearchPage() {
                 icon={User}
                 title={c.name}
                 subtitle={shortenAddress(c.walletAddress, 6)}
-                href={`/send?to=${encodeURIComponent(c.name)}`}
+                href={`/thread?with=${encodeURIComponent(c.walletAddress)}`}
               />
             ))}
           </SettingsSection>

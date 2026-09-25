@@ -2,7 +2,7 @@
 
 import { useProfile } from "@/context/wallet-context";
 import { haptics } from "@/lib/haptics";
-import { ArrowLeftRight, Home, Zap } from "lucide-react";
+import { ArrowLeftRight, House, Zap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 // Four tabs, per the reference design: Home · Payments · Automate · Profile.
 // Billy lives on Home (Smart Assistant card); other screens are pushed.
 const SLOTS: { href: string; label: string; icon?: LucideIcon }[] = [
-  { href: "/", icon: Home, label: "Home" },
+  { href: "/", icon: House, label: "Home" },
   { href: "/payments", icon: ArrowLeftRight, label: "Payments" },
   { href: "/automations", icon: Zap, label: "Automate" },
   { href: "/profile", label: "Profile" },
@@ -43,8 +43,22 @@ export function BottomNav() {
               }}
               className="flex min-h-[50px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 transition-transform active:scale-95"
             >
-              {Icon ? (
-                <Icon className="h-[22px] w-[22px]" style={{ color }} strokeWidth={active ? 2.5 : 2} />
+              {href === "/payments" ? (
+                // Filled circle with arrows, like the reference's Transfer tab.
+                <span
+                  className="flex h-[23px] w-[23px] items-center justify-center rounded-full"
+                  style={{ background: color }}
+                  aria-hidden
+                >
+                  <ArrowLeftRight className="h-[13px] w-[13px] text-white" strokeWidth={2.75} />
+                </span>
+              ) : Icon ? (
+                <Icon
+                  className="h-[23px] w-[23px]"
+                  style={{ color }}
+                  fill={active ? "currentColor" : "none"}
+                  strokeWidth={active ? 2.25 : 2}
+                />
               ) : (
                 <ProfileTabIcon active={Boolean(active)} />
               )}

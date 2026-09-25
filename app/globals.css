@@ -35,6 +35,7 @@
   --glide-nav-surface: #FFFFFF;
   --glide-nav-active: #5B3DF5;
   --glide-nav-inactive: #8A94A8;
+  --glide-balance-cents: #8A94A8;
   --glide-primary-container: rgba(91, 61, 245, 0.10);
   --glide-success-container: rgba(22, 199, 132, 0.14);
 
@@ -110,6 +111,7 @@
   --glide-nav-surface: #FFFFFF;
   --glide-nav-active: #6B4CF2;
   --glide-nav-inactive: #9C99B8;
+  --glide-balance-cents: #B9A6FF;
   --glide-primary-container: rgba(255, 255, 255, 0.2);
   --glide-success-container: rgba(61, 220, 151, 0.2);
 
@@ -144,7 +146,7 @@
    (white) gets dark text and violet accents, so pills, switches, icon tiles
    and links inside it stay visible. Matches by the token name in the class
    or inline style, so every existing card is covered. */
-.dark :is(.glide-surface-card, [class*="surface-elevated"], [style*="surface-elevated"]) {
+.dark :is(.glide-surface-card, .glide-light-sheet, [class*="surface-elevated"], [style*="surface-elevated"]) {
   --glide-text: #17153B;
   --glide-muted: #6F6C90;
   --glide-on-surface: #17153B;
@@ -167,9 +169,17 @@
 
 /* Under the iOS status bar and behind the tab bar: match the gradient top
    and the white bar, so no strip of page background ever shows. */
+/* Home's lower half, per the reference: a light lavender sheet that starts
+   behind the middle of the Smart Assistant card. Tokens are rescoped above
+   (dark text); the Savings card turns solid violet on it. */
+.dark .glide-light-sheet {
+  background: linear-gradient(180deg, transparent 0, transparent 72px, #F3EFFF 72px);
+  --glide-hero-gradient: linear-gradient(150deg, #9B7CFF 0%, #6B4CF2 55%, #5238D6 100%);
+}
+
 html.dark,
 html.dark body {
-  background: linear-gradient(180deg, #7A5CF0 0%, #7A5CF0 50%, #FFFFFF 50%, #FFFFFF 100%);
+  background: linear-gradient(180deg, #22105A 0%, #22105A 50%, #FFFFFF 50%, #FFFFFF 100%);
 }
 
 body {
@@ -225,14 +235,14 @@ body {
   opacity: 1;
 }
 
-/* Violet, per the reference: lavender light at the top, deepening to indigo,
-   with a soft pink glow low on the left. Static (no blur, no animation). */
+/* Deep violet, per the reference: dark indigo-purple at the top, a violet
+   glow behind the balance, a warm glow low on the left. Static. */
 .dark .glide-bg-wash {
   background:
-    radial-gradient(ellipse 90% 45% at 12% 0%, rgba(196, 176, 255, 0.55) 0%, transparent 62%),
-    radial-gradient(ellipse 75% 40% at 100% 28%, rgba(125, 95, 255, 0.45) 0%, transparent 70%),
-    radial-gradient(ellipse 85% 45% at 0% 100%, rgba(255, 150, 200, 0.22) 0%, transparent 70%),
-    linear-gradient(180deg, #7A5CF0 0%, #5E43DA 38%, #4B33BF 72%, #3A2A9C 100%);
+    radial-gradient(ellipse 85% 42% at 50% 36%, rgba(146, 96, 255, 0.58) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 38% at 100% 6%, rgba(120, 80, 240, 0.35) 0%, transparent 70%),
+    radial-gradient(ellipse 90% 45% at 0% 100%, rgba(255, 140, 130, 0.22) 0%, transparent 70%),
+    linear-gradient(180deg, #22105A 0%, #371B86 38%, #4726AC 70%, #3A1E8E 100%);
 }
 
 /* Brand glow utility — apply sparingly to the user's primary focal points
@@ -1548,7 +1558,7 @@ html[data-splash] .glide-splash {
       rgba(125, 95, 255, 0.25) 42%,
       transparent 75%
     ),
-    linear-gradient(180deg, #7A5CF0 0%, #5E43DA 45%, #3A2A9C 100%);
+    linear-gradient(180deg, #22105A 0%, #3A1C8C 50%, #4726AC 100%);
 }
 html[data-splash="leaving"] .glide-splash {
   pointer-events: none;

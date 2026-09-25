@@ -1,5 +1,6 @@
 "use client";
 
+import { PaperHeroArt } from "@/components/illustrations";
 import { TransactionList } from "@/components/transaction-list";
 import type { ActivityDateGroup } from "@/lib/activity";
 
@@ -18,15 +19,16 @@ export function ActivityFeed({
 
   if (groups.length === 0) {
     return (
-      <p
-        className="mt-6 rounded-2xl border px-4 py-12 text-center text-sm font-medium text-[color:var(--glide-on-elevated-variant)]"
+      <div
+        className="mt-6 flex flex-col items-center rounded-3xl border px-4 pb-8 pt-5 text-center text-sm font-medium text-[color:var(--glide-on-elevated-variant)]"
         style={{
           background: "var(--glide-surface-elevated)",
           borderColor: "var(--glide-elevated-border)",
         }}
       >
-        {emptyMessage ?? "No activity matches these filters"}
-      </p>
+        <PaperHeroArt className="h-36 w-auto" />
+        <p className="mt-3">{emptyMessage ?? "No activity matches these filters"}</p>
+      </div>
     );
   }
 
