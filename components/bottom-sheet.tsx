@@ -52,7 +52,7 @@ export function BottomSheet({
         className="glide-sheet-backdrop absolute inset-0 bg-black/45"
       />
       <div
-        className="glide-sheet-panel glide-surface-card relative max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-b-none rounded-t-3xl pb-[max(1rem,env(safe-area-inset-bottom))] pt-2"
+        className="glide-sheet-panel glide-surface-card relative max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-b-none rounded-t-3xl pb-[max(1rem,var(--glide-safe-bottom))] pt-2"
         style={{ borderBottom: "none" }}
       >
         <div className="flex items-center justify-between px-5 pb-1 pt-2">

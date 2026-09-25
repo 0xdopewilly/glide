@@ -998,7 +998,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
 
       <form
         onSubmit={handleSubmit}
-        className="shrink-0 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
+        className="shrink-0 px-3 pb-[max(0.75rem,var(--glide-safe-bottom))] pt-2"
       >
         <div
           className="glide-on-elevated-surface flex items-center gap-2 rounded-[28px] border p-1.5"

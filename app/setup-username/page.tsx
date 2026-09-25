@@ -134,7 +134,7 @@ export default function SetupUsernamePage() {
     <OnboardingShell>
       <form
         onSubmit={(e) => void handleSubmit(e)}
-        className="flex flex-1 flex-col px-7 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]"
+        className="flex flex-1 flex-col px-7 pb-[max(1.5rem,var(--glide-safe-bottom))] pt-[max(3.5rem,env(safe-area-inset-top))]"
       >
         <h1 className="text-2xl font-bold tracking-tight">Pick your pay tag</h1>
         <p className="mt-2 text-sm leading-relaxed glide-muted">

@@ -4,6 +4,10 @@
 
 :root {
   color-scheme: light;
+  /* Bottom safe-area inset used by every bottom padding in the app; the
+     viewport script zeroes it where iOS already reserves the home-indicator
+     strip itself (lib/viewport-script.ts). */
+  --glide-safe-bottom: env(safe-area-inset-bottom, 0px);
   /* glidepay light, refined brand palette: page bg #F7F9FC (very light
      blue-gray, not pure white), pure-white #FFFFFF cards, accent purple
      #5B3DF5 (same hex as dark), dark navy #062448 as text, soft borders

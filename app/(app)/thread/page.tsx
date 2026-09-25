@@ -138,7 +138,7 @@ export default function ThreadPage() {
       </div>
 
       {cp ? (
-        <div className="flex shrink-0 gap-2 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2">
+        <div className="flex shrink-0 gap-2 px-5 pb-[max(0.75rem,var(--glide-safe-bottom))] pt-2">
           <Link
             href={`/send?to=${encodeURIComponent(target)}`}
             className="glide-tap flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-[15px] font-semibold"

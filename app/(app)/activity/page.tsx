@@ -33,7 +33,7 @@ export default function ActivityPage() {
   return (
     <>
       <PageHeader title="Activity" backHref="/" />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(1.5rem,var(--glide-safe-bottom))]">
         <ActivityToolbar
           kind={kind}
           period={period}

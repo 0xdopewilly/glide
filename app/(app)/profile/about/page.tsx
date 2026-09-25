@@ -28,7 +28,7 @@ export default function AboutAccountPage() {
   return (
     <>
       <PageHeader title="How your account works" backHref="/profile" />
-      <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,var(--glide-safe-bottom))]">
         <div className="glide-surface-card mt-4 shrink-0 rounded-2xl">
           {POINTS.map(({ icon, title, body }) => (
             <div key={title} className="flex gap-3 px-4 py-4">

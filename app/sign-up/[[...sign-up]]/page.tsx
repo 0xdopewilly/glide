@@ -41,7 +41,7 @@ export default function SignUpPage() {
         </Link>
       </header>
 
-      <div className="relative z-10 flex flex-1 flex-col items-center px-6 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4">
+      <div className="relative z-10 flex flex-1 flex-col items-center px-6 pb-[max(2rem,var(--glide-safe-bottom))] pt-4">
         <div className="flex w-full max-w-[400px] flex-1 flex-col items-center">
           <div className="flex flex-col items-center pt-6">
             <Image

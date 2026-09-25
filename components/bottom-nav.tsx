@@ -22,7 +22,7 @@ export function BottomNav() {
   const pathname = usePathname();
   return (
     <nav
-      className="relative z-40 shrink-0 rounded-t-[26px] px-2 pt-1.5 pb-[max(env(safe-area-inset-bottom),8px)]"
+      className="relative z-40 shrink-0 rounded-t-[26px] px-2 pt-1.5 pb-[max(var(--glide-safe-bottom),8px)]"
       style={{
         background: "var(--glide-nav-surface)",
         boxShadow: "0 -10px 30px rgba(24, 16, 80, 0.14)",

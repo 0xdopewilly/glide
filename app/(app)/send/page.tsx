@@ -579,7 +579,7 @@ export default function SendPage() {
         </BottomSheet>
       ) : null}
 
-      <div className="flex min-h-0 flex-1 flex-col px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="flex min-h-0 flex-1 flex-col px-5 pb-[max(0.75rem,var(--glide-safe-bottom))]">
         {/* TO ----------------------------------------------------------- */}
         <div
           className={`mt-1 flex shrink-0 items-center gap-2 rounded-full py-1 pl-4 pr-1 transition-shadow ${recipientBorderClass}`}

@@ -32,7 +32,7 @@ export default function ContactsPage() {
   return (
     <>
       <PageHeader title="Contacts" backHref="/profile" />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,var(--glide-safe-bottom))]">
         {loading ? (
           <ul className="mt-4 space-y-2" aria-hidden>
             {[0, 1, 2].map((i) => (

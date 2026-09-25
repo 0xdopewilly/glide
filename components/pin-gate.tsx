@@ -190,7 +190,7 @@ export function PinGate() {
       }}
     >
       <div
-        className="w-full max-w-md rounded-t-3xl border p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:rounded-3xl"
+        className="w-full max-w-md rounded-t-3xl border p-6 pb-[max(1.5rem,var(--glide-safe-bottom))] sm:rounded-3xl"
         style={{
           background: "var(--glide-surface-elevated)",
           borderColor: "var(--glide-elevated-border)",

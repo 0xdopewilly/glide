@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorReporter } from "@/components/error-reporter";
 import { LaunchSplash } from "@/components/launch-splash";
 import { SPLASH_BOOT_SCRIPT } from "@/lib/splash-script";
+import { VIEWPORT_BOOT_SCRIPT } from "@/lib/viewport-script";
 import { AuthProvider } from "@/context/auth-context";
 import { WalletProvider } from "@/context/wallet-context";
 
@@ -105,6 +106,8 @@ export default function RootLayout({
       <head>
         {/* Runs before first paint: see components/launch-splash.tsx. */}
         <script dangerouslySetInnerHTML={{ __html: SPLASH_BOOT_SCRIPT }} />
+        {/* iOS 26 double bottom inset: see lib/viewport-script.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: VIEWPORT_BOOT_SCRIPT }} />
       </head>
       <body className="h-full font-sans antialiased" suppressHydrationWarning>
         <LaunchSplash />

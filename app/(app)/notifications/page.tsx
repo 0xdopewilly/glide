@@ -54,7 +54,7 @@ export default function NotificationsPage() {
   return (
     <>
       <PageHeader title="Notifications" backHref="/" />
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,var(--glide-safe-bottom))]">
         <div className="mt-1 flex items-center justify-between gap-3">
           <p className="text-sm glide-muted">
             {unreadCount > 0

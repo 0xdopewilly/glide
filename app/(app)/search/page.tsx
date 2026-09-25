@@ -159,7 +159,7 @@ export default function SearchPage() {
         </label>
       </header>
 
-      <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <div className="glide-scroll flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-[max(2rem,var(--glide-safe-bottom))]">
         {tagResult ? (
           <SettingsSection title="On glidepay">
             <SettingsRow

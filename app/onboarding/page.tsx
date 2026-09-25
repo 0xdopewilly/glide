@@ -176,7 +176,7 @@ export default function OnboardingPage() {
             ease: [0.32, 0.72, 0, 1],
             delay: 0.32,
           }}
-          className="px-6 pb-[max(1.75rem,env(safe-area-inset-bottom))] pt-4"
+          className="px-6 pb-[max(1.75rem,var(--glide-safe-bottom))] pt-4"
         >
           <div className="space-y-3">
             <div

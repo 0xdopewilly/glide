@@ -219,7 +219,7 @@ export default function ReceivePage() {
 
   return (
     <FlowPage title="Receive" backHref="/">
-      <div className="slide-up-bouncy flex flex-col px-5 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <div className="slide-up-bouncy flex flex-col px-5 pb-[max(2rem,var(--glide-safe-bottom))]">
         <div className="mt-6 flex flex-col items-center text-center">
           <UserAvatar size="lg" />
           <p className="mt-4 text-[20px] font-semibold tracking-tight text-[var(--glide-text)]">
