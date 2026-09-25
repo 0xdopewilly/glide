@@ -204,6 +204,14 @@ export default function HomePage() {
             <BillyArt />
           </Link>
 
+          {/* ASSETS */}
+          <div className="mt-6 shrink-0">
+            <TokenBalances tokens={tokens} loading={loading} />
+          </div>
+
+          {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
+          <SavingsCard className="mt-6" onChange={() => void refresh()} />
+
           {/* LAST TRANSACTIONS — each its own card */}
           <section className="mt-6 shrink-0" aria-label="Transactions">
             <div className="mb-3 flex items-center justify-between px-1">
@@ -226,14 +234,6 @@ export default function HomePage() {
               emptyArt
             />
           </section>
-
-          {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
-          <SavingsCard className="mt-6" onChange={() => void refresh()} />
-
-          {/* ASSETS */}
-          <div className="mt-6 shrink-0">
-            <TokenBalances tokens={tokens} loading={loading} />
-          </div>
         </div>
       </div>
 

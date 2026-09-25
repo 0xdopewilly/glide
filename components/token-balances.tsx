@@ -43,7 +43,7 @@ export function TokenBalances({
 
   return (
     <section aria-label="Assets">
-      <h2 className="mb-2 px-1 text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
+      <h2 className="mb-3 px-1 text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
         Assets
       </h2>
       <div className="glide-surface-card overflow-hidden rounded-2xl py-1">

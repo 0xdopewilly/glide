@@ -10,7 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait",
     // Navy: the OS launch screen blends into the animated splash.
     background_color: "#062448",
-    theme_color: "#F7F9FC",
+    // The default (navy) theme; the page keeps theme-color on the live theme.
+    theme_color: "#0A2F5C",
     icons: [
       {
         src: "/icon-192.png",

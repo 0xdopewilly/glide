@@ -56,19 +56,18 @@ function probe(css: string): number {
 
 function readDiagnostics(): string[] {
   const d = document.documentElement;
-  const cs = getComputedStyle(d);
   const shell = document.querySelector(".app-shell-root")?.getBoundingClientRect();
   const nav = document.querySelector("nav.rounded-t-\\[26px\\]")?.getBoundingClientRect();
   const standalone =
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as { standalone?: boolean }).standalone === true;
   return [
-    `standalone: ${standalone}  fix: ${d.dataset.viewportFix ?? "-"}`,
+    `standalone: ${standalone}`,
     `screen: ${screen.width}x${screen.height}  dpr: ${window.devicePixelRatio}`,
     `inner: ${window.innerWidth}x${window.innerHeight}  client: ${d.clientHeight}`,
     `visual: ${Math.round(window.visualViewport?.height ?? 0)}  100vh: ${probe("height:100vh")}  100dvh: ${probe("height:100dvh")}  100lvh: ${probe("height:100lvh")}`,
     `inset top: ${probe("height:env(safe-area-inset-top,0px)")}  bottom: ${probe("height:env(safe-area-inset-bottom,0px)")}`,
-    `--safe-bottom: ${cs.getPropertyValue("--glide-safe-bottom").trim() || "-"}  --extend: ${cs.getPropertyValue("--glide-shell-extend").trim() || "-"}`,
+    `theme-color: ${document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.content ?? "-"}`,
     `shell: top ${Math.round(shell?.top ?? -1)} bottom ${Math.round(shell?.bottom ?? -1)}`,
     `nav: top ${Math.round(nav?.top ?? -1)} bottom ${Math.round(nav?.bottom ?? -1)}`,
   ];

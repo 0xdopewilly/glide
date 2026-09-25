@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorReporter } from "@/components/error-reporter";
 import { LaunchSplash } from "@/components/launch-splash";
 import { SPLASH_BOOT_SCRIPT } from "@/lib/splash-script";
-import { VIEWPORT_BOOT_SCRIPT } from "@/lib/viewport-script";
+import { THEME_COLOR_BOOT_SCRIPT } from "@/lib/theme-color-script";
 import { AuthProvider } from "@/context/auth-context";
 import { WalletProvider } from "@/context/wallet-context";
 
@@ -35,10 +35,8 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F9FC" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A2F5C" },
-  ],
+  // theme-color follows the app's theme, not the system's: see
+  // lib/theme-color-script.ts.
 };
 
 export const metadata: Metadata = {
@@ -59,7 +57,12 @@ export const metadata: Metadata = {
   appleWebApp: {
     title: "glidepay",
     capable: true,
-    statusBarStyle: "black-translucent",
+    // Not "black-translucent": iOS 26 then draws the app under the status bar
+    // but sizes it as if it were below it, leaving an unpaintable strip the
+    // height of the status bar under the tab bar (WebKit bug 301108). With the
+    // default style the app runs from below the status bar to the true
+    // bottom edge. iOS caches this per home-screen icon: re-add the app.
+    statusBarStyle: "default",
   },
   // Next emits only the generic `mobile-web-app-capable`; iOS still keys the
   // full-screen web app (drawing under the status bar and home indicator,
@@ -106,8 +109,7 @@ export default function RootLayout({
       <head>
         {/* Runs before first paint: see components/launch-splash.tsx. */}
         <script dangerouslySetInnerHTML={{ __html: SPLASH_BOOT_SCRIPT }} />
-        {/* iOS 26 double bottom inset: see lib/viewport-script.ts. */}
-        <script dangerouslySetInnerHTML={{ __html: VIEWPORT_BOOT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_COLOR_BOOT_SCRIPT }} />
       </head>
       <body className="h-full font-sans antialiased" suppressHydrationWarning>
         <LaunchSplash />

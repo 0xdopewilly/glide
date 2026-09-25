@@ -4,9 +4,7 @@
 
 :root {
   color-scheme: light;
-  /* Bottom safe-area inset used by every bottom padding in the app; the
-     viewport script zeroes it where iOS already reserves the home-indicator
-     strip itself (lib/viewport-script.ts). */
+  /* Bottom safe-area inset (home indicator), used by every bottom padding. */
   --glide-safe-bottom: env(safe-area-inset-bottom, 0px);
   /* glidepay light, refined brand palette: page bg #F7F9FC (very light
      blue-gray, not pure white), pure-white #FFFFFF cards, accent purple
@@ -164,12 +162,6 @@
 html,
 body {
   background-color: var(--glide-chrome);
-}
-
-/* Fixed full-screen shells: stretch past a viewport that iOS sizes short of
-   the screen (case B in lib/viewport-script.ts). 0 everywhere else. */
-.glide-full-screen {
-  bottom: calc(-1 * var(--glide-shell-extend, 0px));
 }
 
 body {
@@ -1540,7 +1532,6 @@ html[data-splash] .glide-splash {
   display: flex;
   align-items: center;
   justify-content: center;
-  bottom: calc(-1 * var(--glide-shell-extend, 0px));
   background-color: #0A2F5C; /* sampled by iOS for the bars */
   background-image:
     radial-gradient(
