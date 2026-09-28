@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { IS_MAINNET } from "@/lib/network";
 
 const isPublicRoute = createRouteMatcher([
@@ -38,7 +38,13 @@ const authorizedParties = [
     : []),
 ];
 
-export default clerkMiddleware(
+/** The canonical app host on mainnet. Clerk production only signs people in on
+ * glidepay.cash domains, so the old vercel.app link sends pages here. API
+ * routes are left alone: webhooks and cron may still call them directly. */
+const CANONICAL_HOST = "app.glidepay.cash";
+const LEGACY_HOSTS = new Set(["glide-arc.vercel.app"]);
+
+const clerk = clerkMiddleware(
   async (auth, request) => {
     if (IS_MAINNET && isTestnetOnlyRoute(request)) {
       return new NextResponse(null, { status: 404 });
@@ -70,6 +76,21 @@ export default clerkMiddleware(
     },
   },
 );
+
+/** Legacy-host redirect first, before Clerk sees the request (a production
+ * Clerk key rejects hosts outside glidepay.cash). */
+export default function proxy(request: NextRequest, event: NextFetchEvent) {
+  const host = request.headers.get("host") ?? "";
+  if (
+    IS_MAINNET &&
+    LEGACY_HOSTS.has(host) &&
+    !request.nextUrl.pathname.startsWith("/api/")
+  ) {
+    const { pathname, search } = request.nextUrl;
+    return NextResponse.redirect(`https://${CANONICAL_HOST}${pathname}${search}`, 308);
+  }
+  return clerk(request, event);
+}
 
 export const config = {
   matcher: [
