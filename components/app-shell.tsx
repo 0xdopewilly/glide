@@ -18,6 +18,7 @@ const FULL_BLEED_ROUTES = [
   "/pay",
   "/profile/details",
   "/profile/about",
+  "/profile/ops",
   "/activity",
   "/contacts",
   "/notifications",

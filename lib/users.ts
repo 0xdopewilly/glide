@@ -3,7 +3,7 @@ import {
   RECEIVE_CHAINS,
   type ReceiveChainKey,
 } from "@/lib/circle";
-import { hasGasWallet } from "@/lib/gas-refill";
+import { gasWalletReady } from "@/lib/gas-refill";
 import { addressesEqual } from "@/lib/tokens";
 import {
   createGlideWallet,
@@ -165,7 +165,7 @@ export type ReceiveAddress = {
   circleBlockchain: string;
   walletId: string;
   address: string;
-  /** False when the chain has no gas service wallet (see hasGasWallet). */
+  /** False when the chain's gas wallet isn't ready (see gasWalletReady). */
   enabled?: boolean;
 };
 
@@ -210,7 +210,7 @@ export async function getOrCreateReceiveAddress(
 }
 
 /** Universal Receive addresses for a user: created if missing on every chain
- * with a gas service wallet. Addresses already created on other chains are
+ * whose gas wallet is ready. Addresses already created on other chains are
  * returned too (never created anew), flagged enabled: false, so the caller
  * can still surface funds sent there. */
 export async function getReceiveAddresses(
@@ -221,15 +221,20 @@ export async function getReceiveAddresses(
     select: { chain: true },
   });
   const provisioned = new Set(existing.map((row) => row.chain));
-  const chains = (Object.keys(RECEIVE_CHAINS) as ReceiveChainKey[]).filter(
-    (chain) =>
-      hasGasWallet(RECEIVE_CHAINS[chain].circleBlockchain) ||
-      provisioned.has(RECEIVE_CHAINS[chain].circleBlockchain),
+  const all = Object.keys(RECEIVE_CHAINS) as ReceiveChainKey[];
+  const ready = await Promise.all(
+    all.map((chain) => gasWalletReady(RECEIVE_CHAINS[chain].circleBlockchain)),
   );
+  const chains = all
+    .map((chain, i) => ({ chain, enabled: ready[i] }))
+    .filter(
+      ({ chain, enabled }) =>
+        enabled || provisioned.has(RECEIVE_CHAINS[chain].circleBlockchain),
+    );
   return Promise.all(
-    chains.map(async (chain) => ({
+    chains.map(async ({ chain, enabled }) => ({
       ...(await getOrCreateReceiveAddress(userId, chain)),
-      enabled: hasGasWallet(RECEIVE_CHAINS[chain].circleBlockchain),
+      enabled,
     })),
   );
 }

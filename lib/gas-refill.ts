@@ -5,7 +5,15 @@ import {
   type ExternalChainKey,
   type GlideNetwork,
 } from "@/lib/network";
-import { createPublicClient, http, parseEther, type Address, type Chain } from "viem";
+import type { Blockchain } from "@circle-fin/developer-controlled-wallets";
+import {
+  createPublicClient,
+  formatEther,
+  http,
+  parseEther,
+  type Address,
+  type Chain,
+} from "viem";
 import {
   arbitrum,
   arbitrumSepolia,
@@ -55,38 +63,33 @@ const REFILL_BY_CHAIN: Record<
   },
 };
 
-/** Env var holding the Glide-operated gas service wallet id for a chain,
- * e.g. GLIDE_GAS_WALLET_BASE_SEPOLIA (testnet) or GLIDE_GAS_WALLET_BASE
- * (mainnet). The wallet is a Circle wallet holding native gas for refills
- * (the admin tool creates an EOA); provision it via /api/admin/gas-wallet
- * and fund it. */
-export function gasWalletEnvVar(circleBlockchain: string): string {
+/** Env var that can pin a chain's gas service wallet id, e.g.
+ * GLIDE_GAS_WALLET_BASE_SEPOLIA (testnet setups). Optional: without it the
+ * wallet is found by its Circle refId (gasWalletRefId). */
+function gasWalletEnvVar(circleBlockchain: string): string {
   return `GLIDE_GAS_WALLET_${circleBlockchain.replace(/-/g, "_")}`;
 }
 
-/** Whether a gas service wallet is configured for the chain. Universal
- * Receive is only offered where it is: without one a deposit can't be bridged
- * to Arc (the bridge needs native gas in the user's source wallet) and would
- * sit on the source chain. */
-export function hasGasWallet(circleBlockchain: string): boolean {
-  return Boolean(process.env[gasWalletEnvVar(circleBlockchain)]?.trim());
+/** Circle refId that marks a wallet as glidepay's gas service wallet for a
+ * chain. The Operations screen tags the wallets it creates with it, so a new
+ * gas wallet is picked up without an env var or a redeploy. */
+export function gasWalletRefId(circleBlockchain: string): string {
+  return `glidepay-gas-${circleBlockchain}`;
 }
 
+/** A chain counts as ready once its gas wallet holds this many refills (one
+ * refill plus headroom for the wallet's own transfer fee). */
+const READY_REFILLS = BigInt(2);
+
+/** Suggested funding: enough for about this many first-time sweeps. */
+const SUGGESTED_REFILLS = BigInt(10);
+
 /** Refill config for the active network, keyed by Circle blockchain id. */
-const REFILL_CONFIG: Record<
-  string,
-  RefillChainConfig & { serviceWalletIdEnv: string }
-> = Object.fromEntries(
-  (Object.keys(EXTERNAL_CHAINS) as ExternalChainKey[]).map((key) => {
-    const circleBlockchain = EXTERNAL_CHAINS[key].circleBlockchain;
-    return [
-      circleBlockchain,
-      {
-        ...REFILL_BY_CHAIN[key][GLIDE_NETWORK],
-        serviceWalletIdEnv: gasWalletEnvVar(circleBlockchain),
-      },
-    ];
-  }),
+const REFILL_CONFIG: Record<string, RefillChainConfig> = Object.fromEntries(
+  (Object.keys(EXTERNAL_CHAINS) as ExternalChainKey[]).map((key) => [
+    EXTERNAL_CHAINS[key].circleBlockchain,
+    REFILL_BY_CHAIN[key][GLIDE_NETWORK],
+  ]),
 );
 
 function isSupportedChain(chain: string): boolean {
@@ -96,6 +99,125 @@ function isSupportedChain(chain: string): boolean {
 async function readNativeBalance(chain: Chain, address: Address): Promise<bigint> {
   const client = createPublicClient({ chain, transport: http() });
   return client.getBalance({ address });
+}
+
+type GasWallet = { id: string; address: string };
+
+const walletCache = new Map<string, { value: GasWallet | null; at: number }>();
+const readyCache = new Map<string, { value: boolean; at: number }>();
+const FOUND_TTL_MS = 10 * 60_000;
+const MISSING_TTL_MS = 60_000;
+const READY_TTL_MS = 60_000;
+
+/** The chain's gas service wallet: the env var id when one is set, else the
+ * Circle wallet tagged with gasWalletRefId. Cached per instance. */
+export async function resolveGasWallet(
+  circleBlockchain: string,
+): Promise<GasWallet | null> {
+  const hit = walletCache.get(circleBlockchain);
+  if (hit && Date.now() - hit.at < (hit.value ? FOUND_TTL_MS : MISSING_TTL_MS)) {
+    return hit.value;
+  }
+  const initialized = createCircleClient();
+  if ("error" in initialized) return null;
+  const { client } = initialized;
+
+  let value: GasWallet | null = null;
+  const envId = process.env[gasWalletEnvVar(circleBlockchain)]?.trim();
+  if (envId) {
+    const w = (await client.getWallet({ id: envId })).data?.wallet;
+    if (w?.id && w.address) value = { id: w.id, address: w.address };
+  } else {
+    const wallets =
+      (
+        await client.listWallets({
+          refId: gasWalletRefId(circleBlockchain),
+          blockchain: circleBlockchain as Blockchain,
+        })
+      ).data?.wallets ?? [];
+    const w = wallets.find((x) => x.state === "LIVE") ?? wallets[0];
+    if (w?.id && w.address) value = { id: w.id, address: w.address };
+  }
+  walletCache.set(circleBlockchain, { value, at: Date.now() });
+  return value;
+}
+
+/** Drop the cached lookup, e.g. right after the Operations screen creates a
+ * gas wallet. */
+export function forgetGasWallet(circleBlockchain: string): void {
+  walletCache.delete(circleBlockchain);
+  readyCache.delete(circleBlockchain);
+}
+
+/** Whether Universal Receive can run on the chain: its gas wallet exists and
+ * holds enough native gas for a refill. Without that a deposit can't be
+ * bridged to Arc (the bridge needs native gas in the user's source wallet)
+ * and would sit on the source chain, so Receive doesn't offer the chain.
+ * A drained gas wallet takes its chain offline by itself. Cached briefly. */
+export async function gasWalletReady(circleBlockchain: string): Promise<boolean> {
+  if (!isSupportedChain(circleBlockchain)) return false;
+  const hit = readyCache.get(circleBlockchain);
+  if (hit && Date.now() - hit.at < READY_TTL_MS) return hit.value;
+  let value = false;
+  try {
+    const wallet = await resolveGasWallet(circleBlockchain);
+    if (wallet) {
+      const config = REFILL_CONFIG[circleBlockchain];
+      const balance = await readNativeBalance(config.chain, wallet.address as Address);
+      value = balance >= parseEther(config.refillEth) * READY_REFILLS;
+    }
+  } catch (err) {
+    console.warn("[Glide] gas wallet check:", circleBlockchain, err);
+  }
+  readyCache.set(circleBlockchain, { value, at: Date.now() });
+  return value;
+}
+
+export type GasWalletStatus = {
+  circleBlockchain: string;
+  /** Native gas token, e.g. "ETH" or "POL". */
+  symbol: string;
+  walletId: string | null;
+  address: string | null;
+  /** Current native balance, in whole tokens ("0.0042"). Null if unknown. */
+  balance: string | null;
+  /** Amount sent to a user's wallet before a sweep. */
+  refill: string;
+  /** Balance at which the chain goes live. */
+  readyAt: string;
+  /** Suggested funding (about SUGGESTED_REFILLS sweeps). */
+  suggested: string;
+  ready: boolean;
+};
+
+/** Fresh (uncached) status of a chain's gas wallet, for the Operations
+ * screen. */
+export async function describeGasWallet(
+  circleBlockchain: string,
+): Promise<GasWalletStatus> {
+  const config = REFILL_CONFIG[circleBlockchain];
+  const refill = parseEther(config.refillEth);
+  forgetGasWallet(circleBlockchain);
+  const wallet = await resolveGasWallet(circleBlockchain);
+  let balance: bigint | null = null;
+  if (wallet) {
+    balance = await readNativeBalance(config.chain, wallet.address as Address).catch(
+      () => null,
+    );
+  }
+  const ready = balance !== null && balance >= refill * READY_REFILLS;
+  readyCache.set(circleBlockchain, { value: ready, at: Date.now() });
+  return {
+    circleBlockchain,
+    symbol: config.chain.nativeCurrency.symbol,
+    walletId: wallet?.id ?? null,
+    address: wallet?.address ?? null,
+    balance: balance === null ? null : formatEther(balance),
+    refill: config.refillEth,
+    readyAt: formatEther(refill * READY_REFILLS),
+    suggested: formatEther(refill * SUGGESTED_REFILLS),
+    ready,
+  };
 }
 
 /** Polls Circle for a transaction id until it confirms or we time out.
@@ -142,12 +264,13 @@ export async function ensureSourceGas(input: {
   }
 
   const config = REFILL_CONFIG[input.circleBlockchain];
-  const serviceWalletId = process.env[config.serviceWalletIdEnv]?.trim();
-  if (!serviceWalletId) {
+  const serviceWallet = await resolveGasWallet(input.circleBlockchain);
+  if (!serviceWallet) {
     throw new Error(
-      `Missing ${config.serviceWalletIdEnv} - provision a Glide gas wallet on ${input.circleBlockchain} and set the env var.`,
+      `No gas wallet on ${input.circleBlockchain} - create one in Profile → Operations and fund it.`,
     );
   }
+  const serviceWalletId = serviceWallet.id;
 
   const userAddress = input.userWalletAddress as Address;
   const balance = await readNativeBalance(config.chain, userAddress);

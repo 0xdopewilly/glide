@@ -14,6 +14,7 @@ import {
   Check,
   Copy,
   FileText,
+  Fuel,
   LifeBuoy,
   LogOut,
   Palette,
@@ -25,7 +26,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 const SITE = "https://glidepay.cash";
 
@@ -120,6 +121,8 @@ export default function ProfilePage() {
           <PushNotificationsToggle />
           <AppearanceRow />
         </SettingsSection>
+
+        <OperatorSection />
 
         <SettingsSection title="Help">
           <SettingsRow
@@ -321,5 +324,34 @@ function CloseAccount() {
         </button>
       </div>
     </div>
+  );
+}
+
+/** Only the glidepay operator (GLIDE_ADMIN_USER_ID) sees this: the gas
+ * wallets behind Universal Receive. */
+function OperatorSection() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/admin/ops?summary=1")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { isAdmin?: boolean } | null) => {
+        if (live && d?.isAdmin) setIsAdmin(true);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  if (!isAdmin) return null;
+  return (
+    <SettingsSection title="Operator">
+      <SettingsRow
+        icon={Fuel}
+        title="Operations"
+        subtitle="Gas wallets for other chains"
+        href="/profile/ops"
+      />
+    </SettingsSection>
   );
 }
