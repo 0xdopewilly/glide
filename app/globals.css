@@ -1354,6 +1354,16 @@ body {
     color: var(--glide-text) !important;
   }
 
+  /* Outlines. Clerk's production styles zero the border width, so the
+     border colors above drew nothing (white on white in light mode). The
+     element selectors keep this off the text inside the Google button. */
+  .clerk-auth input[class*="cl-formFieldInput"],
+  .clerk-auth input[class*="cl-otpCodeFieldInput"],
+  .clerk-auth button[class*="cl-socialButtonsBlockButton"] {
+    border-width: 1px !important;
+    border-style: solid !important;
+  }
+
   .clerk-auth [class*="cl-formButtonPrimary"] {
     background: var(--glide-primary) !important;
     color: var(--glide-on-primary) !important;

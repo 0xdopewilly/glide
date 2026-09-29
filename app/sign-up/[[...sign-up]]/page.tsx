@@ -45,12 +45,20 @@ export default function SignUpPage() {
         <div className="flex w-full max-w-[400px] flex-1 flex-col items-center">
           <div className="flex flex-col items-center pt-6">
             <Image
-              src="/glidepay-wordmark.png"
+              src="/glidepay-wordmark-dark.png"
               alt="glidepay"
               width={1205}
               height={397}
               priority
-              className="h-11 w-auto"
+              className="h-11 w-auto dark:hidden"
+            />
+            <Image
+              src="/glidepay-wordmark.png"
+              alt=""
+              width={1205}
+              height={397}
+              priority
+              className="hidden h-11 w-auto dark:block"
             />
             <p
               className="mt-4 text-center text-[15px] font-medium"
