@@ -114,6 +114,12 @@ export default function RootLayout({
       <body className="h-full font-sans antialiased" suppressHydrationWarning>
         <LaunchSplash />
         <ErrorReporter />
+        {/* Clerk's browser code loads from jsDelivr, pinned to exact versions
+            (NEXT_PUBLIC_CLERK_JS_URL / NEXT_PUBLIC_CLERK_UI_URL on Vercel). The
+            same npm files Clerk's /npm route mirrors (checked byte for byte),
+            but without two trips through our /__clerk proxy, which made them
+            land seconds late, mid-onboarding. Bump them with @clerk/nextjs.
+            Sign-in itself still goes through /__clerk. */}
         <ClerkProvider
           signInUrl="/sign-in"
           signUpUrl="/sign-up"

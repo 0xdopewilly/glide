@@ -1376,12 +1376,14 @@ body {
     border: 1px solid var(--glide-border);
   }
 
+  /* A wider radial gradient is already soft: no filter: blur(), which the
+     phone re-rendered on every slide change (the slide animates around it). */
   .onboarding-hero-glow {
     position: absolute;
-    width: min(88%, 320px);
+    width: min(115%, 420px);
     aspect-ratio: 1;
     border-radius: 50%;
-    filter: blur(56px);
+    opacity: 0.8;
     pointer-events: none;
   }
 
