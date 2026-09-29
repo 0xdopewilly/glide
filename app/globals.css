@@ -1293,11 +1293,11 @@ body {
      social-button colors below must still win over this rule. */
 
   /* Hide Clerk's built-in "Don't have an account? / Already have an account?"
-     switch. Both auth pages render their own branded footer link below the
-     card, so Clerk's is a duplicate. `[class*="cl-footerAction"]` matches the
-     hashed variants (cl-footerAction, __signIn, __signUp) and its text/link
-     children; "Secured by Clerk" lives in cl-logoBox so it stays. */
-  .clerk-auth [class*="cl-footerAction"] {
+     switch on the start screens: both auth pages render their own branded
+     link below the card, so Clerk's is a duplicate. Only that one (its link
+     is keyed signIn/signUp.start.actionLink): other steps put "Use another
+     method" in the same footer, and it must stay. */
+  .clerk-auth .cl-footerAction:has([data-localization-key$=".start.actionLink"]) {
     display: none !important;
   }
 
@@ -1336,32 +1336,65 @@ body {
     color: var(--glide-muted) !important;
   }
 
-  .clerk-auth [class*="cl-formFieldInput"],
-  .clerk-auth [class*="cl-otpCodeFieldInput"] {
+  /* Fields draw their own border, focus and error states. Clerk draws
+     them as box-shadows, which the container rule above removes, and its
+     production styles zero the border width. Exact class selectors: the
+     code boxes are divs (.cl-otpCodeFieldInput) inside .cl-otpCodeFieldInputs,
+     and the eye button is .cl-formFieldInputShowPasswordButton. */
+  .clerk-auth {
+    --glide-auth-field-border: #cfd8e6;
+  }
+  .dark .clerk-auth {
+    --glide-auth-field-border: rgba(255, 255, 255, 0.14);
+  }
+
+  .clerk-auth .cl-formFieldInput,
+  .clerk-auth .cl-otpCodeFieldInput {
     color: var(--glide-text) !important;
     background: var(--glide-input) !important;
-    border-color: var(--glide-border) !important;
+    border: 1px solid var(--glide-auth-field-border) !important;
     caret-color: var(--glide-accent) !important;
+  }
+
+  .clerk-auth .cl-formFieldInput:focus,
+  .clerk-auth .cl-formFieldInput:focus-visible {
+    border-color: var(--glide-primary) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--glide-primary) 22%, transparent) !important;
+    outline: none !important;
+  }
+
+  /* The code field is one hidden input over the boxes; Clerk marks the box
+     being typed into with data-focus-within="true". */
+  .clerk-auth .cl-otpCodeFieldInput[data-focus-within="true"] {
+    border-color: var(--glide-primary) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--glide-primary) 22%, transparent) !important;
+  }
+
+  .clerk-auth .cl-formFieldInputShowPasswordButton {
+    color: var(--glide-muted) !important;
+    background: transparent !important;
+  }
+  .clerk-auth .cl-formFieldInputShowPasswordButton:hover {
+    color: var(--glide-text) !important;
+  }
+
+  .clerk-auth .cl-formFieldInput[aria-invalid="true"],
+  .clerk-auth .cl-otpCodeFieldInput[aria-invalid="true"] {
+    border-color: var(--glide-error) !important;
   }
 
   .clerk-auth [class*="cl-socialButtonsBlockButton"] {
     color: var(--glide-text) !important;
     background: var(--glide-input) !important;
-    border-color: var(--glide-border) !important;
+  }
+
+  .clerk-auth .cl-socialButtonsBlockButton,
+  .clerk-auth .cl-alternativeMethodsBlockButton {
+    border: 1px solid var(--glide-auth-field-border) !important;
   }
 
   .clerk-auth [class*="cl-socialButtonsBlockButtonText"] {
     color: var(--glide-text) !important;
-  }
-
-  /* Outlines. Clerk's production styles zero the border width, so the
-     border colors above drew nothing (white on white in light mode). The
-     element selectors keep this off the text inside the Google button. */
-  .clerk-auth input[class*="cl-formFieldInput"],
-  .clerk-auth input[class*="cl-otpCodeFieldInput"],
-  .clerk-auth button[class*="cl-socialButtonsBlockButton"] {
-    border-width: 1px !important;
-    border-style: solid !important;
   }
 
   .clerk-auth [class*="cl-formButtonPrimary"] {
@@ -1380,7 +1413,9 @@ body {
   .clerk-auth [class*="cl-footerActionLink"],
   .clerk-auth [class*="cl-formResendCodeLink"],
   .clerk-auth [class*="cl-alternativeMethodsBlockButton"],
-  .clerk-auth [class*="cl-identityPreviewEditButton"] {
+  .clerk-auth [class*="cl-identityPreviewEditButton"],
+  .clerk-auth .cl-backLink,
+  .clerk-auth .cl-headerBackLink {
     color: var(--glide-accent) !important;
     background: transparent !important;
   }
@@ -1406,7 +1441,7 @@ body {
      should not paint its own opaque background over our lifted card. Only
      inputs / primary CTA / social buttons keep their fills (defined above,
      each with an explicit `background: ...` rule earlier). */
-  .clerk-auth [class^="cl-"]:not([class*="cl-formFieldInput"]):not([class*="cl-otpCodeFieldInput"]):not([class*="cl-formButtonPrimary"]):not([class*="cl-socialButtonsBlockButton"]):not([class*="cl-dividerLine"]) {
+  .clerk-auth [class^="cl-"]:not([class*="cl-formFieldInput"]):not([class*="cl-otpCodeFieldInput"]):not([class*="cl-formButtonPrimary"]):not([class*="cl-socialButtonsBlockButton"]):not([class*="cl-alternativeMethodsBlockButton"]):not([class*="cl-dividerLine"]) {
     background-color: transparent !important;
   }
 
