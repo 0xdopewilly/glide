@@ -1281,11 +1281,14 @@ body {
   .clerk-auth [class*="cl-header"]:not([class*="cl-headerTitle"]):not([class*="cl-headerSubtitle"]),
   .clerk-auth [class*="cl-scrollBox"],
   .clerk-auth [class*="cl-pageScrollBox"],
-  .clerk-auth [class*="cl-socialButtons"]:not([class*="cl-socialButtonsBlockButton"]),
-  .clerk-auth [class*="cl-internal-"] {
+  .clerk-auth [class*="cl-socialButtons"]:not([class*="cl-socialButtonsBlockButton"]):not([class*="providerIcon"]),
+  .clerk-auth [class*="cl-internal-"]:not([class*="providerIcon"]) {
     background: transparent !important;
     box-shadow: none !important;
   }
+
+  /* The provider logos (Google's "G") are background images on
+     cl-providerIcon, so they're kept out of the rule above. */
 
   /* Hide Clerk's built-in "Don't have an account? / Already have an account?"
      switch. Both auth pages render their own branded footer link below the
