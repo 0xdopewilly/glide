@@ -1217,6 +1217,20 @@ body {
     border: 0 !important;
   }
 
+  /* Fill our auth card. The production widget is a fixed ~22rem box with
+     40px padding, wider than the card on phones, so it overflowed to the
+     right. A little padding stays so the card's clip doesn't shave the
+     heading's first letter. */
+  .clerk-auth [class*="cl-rootBox"],
+  .clerk-auth [class*="cl-cardBox"],
+  .clerk-auth [class*="cl-card"]:not([class*="cl-cardBox"]) {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .clerk-auth [class*="cl-card"]:not([class*="cl-cardBox"]) {
+    padding: 0.25rem !important;
+  }
+
   .clerk-auth [class*="cl-headerTitle"] {
     color: var(--glide-text) !important;
   }
