@@ -75,3 +75,6 @@ GoogleService-Info.plist
 
 # Local-only admin / partner notes (contains the PARTNER_ARC_KEY)
 admin-access.md
+
+# clerk configuration (can include secrets)
+/.clerk/

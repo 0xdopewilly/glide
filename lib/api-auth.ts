@@ -57,7 +57,18 @@ async function relinkFromPreviousClerkInstance(
   } catch (err) {
     if (!isClerkAPIResponseError(err) || err.status !== 404) throw err;
   }
-  await relinkUser(previous.id, userId);
+  try {
+    await relinkUser(previous.id, userId);
+  } catch (err) {
+    // A new user's first page load fires several requests at once, and each
+    // tries the re-link; the ones that lose find the row already moved.
+    const moved = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+    if (moved) return;
+    throw err;
+  }
   console.info("[Glide] re-linked account to new Clerk id", {
     from: previous.id,
     to: userId,

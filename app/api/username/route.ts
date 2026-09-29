@@ -21,18 +21,22 @@ export async function POST(request: NextRequest) {
 
   const existing = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { username: true },
+    select: { username: true, displayName: true, email: true, avatarUrl: true },
   });
 
   if (!existing) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
+  // A tag is claimed once. If this account already has one (e.g. it was
+  // reconnected after the sign-in move), hand it back so setup finishes.
   if (existing.username) {
-    return NextResponse.json(
-      { error: "You already have a username", username: existing.username },
-      { status: 400 },
-    );
+    return NextResponse.json({
+      username: existing.username,
+      displayName: existing.displayName ?? "Guest",
+      email: existing.email,
+      avatarUrl: existing.avatarUrl,
+    });
   }
 
   if (!(await isUsernameAvailable(username))) {

@@ -50,13 +50,16 @@ export default function SetupUsernamePage() {
       const res = await fetch(`/api/username/check?u=${encodeURIComponent(u)}`);
       const data = (await res.json()) as {
         available?: boolean;
+        yours?: boolean;
         reason?: string;
       };
       setAvailable(Boolean(data.available));
       setHint(
-        data.available
-          ? `@${u} is available`
-          : (data.reason ?? "That username is taken"),
+        data.yours
+          ? `@${u} is already yours`
+          : data.available
+            ? `@${u} is available`
+            : (data.reason ?? "That username is taken"),
       );
     } catch {
       setHint("Could not check availability");
