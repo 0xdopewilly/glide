@@ -31,7 +31,7 @@ export function StableTokenSegment({
           style={
             value === token
               ? {
-                  background: "var(--glide-accent)",
+                  background: "var(--glide-primary)",
                   color: "var(--glide-on-primary)",
                 }
               : { color: "var(--glide-muted)" }

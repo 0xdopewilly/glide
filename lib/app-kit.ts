@@ -216,13 +216,15 @@ export async function executeArcSwap(input: {
       message.includes("401") ||
       message.includes("403")
     ) {
+      // Operator detail goes to the logs; users get a plain message.
       const status = kitKeyStatus();
-      if (!status.ok) {
-        throw new Error(status.hint ?? "Swap unavailable - kit key not configured.");
-      }
-      throw new Error(
-        "Circle rejected your Kit Key (wrong project or revoked). In Circle Console, create a new Kit Key under the same app as CIRCLE_API_KEY, update CIRCLE_KIT_KEY on Vercel, redeploy, then check /api/health/kit.",
+      console.error(
+        "[Glide] swap auth:",
+        status.ok
+          ? "Circle rejected the Kit Key (wrong project or revoked): create one under the same app as CIRCLE_API_KEY, set CIRCLE_KIT_KEY, redeploy, check /api/health/kit."
+          : (status.hint ?? "Kit key not configured."),
       );
+      throw new Error("Swaps are unavailable right now. Please try again later.");
     }
     throw new Error(message.length < 200 ? message : "Swap could not be completed. Try again.");
   }

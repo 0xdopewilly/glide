@@ -73,7 +73,7 @@ export function FlowProcessingOverlay({
               <span
                 className="glide-arrow-pulse flex h-9 w-9 items-center justify-center rounded-full"
                 style={{
-                  background: "var(--glide-accent)",
+                  background: "var(--glide-primary)",
                   color: "var(--glide-on-primary)",
                 }}
                 aria-hidden
@@ -92,7 +92,7 @@ export function FlowProcessingOverlay({
               <span
                 className="glide-arrow-pulse flex h-9 w-9 items-center justify-center rounded-full"
                 style={{
-                  background: "var(--glide-accent)",
+                  background: "var(--glide-primary)",
                   color: "var(--glide-on-primary)",
                 }}
                 aria-hidden
@@ -122,7 +122,7 @@ export function FlowProcessingOverlay({
         >
           <span
             className="glide-processing-bar-indeterminate absolute inset-y-0 left-0 w-2/5 rounded-full"
-            style={{ background: "var(--glide-accent)" }}
+            style={{ background: "var(--glide-primary)" }}
           />
         </div>
 
@@ -133,7 +133,7 @@ export function FlowProcessingOverlay({
           {title}…
         </p>
         <p
-          className="glide-label-mono mt-1 text-[11px] font-semibold"
+          className="glide-label-mono mt-1 text-[12px] font-semibold"
           style={{ color: "var(--glide-muted)" }}
         >
           {detail}

@@ -44,10 +44,9 @@ export default function PayRequestPage({
     })();
   }, [code]);
 
-  const label =
-    info?.requester.username != null
-      ? info.requester.username
-      : info?.requester.displayName ?? "Someone";
+  const name = info?.requester.displayName?.trim() || null;
+  const tag = info?.requester.username ? `@${info.requester.username}` : null;
+  const label = name ?? tag ?? "Someone";
 
   const goPay = () => {
     if (!info?.payTo) return;
@@ -88,26 +87,24 @@ export default function PayRequestPage({
           <p className="text-sm glide-muted">This request was already paid.</p>
         ) : (
           <>
-            <p className="text-sm font-medium glide-muted">
-              Pay {label}
-              {info.requester.username ? (
-                <span className="block text-xs font-normal glide-muted">
-                  Pay tag
-                </span>
-              ) : null}
+            <p className="text-[15px] font-semibold text-[var(--glide-text)]">
+              {label} requested
             </p>
+            {name && tag ? (
+              <p className="mt-0.5 text-[13px] glide-muted">{tag}</p>
+            ) : null}
             <p className="mt-4 text-5xl font-bold tabular-nums">
               {currencyPrefixForToken(info.token)}
               {info.amount}
             </p>
-            <p className="mt-1 text-xs font-semibold uppercase tracking-wider glide-muted">
+            <p className="mt-1 text-[13px] font-medium glide-muted">
               {stableTokenFromSymbol(info.token)}
             </p>
             {info.note ? (
               <p className="mt-2 text-base glide-muted">&ldquo;{info.note}&rdquo;</p>
             ) : null}
             <GlideButton onClick={goPay} className="mt-10 max-w-sm" uppercase={false}>
-              Pay now
+              Pay {label === "Someone" ? "now" : label.split(" ")[0]}
             </GlideButton>
           </>
         )}

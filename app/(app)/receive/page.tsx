@@ -226,7 +226,7 @@ export default function ReceivePage() {
           <p className="mt-4 text-[20px] font-semibold tracking-tight text-[var(--glide-text)]">
             {profile.displayName.trim() || "Guest"}
           </p>
-          <p className="glide-label-mono mt-2 text-[11px] font-semibold text-[var(--glide-muted)]">
+          <p className="glide-label-mono mt-2 text-[12px] font-semibold text-[var(--glide-muted)]">
             {active.hint}
           </p>
         </div>
@@ -248,7 +248,7 @@ export default function ReceivePage() {
                   type="button"
                   onClick={() => setSelected(t.key)}
                   aria-pressed={isActive}
-                  className="glide-tap glide-label-mono relative shrink-0 px-4 py-2.5 text-[12px] font-bold"
+                  className="glide-tap glide-label-mono relative shrink-0 px-4 py-2.5 text-[12px] font-semibold"
                   style={{
                     color: isActive
                       ? "var(--glide-on-primary)"
@@ -259,7 +259,7 @@ export default function ReceivePage() {
                   {isActive ? (
                     <span
                       className="absolute inset-0 rounded-full"
-                      style={{ background: "var(--glide-accent)" }}
+                      style={{ background: "var(--glide-primary)" }}
                     />
                   ) : null}
                   <span className="relative z-10">{t.label}</span>
@@ -287,7 +287,7 @@ export default function ReceivePage() {
               borderColor: "var(--glide-elevated-border)",
             }}
           >
-            <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+            <p className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]">
               Your {active.label} address
             </p>
             {address ? (
@@ -307,7 +307,7 @@ export default function ReceivePage() {
               </div>
             )}
             {active.key !== "arc" ? (
-              <p className="glide-label-mono mt-3 text-[10px] font-semibold leading-relaxed text-[var(--glide-muted)]">
+              <p className="glide-label-mono mt-3 text-[12px] font-semibold leading-relaxed text-[var(--glide-muted)]">
                 USDC sent here lands on Arc automatically via CCTP — usually
                 within a minute.
                 {minSweep > 0
@@ -327,7 +327,7 @@ export default function ReceivePage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+                  <p className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]">
                     Stuck on {active.label}
                   </p>
                   <p className="mt-1 text-[18px] font-bold tabular-nums tracking-tight text-[var(--glide-text)]">
@@ -338,9 +338,9 @@ export default function ReceivePage() {
                   type="button"
                   onClick={() => void handleSweep()}
                   disabled={sweeping || stuckBalance <= 0 || stuckBalance < minSweep}
-                  className="glide-tap glide-label-mono rounded-full px-4 py-2 text-[11px] font-bold transition-opacity disabled:opacity-40"
+                  className="glide-tap glide-label-mono rounded-full px-4 py-2 text-[12px] font-semibold transition-opacity disabled:opacity-40"
                   style={{
-                    background: "var(--glide-accent)",
+                    background: "var(--glide-primary)",
                     color: "var(--glide-on-primary)",
                   }}
                 >
@@ -349,7 +349,7 @@ export default function ReceivePage() {
               </div>
               {sweepMsg ? (
                 <p
-                  className="glide-label-mono mt-3 text-[10px] font-semibold"
+                  className="glide-label-mono mt-3 text-[12px] font-semibold"
                   style={{ color: "var(--glide-muted)" }}
                 >
                   {sweepMsg}
@@ -368,9 +368,9 @@ export default function ReceivePage() {
             type="button"
             onClick={() => void share()}
             disabled={!address}
-            className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-[11px] font-semibold transition-opacity disabled:opacity-40"
+            className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border py-3.5 text-[12px] font-semibold transition-opacity disabled:opacity-40"
             style={{
-              background: "var(--glide-accent)",
+              background: "var(--glide-primary)",
               color: "var(--glide-on-primary)",
               borderColor: "var(--glide-accent)",
             }}

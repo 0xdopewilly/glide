@@ -17,21 +17,21 @@ export default function ScheduledPage() {
           }}
         >
           <span
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
             style={{
-              background: "var(--glide-accent)",
-              color: "var(--glide-on-primary)",
+              background: "var(--glide-primary-container)",
+              color: "var(--glide-accent)",
             }}
           >
             <CalendarClock className="h-5 w-5" strokeWidth={2.25} />
           </span>
           <div>
-            <p className="text-[15px] font-bold tracking-tight text-[var(--glide-text)]">
-              Recurring sends
+            <p className="text-[15px] font-semibold tracking-tight text-[var(--glide-text)]">
+              Recurring payments
             </p>
             <p className="mt-1 text-xs leading-relaxed text-[var(--glide-muted)]">
-              Rent, allowances, and subscriptions. Processed once per day on the
-              server. Cancel anytime.
+              Rent, allowances and subscriptions, paid on the schedule you
+              set. Cancel anytime.
             </p>
           </div>
         </div>

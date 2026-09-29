@@ -164,7 +164,7 @@ export default function SwapPage() {
             <div className="slide-up-bouncy flex flex-1 flex-col items-center px-6 pt-10 text-center">
               <div
                 className="glide-pop flex h-24 w-24 items-center justify-center rounded-full"
-                style={{ background: "var(--glide-accent)" }}
+                style={{ background: "var(--glide-primary)" }}
               >
                 <Check
                   className="h-12 w-12"
@@ -172,7 +172,7 @@ export default function SwapPage() {
                   style={{ color: "var(--glide-on-primary)" }}
                 />
               </div>
-              <h1 className="glide-label-mono mt-8 text-[13px] font-bold text-[var(--glide-muted)]">
+              <h1 className="glide-label-mono mt-8 text-[13px] font-semibold text-[var(--glide-muted)]">
                 Swap complete
               </h1>
               <p className="mt-4 text-[28px] font-bold tracking-[-0.02em] text-[var(--glide-text)]">
@@ -195,7 +195,7 @@ export default function SwapPage() {
                     setQuoteAmount(null);
                     setQuoteError(null);
                   }}
-                  className="glide-tap glide-label-mono rounded-full border py-3 text-[12px] font-bold transition-opacity"
+                  className="glide-tap glide-label-mono rounded-full border py-3 text-[12px] font-semibold transition-opacity"
                   style={{
                     borderColor: "var(--glide-elevated-border)",
                     color: "var(--glide-text)",
@@ -231,7 +231,7 @@ export default function SwapPage() {
                     aria-label="Swap direction"
                     className="glide-tap flex h-12 w-12 items-center justify-center rounded-full ring-4"
                     style={{
-                      background: "var(--glide-accent)",
+                      background: "var(--glide-primary)",
                       color: "var(--glide-on-primary)",
                       ["--tw-ring-color" as string]: "var(--glide-bg)",
                     }}
@@ -277,7 +277,7 @@ export default function SwapPage() {
                     onConfirm={handleSubmit}
                     disabled={!canSubmit}
                     loading={submitting}
-                    successLabel="Swapped!"
+                    successLabel="Swapped"
                   />
                 </div>
               </div>
@@ -352,7 +352,7 @@ function TokenCard({
           <button
             type="button"
             onClick={useMax}
-            className="glide-tap glide-label-mono rounded-full border px-3 py-1.5 text-[11px] font-bold"
+            className="glide-tap glide-label-mono rounded-full border px-3 py-1.5 text-[12px] font-semibold"
             style={{
               background: "var(--glide-surface-container)",
               borderColor: "var(--glide-border)",
@@ -362,7 +362,7 @@ function TokenCard({
             Use max
           </button>
         ) : (
-          <span className="glide-label-mono text-[11px] font-bold text-[var(--glide-muted)]">
+          <span className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]">
             {side === "to" ? "Receive" : null}
           </span>
         )}
@@ -399,7 +399,7 @@ function TokenCard({
           />
         )}
       </div>
-      <p className="glide-label-mono mt-3 text-[11px] font-semibold text-[var(--glide-muted)]">
+      <p className="glide-label-mono mt-3 text-[12px] font-semibold text-[var(--glide-muted)]">
         {balance !== undefined
           ? `Balance ${formatStableAmountWithCode(balance, token)}`
           : (estimatedLabel ?? "Estimated")}

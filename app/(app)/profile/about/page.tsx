@@ -3,12 +3,12 @@
 import { PageHeader } from "@/components/page-header";
 import { SettingsIcon } from "@/components/settings-list";
 import { ARC_NETWORK } from "@/lib/network";
-import { KeyRound, Send, Sparkles } from "lucide-react";
+import { KeyRound, Send, UserRoundCheck } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const POINTS: { icon: LucideIcon; title: string; body: string }[] = [
   {
-    icon: Sparkles,
+    icon: UserRoundCheck,
     title: "Set up for you",
     body: `glidepay creates a smart account for you on ${ARC_NETWORK.label} the first time you sign in. There's no browser extension to install and no seed phrase to write down.`,
   },

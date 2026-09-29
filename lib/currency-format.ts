@@ -27,13 +27,18 @@ function decimalsForToken(symbol?: string | null): number {
   return stableTokenFromSymbol(symbol) === "cirBTC" ? 8 : 2;
 }
 
+/** Display formatting: grouped thousands ("1,240.50"). Labels built from
+ * this are only ever parsed after stripping non-digits, so commas are safe. */
 function formatNumber(n: number, decimals: number): string {
   if (!Number.isFinite(n)) return decimals === 8 ? "0.00000000" : "0.00";
   // Trim trailing zeros for BTC display (e.g. 0.50000000 → 0.5)
   if (decimals === 8) {
     return n.toFixed(8).replace(/(\.\d*?[1-9])0+$/, "$1").replace(/\.0+$/, "");
   }
-  return n.toFixed(decimals);
+  return n.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
 }
 
 export function formatStableAmount(

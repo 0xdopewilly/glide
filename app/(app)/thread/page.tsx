@@ -1,7 +1,7 @@
 "use client";
 
 import { headerIconButtonClassName } from "@/components/header-icon-button";
-import { MoneyStackArt, PaperHeroArt } from "@/components/illustrations";
+import { PaperHeroArt } from "@/components/illustrations";
 import type { ThreadItem, ThreadResponse } from "@/app/api/thread/route";
 import { useGoBack } from "@/lib/use-go-back";
 import { ChevronLeft, HandCoins, Send } from "lucide-react";
@@ -89,8 +89,8 @@ export default function ThreadPage() {
           ) : null}
         </div>
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-[16px] font-bold text-white"
-          style={{ background: "linear-gradient(135deg, #8B6CF6 0%, #5B3DF5 100%)" }}
+          className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-[16px] font-bold"
+          style={{ background: "var(--glide-primary-container)", color: "var(--glide-accent)" }}
           aria-hidden
         >
           {cp?.avatarUrl ? (
@@ -184,7 +184,7 @@ function Bubble({ item }: { item: ThreadItem }) {
         className={`max-w-[78%] overflow-hidden rounded-3xl ${mine ? "rounded-br-lg" : "rounded-bl-lg"}`}
         style={
           mine
-            ? { background: "linear-gradient(150deg, #7C5CFF 0%, #5B3DF5 100%)", color: "#FFFFFF" }
+            ? { background: "var(--glide-primary)", color: "var(--glide-on-primary)" }
             : {
                 background: "var(--glide-surface-container-high)",
                 border: "1px solid var(--glide-border)",
@@ -192,16 +192,9 @@ function Bubble({ item }: { item: ThreadItem }) {
               }
         }
       >
-        {item.kind === "received" ? (
-          <div className="flex justify-center bg-white/90 px-4 pt-3">
-            <MoneyStackArt className="h-20 w-auto" />
-          </div>
-        ) : null}
         <div className="px-4 pb-3 pt-3">
-          <span className="inline-flex rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold text-[#17153B]">
-            {chip}
-          </span>
-          <p className="mt-2 text-[26px] font-bold leading-none tracking-tight tabular-nums">
+          <p className="text-[12.5px] font-medium opacity-80">{chip}</p>
+          <p className="mt-1.5 text-[26px] font-bold leading-none tracking-tight tabular-nums">
             {item.amount}
           </p>
           {item.note ? <p className="mt-1.5 text-[13.5px] opacity-90">{item.note}</p> : null}

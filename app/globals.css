@@ -1024,23 +1024,10 @@ body {
     transform: scale(0.985);
   }
 
+  /* The old notched-corner flourish is retired: the accent span stays in
+     the markup (GlideButton) but draws nothing. */
   .glide-btn-notch__accent {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 0;
-    width: 14px;
-    height: 14px;
-    background: linear-gradient(
-      135deg,
-      var(--glide-gradient-from),
-      var(--glide-gradient-to)
-    );
-    clip-path: polygon(0 0, 100% 0, 0 100%);
-  }
-
-  .dark .glide-btn-notch__accent {
-    background: var(--glide-surface-container-high);
+    display: none;
   }
 
   .glide-btn-notch__inner {
@@ -1055,71 +1042,43 @@ body {
     padding: 0.7rem 1.15rem;
     background: var(--glide-primary);
     color: var(--glide-on-primary);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
-    letter-spacing: 0.01em;
-    clip-path: polygon(
-      14px 0,
-      100% 0,
-      100% 100%,
-      0 100%,
-      0 14px
-    );
-    border-radius: 0 1rem 1rem 1rem;
-  }
-
-  .glide-btn-notch--sm .glide-btn-notch__accent {
-    width: 11px;
-    height: 11px;
+    letter-spacing: -0.005em;
+    border-radius: 999px;
   }
 
   .glide-btn-notch--sm .glide-btn-notch__inner {
     min-height: 2.35rem;
     padding: 0.55rem 1rem;
     font-size: 13px;
-    clip-path: polygon(11px 0, 100% 0, 100% 100%, 0 100%, 0 11px);
-    border-radius: 0 0.85rem 0.85rem 0.85rem;
   }
 
+  /* Formerly all-caps; buttons read in sentence case now. */
   .glide-btn-notch__inner--caps {
     font-family: var(--font-jakarta), var(--font-geist-sans), sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-weight: 600;
   }
 
-  /* Soft small label (used to be mono caps under terminal aesthetic).
-     Kept as uppercase + tracked, no mono font - friendly fintech style. */
+  /* Small secondary label. Sentence case, as written in the markup: the
+     old spaced-out capitals read as decoration, not information. */
   .glide-label-mono {
     font-family: var(--font-jakarta), var(--font-geist-sans), sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 600;
   }
 
   .glide-btn-notch--sm .glide-btn-notch__inner--caps {
-    font-size: 11px;
-    letter-spacing: 0.04em;
+    font-size: 13px;
   }
 
   .glide-btn-notch:not(:disabled):hover .glide-btn-notch__inner {
     filter: brightness(0.98);
   }
 
-  :root:not(.dark) .glide-btn-notch__accent {
-    background: var(--glide-accent);
-  }
-
-  :root:not(.dark) .glide-btn-notch:not(:disabled) .glide-btn-notch__inner {
-    background: var(--glide-primary);
-    color: var(--glide-on-primary);
-    box-shadow: 0 10px 28px color-mix(in srgb, var(--glide-primary) 22%, transparent);
-  }
-
-  :root:not(.dark) .glide-btn-notch:not(:disabled):hover .glide-btn-notch__inner {
+  .glide-btn-notch:not(:disabled):hover .glide-btn-notch__inner {
     background: var(--glide-primary-hover);
-    box-shadow: 0 14px 36px color-mix(in srgb, var(--glide-primary) 28%, transparent);
     filter: none;
   }
 
@@ -1579,7 +1538,7 @@ body {
   .onboarding-continue--0,
   .onboarding-continue--1,
   .onboarding-continue--2 {
-    background: var(--glide-accent);
+    background: var(--glide-primary);
   }
 }
 

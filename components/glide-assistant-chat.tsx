@@ -23,7 +23,7 @@ import {
 } from "@/lib/chat-cache";
 import { useAppAuth } from "@/context/auth-context";
 import { useWallet } from "@/context/wallet-context";
-import { ArrowUp, ChevronLeft, Sparkles } from "lucide-react";
+import { ArrowUp, ChevronLeft, MessageCircle } from "lucide-react";
 import { headerIconButtonClassName } from "@/components/header-icon-button";
 import { useGoBack } from "@/lib/use-go-back";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -922,17 +922,17 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
               <ChevronLeft className="h-5 w-5" strokeWidth={2.25} />
             </button>
             <span
-              className="flex h-10 w-10 items-center justify-center rounded-2xl"
+              className="flex h-10 w-10 items-center justify-center rounded-full"
               style={{
-                background: "var(--glide-accent)",
-                color: "var(--glide-on-primary)",
+                background: "var(--glide-primary-container)",
+                color: "var(--glide-accent)",
               }}
             >
-              <Sparkles className="h-[18px] w-[18px]" />
+              <MessageCircle className="h-[18px] w-[18px]" strokeWidth={2.25} />
             </span>
             <div>
               <p className="text-base font-semibold tracking-tight">Billy</p>
-              <p className="text-xs glide-muted">Send, swap, bridge. Just ask.</p>
+              <p className="text-xs glide-muted">Your glidepay assistant</p>
             </div>
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -1026,7 +1026,7 @@ export function GlideAssistantChat({ variant = "page" }: { variant?: "page" }) {
             disabled={busy || !message.trim()}
             className="glide-tap flex h-11 w-11 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
             style={{
-              background: "var(--glide-accent)",
+              background: "var(--glide-primary)",
               color: "var(--glide-on-primary)",
             }}
             aria-label="Send"

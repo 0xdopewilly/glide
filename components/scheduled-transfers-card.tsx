@@ -73,7 +73,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
         borderColor: "var(--glide-elevated-border)",
       }}
     >
-      <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+      <p className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]">
         Active
       </p>
       {rows.length > 0 ? (
@@ -103,7 +103,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
               <button
                 type="button"
                 onClick={() => void cancel(r.id)}
-                className="glide-tap glide-label-mono shrink-0 rounded-full px-3 py-1 text-[11px] font-bold text-red-500"
+                className="glide-tap glide-label-mono shrink-0 rounded-full px-3 py-1 text-[12px] font-semibold text-red-500"
                 style={{
                   background:
                     "color-mix(in srgb, #ef4444 14%, transparent)",
@@ -123,7 +123,7 @@ export function ScheduledTransfersCard({ className = "" }: { className?: string 
         </p>
       )}
 
-      <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+      <p className="glide-label-mono mt-6 text-[12px] font-semibold text-[var(--glide-muted)]">
         New schedule
       </p>
       <FormField id="sched-to" label="To (pay tag or address)" className="mt-3">

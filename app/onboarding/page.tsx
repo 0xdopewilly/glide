@@ -12,19 +12,19 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const SLIDES = [
   {
-    tag: "Freedom Unlocked",
-    title: "Your gateway to borderless money.",
-    body: "Take full control of your USDC on Arc with a wallet built for seamless global payments.",
+    tag: "Stablecoin payments",
+    title: "Send dollars anywhere, in seconds.",
+    body: "USDC and EURC on Arc, sent to a @paytag as easily as a text.",
   },
   {
-    tag: "Built for Trust",
-    title: "Security that feels invisible.",
-    body: "No seed phrases. Email or Google sign-in, and glidepay handles the wallet for you.",
+    tag: "Security",
+    title: "No seed phrase. No extension.",
+    body: "Sign in with email or Google. Circle secures your account, and every payment needs your PIN.",
   },
   {
-    tag: "Limitless Potential",
-    title: "More than just a wallet app.",
-    body: "Send, receive, and move money like a text. All from one clean app.",
+    tag: "All in one",
+    title: "Pay, get paid and save.",
+    body: "Requests, bill splits, swaps and automatic savings, in one app.",
   },
 ] as const;
 
@@ -111,7 +111,7 @@ export default function OnboardingPage() {
             onClick={() => router.push("/sign-in")}
             className="glide-tap text-[15px] font-medium text-[var(--glide-muted)] transition-colors hover:text-[var(--glide-text)]"
           >
-            Login
+            Log in
           </button>
         </header>
 
@@ -126,7 +126,7 @@ export default function OnboardingPage() {
               <OnboardingHeroVisual step={shown} />
             </div>
             <div className="onb-rise px-6 pt-2" style={{ animationDelay: "120ms" }}>
-              <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
+              <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[12px] font-semibold text-[var(--glide-accent)]">
                 {slide.tag}
               </span>
             </div>

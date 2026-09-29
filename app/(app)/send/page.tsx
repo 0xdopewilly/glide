@@ -378,11 +378,11 @@ export default function SendPage() {
     return (
       <FlowPage>
         <div className="slide-up-bouncy flex flex-1 flex-col items-center px-6 pt-8 text-center">
-          <h1 className="glide-label-mono text-[14px] font-bold text-[var(--glide-muted)]">
+          <h1 className="glide-label-mono text-[14px] font-semibold text-[var(--glide-muted)]">
             Sent
           </h1>
           <CardHeroArt className="glide-pop mt-6 h-52 w-auto" />
-          <p className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)]">
+          <p className="glide-label-mono mt-6 text-[12px] font-semibold text-[var(--glide-muted)]">
             You paid
           </p>
           <p
@@ -424,7 +424,7 @@ export default function SendPage() {
         <div className="slide-up-bouncy flex flex-col px-5 pb-6">
           <div className="mt-6 rounded-3xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] p-6 text-center text-[color:var(--glide-on-elevated)]">
             <UserAvatar size="lg" />
-            <p className="glide-label-mono mt-3 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
+            <p className="glide-label-mono mt-3 text-[12px] font-semibold text-[color:var(--glide-on-elevated-variant)]">
               Sending to
             </p>
             <p className="mt-2 text-[20px] font-bold tracking-tight">
@@ -460,12 +460,12 @@ export default function SendPage() {
           <div className="mt-6 flex items-baseline justify-between">
             <label
               htmlFor="send-note"
-              className="glide-label-mono block text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]"
+              className="glide-label-mono block text-[12px] font-semibold text-[color:var(--glide-on-elevated-variant)]"
             >
               Note (optional)
             </label>
             <span
-              className={`glide-label-mono text-[10px] font-semibold ${
+              className={`glide-label-mono text-[12px] font-semibold ${
                 note.length > 130 ? "text-red-400" : "text-[color:var(--glide-on-elevated-variant)]"
               }`}
             >
@@ -482,7 +482,7 @@ export default function SendPage() {
           />
 
           <div className="mt-5 flex items-center justify-between rounded-2xl border border-[color:var(--glide-elevated-border)] bg-[color:var(--glide-surface-elevated)] px-4 py-3.5 text-[color:var(--glide-on-elevated)]">
-            <span className="glide-label-mono text-[11px] font-semibold uppercase tracking-wide text-[color:var(--glide-on-elevated-variant)]">
+            <span className="glide-label-mono text-[12px] font-semibold text-[color:var(--glide-on-elevated-variant)]">
               From
             </span>
             <span className="text-sm font-bold">glidepay · {activeSymbol}</span>
@@ -507,7 +507,7 @@ export default function SendPage() {
               onConfirm={handlePay}
               disabled={submitting || loading}
               loading={submitting}
-              successLabel="Sent!"
+              successLabel="Sent"
             />
           </div>
         </div>
@@ -713,7 +713,11 @@ export default function SendPage() {
             href="/scheduled"
             aria-label="Schedule a payment"
             className="glide-tap flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-full"
-            style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
+            style={{
+              background: "var(--glide-surface-container-high)",
+              border: "1px solid var(--glide-border)",
+              color: "var(--glide-text)",
+            }}
           >
             <CalendarClock className="h-5 w-5" strokeWidth={2.25} />
           </Link>
@@ -814,7 +818,7 @@ function SaveContactPrompt({
 
   if (status === "saved") {
     return (
-      <p className="mt-6 glide-label-mono text-[11px] font-semibold text-[var(--glide-success)]">
+      <p className="mt-6 glide-label-mono text-[12px] font-semibold text-[var(--glide-success)]">
         Saved to contacts.
       </p>
     );
@@ -855,7 +859,7 @@ function SaveContactPrompt({
           type="button"
           onClick={() => void handleSave()}
           disabled={status === "saving"}
-          className="glide-tap glide-label-mono flex-1 rounded-full py-2.5 text-[11px] font-bold disabled:opacity-50"
+          className="glide-tap glide-label-mono flex-1 rounded-full py-2.5 text-[12px] font-semibold disabled:opacity-50"
           style={{
             background: "var(--glide-primary)",
             color: "var(--glide-on-primary)",
@@ -866,7 +870,7 @@ function SaveContactPrompt({
         <button
           type="button"
           onClick={() => setStatus("skip")}
-          className="glide-tap glide-label-mono flex-1 rounded-full border py-2.5 text-[11px] font-bold"
+          className="glide-tap glide-label-mono flex-1 rounded-full border py-2.5 text-[12px] font-semibold"
           style={{
             background: "var(--glide-surface-container)",
             borderColor: "var(--glide-border)",

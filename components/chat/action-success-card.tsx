@@ -6,12 +6,8 @@ import { shortenAddress } from "@/lib/format";
 import type { LucideIcon } from "lucide-react";
 import { ArrowLeftRight, Globe2, Send } from "lucide-react";
 
-// All success cards share the navy brand gradient — unified action
-// confirmation visual language. Failure / cancellation states are handled
-// elsewhere (red) and intentionally not this brand tone.
-const BRAND_NAVY_GRADIENT =
-  "linear-gradient(135deg, #041f3d 0%, #0a2a4d 50%, #03070d 100%)";
-
+// Success reads as a receipt: the app's card surface, a green status line,
+// the amount. Failures and cancellations are handled elsewhere.
 const CONFIG: Record<
   ActionSuccessType,
   {
@@ -80,19 +76,23 @@ export function ActionSuccessCard({
   return (
     <div className="flex w-full justify-end px-1 py-2">
       <div
-        className="glide-chat-card flex aspect-square w-[min(100%,300px)] max-w-[300px] shrink-0 flex-col items-center justify-center rounded-[28px] rounded-br-md p-6 text-center text-white shadow-[0_20px_60px_-20px_rgba(139,92,246,0.5)]"
-        style={{ background: BRAND_NAVY_GRADIENT }}
+        className="glide-chat-card w-[min(100%,280px)] shrink-0 rounded-2xl rounded-br-md border p-4"
+        style={{
+          background: "var(--glide-surface-elevated)",
+          borderColor: "var(--glide-elevated-border)",
+        }}
         role="status"
         aria-label={`${label}${amount ? `: ${formatStableAmount(amount, action === "swap" ? "USDC" : token)}` : ""}`}
       >
-        <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
-          <Icon className="h-7 w-7" strokeWidth={2.25} />
-        </span>
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
+        <p
+          className="inline-flex items-center gap-1.5 text-[13px] font-semibold"
+          style={{ color: "var(--glide-success)" }}
+        >
+          <Icon className="h-4 w-4" strokeWidth={2.25} aria-hidden />
           {label}
         </p>
         {amount || receivedAmount ? (
-          <p className="mt-2 text-4xl font-bold tracking-tight tabular-nums">
+          <p className="mt-2 text-[28px] font-bold leading-none tracking-tight tabular-nums text-[var(--glide-text)]">
             {action === "swap" && receivedAmount
               ? formatStableAmount(receivedAmount, "EURC")
               : formatStableAmount(
@@ -102,7 +102,7 @@ export function ActionSuccessCard({
           </p>
         ) : null}
         {detail ? (
-          <p className="mt-2 max-w-[220px] text-sm font-medium leading-snug text-white/90">
+          <p className="mt-1.5 text-[13px] leading-snug text-[var(--glide-muted)]">
             {detail}
           </p>
         ) : null}

@@ -88,7 +88,7 @@ export function SwipeToConfirm({ label, onConfirm, disabled, loading, successLab
           opacity: showCompleted ? 0 : labelOpacity,
         }}
       >
-        {label} →
+        {label}
       </motion.span>
       {/* Success label */}
       {showCompleted && !loading && (

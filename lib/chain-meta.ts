@@ -47,6 +47,7 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
     shortLabel: "Base",
     badgeClass: "from-[#0052FF] to-[#0038B8]",
     color: "#0052FF",
+    logo: "/chains/base.png",
   },
   "polygon-amoy": {
     id: "polygon-amoy",
@@ -62,6 +63,7 @@ export const CHAIN_META: Record<GlideChainKey, ChainMeta> = {
     shortLabel: "ARB",
     badgeClass: "from-[#28A0F0] to-[#1B7ACC]",
     color: "#28A0F0",
+    logo: "/chains/arbitrum.png",
   },
 };
 

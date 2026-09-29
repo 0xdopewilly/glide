@@ -282,7 +282,7 @@ export function QrScannerView({ onScanned }: { onScanned?: () => void }) {
       </div>
 
       <p
-        className="glide-label-mono mt-4 text-center text-[11px] font-bold"
+        className="glide-label-mono mt-4 text-center text-[12px] font-semibold"
         style={{
           color: status === "ready" ? "var(--glide-text)" : "var(--glide-muted)",
         }}
@@ -317,7 +317,7 @@ export function QrScannerView({ onScanned }: { onScanned?: () => void }) {
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
-        className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-full border py-3 text-[11px] font-bold disabled:opacity-50"
+        className="glide-tap glide-label-mono mt-3 flex w-full items-center justify-center gap-2 rounded-full border py-3 text-[12px] font-semibold disabled:opacity-50"
         style={{
           background: "var(--glide-surface-container)",
           borderColor: "var(--glide-border)",
@@ -331,7 +331,7 @@ export function QrScannerView({ onScanned }: { onScanned?: () => void }) {
       <div className="mt-5">
         <label
           htmlFor="manual-address"
-          className="glide-label-mono text-[11px] font-bold text-[var(--glide-muted)]"
+          className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]"
         >
           Paste address or link
         </label>
@@ -351,9 +351,9 @@ export function QrScannerView({ onScanned }: { onScanned?: () => void }) {
           type="button"
           onClick={() => navigateFromQr(manual)}
           disabled={!manual.trim()}
-          className="glide-tap glide-label-mono mt-3 w-full rounded-full py-3 text-[12px] font-bold disabled:opacity-40"
+          className="glide-tap glide-label-mono mt-3 w-full rounded-full py-3 text-[12px] font-semibold disabled:opacity-40"
           style={{
-            background: "var(--glide-accent)",
+            background: "var(--glide-primary)",
             color: "var(--glide-on-primary)",
           }}
         >

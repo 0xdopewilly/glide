@@ -71,7 +71,7 @@ export function AppHeader({
       />
       {IS_MAINNET ? null : (
         <span
-          className="glide-label-mono rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+          className="glide-label-mono rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider"
           style={{
             background: "var(--glide-primary-container)",
             color: "var(--glide-text)",

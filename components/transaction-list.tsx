@@ -3,35 +3,30 @@
 import { usePrivacy } from "@/context/privacy-context";
 import type { GlideTransaction, TransactionKind } from "@/lib/types";
 import { PaperHeroArt } from "@/components/illustrations";
-import { ArrowDown, ArrowLeftRight, ArrowUp, Clock, Link2 } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, Link2 } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+
+// Only money coming in gets a colour (green); everything else is neutral,
+// as in a bank statement. Red is for errors, not for spending.
+const NEUTRAL_ICON = {
+  iconBg: "color-mix(in srgb, var(--glide-text) 7%, transparent)",
+  iconColor: "var(--glide-text)",
+};
 
 const KIND_VISUALS: Record<
   TransactionKind,
   { Icon: LucideIcon; iconBg: string; iconColor: string }
 > = {
-  send: {
-    Icon: ArrowUp,
-    iconBg: "color-mix(in srgb, var(--glide-error) 12%, transparent)",
-    iconColor: "var(--glide-error)",
-  },
+  send: { Icon: ArrowUp, ...NEUTRAL_ICON },
   receive: {
     Icon: ArrowDown,
     iconBg: "var(--glide-success-container)",
     iconColor: "var(--glide-success)",
   },
-  swap: {
-    Icon: ArrowLeftRight,
-    iconBg: "var(--glide-primary-container)",
-    iconColor: "var(--glide-accent)",
-  },
-  bridge: {
-    Icon: Link2,
-    iconBg: "rgba(251,191,36,0.12)",
-    iconColor: "#F59E0B",
-  },
+  swap: { Icon: ArrowLeftRight, ...NEUTRAL_ICON },
+  bridge: { Icon: Link2, ...NEUTRAL_ICON },
 };
 
 const KIND_TITLE: Record<TransactionKind, string> = {
@@ -64,8 +59,26 @@ function shortHex(value: string) {
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
 }
 
+function prettyCounterparty(value: string): string {
+  return ADDR_RE.test(value) ? shortHex(value) : value;
+}
+
+/** A payment reads like a statement line: who, then the note (or what it
+ * was), rather than "Received from @ada / From @ada". */
+function isPayment(tx: GlideTransaction): boolean {
+  return (
+    (tx.kind === "send" || tx.kind === "receive") &&
+    Boolean(tx.counterparty?.trim())
+  );
+}
+
 /** Build the row subtitle from a transaction. Prefer the existing tx.meta. */
 function buildSubtitle(tx: GlideTransaction): string {
+  if (isPayment(tx)) {
+    const note = tx.note?.trim();
+    if (note) return note;
+    return tx.kind === "receive" ? "Received" : "Sent";
+  }
   if (tx.meta && tx.meta.trim().length > 0) {
     // Shorten any embedded hex address found in the existing meta string so it
     // matches the 0x123456...abcd format used in the new design.
@@ -87,7 +100,8 @@ function buildSubtitle(tx: GlideTransaction): string {
 }
 
 function buildTitle(tx: GlideTransaction): string {
-  // Prefer the richer existing title (e.g. "Received from @fifi") when present.
+  if (isPayment(tx)) return prettyCounterparty(tx.counterparty!.trim());
+  // Prefer the richer existing title (e.g. "Swapped USDC to EURC") when present.
   if (tx.title && tx.title.trim().length > 0) return tx.title;
   if (tx.kind) return KIND_TITLE[tx.kind];
   return "Activity";
@@ -223,9 +237,7 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
   const amountColor =
     tx.variant === "credit"
       ? "var(--glide-success)"
-      : tx.variant === "debit"
-        ? "var(--glide-error)"
-        : "var(--glide-accent)";
+      : "var(--glide-on-elevated)";
 
   const title = buildTitle(tx);
   const subtitle = buildSubtitle(tx);
@@ -280,8 +292,7 @@ function TransactionRow({ tx }: { tx: GlideTransaction }) {
             Pending
           </p>
         ) : relativeTime ? (
-          <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-[color:var(--glide-on-elevated-variant)]">
-            <Clock className="h-3 w-3" strokeWidth={2.25} aria-hidden />
+          <p className="mt-0.5 text-xs text-[color:var(--glide-on-elevated-variant)]">
             {relativeTime}
           </p>
         ) : null}

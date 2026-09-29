@@ -110,9 +110,9 @@ export function ReceiveQr({ address }: { address: string }) {
           type="button"
           onClick={() => void handleShare()}
           disabled={busy}
-          className="glide-tap glide-label-mono flex items-center justify-center gap-1.5 rounded-2xl py-2.5 text-[11px] font-bold disabled:opacity-50"
+          className="glide-tap glide-label-mono flex items-center justify-center gap-1.5 rounded-2xl py-2.5 text-[12px] font-semibold disabled:opacity-50"
           style={{
-            background: "var(--glide-accent)",
+            background: "var(--glide-primary)",
             color: "var(--glide-on-primary)",
           }}
         >
@@ -123,7 +123,7 @@ export function ReceiveQr({ address }: { address: string }) {
           type="button"
           onClick={() => void handleDownload()}
           disabled={busy}
-          className="glide-tap glide-label-mono flex items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-[11px] font-bold disabled:opacity-50"
+          className="glide-tap glide-label-mono flex items-center justify-center gap-1.5 rounded-2xl border py-2.5 text-[12px] font-semibold disabled:opacity-50"
           style={{
             background: "var(--glide-surface-container)",
             borderColor: "var(--glide-border)",
@@ -136,7 +136,7 @@ export function ReceiveQr({ address }: { address: string }) {
       </div>
       {feedback ? (
         <p
-          className="glide-label-mono mt-2 text-center text-[10px] font-bold"
+          className="glide-label-mono mt-2 text-center text-[12px] font-semibold"
           style={{ color: "var(--glide-success)" }}
         >
           {feedback}

@@ -3,9 +3,22 @@
 import { inputClassName } from "@/components/form-field";
 import { PaperHeroArt } from "@/components/illustrations";
 import { PageHeader } from "@/components/page-header";
-import { AUTOMATION_TEMPLATES } from "@/lib/automation-templates";
+import {
+  AUTOMATION_TEMPLATES,
+  type AutomationTemplateIcon,
+} from "@/lib/automation-templates";
 import { fetchWithPin, requirePin } from "@/lib/pin-gate";
-import { Sparkles } from "lucide-react";
+import {
+  ArrowDownToLine,
+  Briefcase,
+  Percent,
+  PiggyBank,
+  Receipt,
+  Repeat,
+  Users,
+  Zap,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -51,6 +64,19 @@ function timeAgo(iso: string): string {
   if (days < 7) return `${days}d ago`;
   return new Date(iso).toLocaleDateString();
 }
+
+const TEMPLATE_ICONS: Record<AutomationTemplateIcon, LucideIcon> = {
+  "piggy-bank": PiggyBank,
+  percent: Percent,
+  receipt: Receipt,
+  overflow: ArrowDownToLine,
+  briefcase: Briefcase,
+  users: Users,
+  repeat: Repeat,
+};
+
+const usd = (n: number) =>
+  n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const cardStyle = {
   background: "var(--glide-surface-elevated)",
@@ -228,41 +254,34 @@ export default function AutomationsPage() {
           style={cardStyle}
         >
           <span
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl"
-            style={{ background: "var(--glide-accent)", color: "var(--glide-on-primary)" }}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+            style={{ background: "var(--glide-primary-container)", color: "var(--glide-accent)" }}
           >
-            <Sparkles className="h-5 w-5" strokeWidth={2.25} />
+            <Zap className="h-5 w-5" strokeWidth={2.25} aria-hidden />
           </span>
           <div>
-            <p className="text-[15px] font-bold tracking-tight text-[var(--glide-text)]">
-              Let your money work
+            <p className="text-[15px] font-semibold tracking-tight text-[var(--glide-text)]">
+              Save and pay automatically
             </p>
-            <p className="mt-1 text-xs leading-relaxed text-[var(--glide-muted)]">
-              Rules run automatically in the background. Ask Billy, or start from
-              a template below.
+            <p className="mt-1 text-[13px] leading-relaxed text-[var(--glide-muted)]">
+              Set a rule once and it runs for you. Start from a template below,
+              or ask Billy.
             </p>
           </div>
         </div>
 
-        {/* Savings balance + withdraw */}
+        {/* Savings balance + withdraw (same card as Home's SavingsCard) */}
         {savings?.address ? (
-          <div
-            className="mt-4 rounded-3xl border p-5"
-            style={{
-              background:
-                "var(--glide-hero-gradient)",
-              borderColor: "transparent",
-            }}
-          >
+          <div className="glide-surface-card mt-4 rounded-2xl p-4">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[12px] font-medium text-white/75">Savings</p>
-                <p className="mt-0.5 text-[28px] font-bold tabular-nums text-white">
-                  ${savings.usdc.toFixed(2)}
+                <p className="text-[13px] font-medium text-[var(--glide-muted)]">Savings</p>
+                <p className="mt-0.5 text-[24px] font-bold tabular-nums tracking-tight text-[var(--glide-text)]">
+                  ${usd(savings.usdc)}
                 </p>
                 {savings.eurc > 0 ? (
-                  <p className="text-[12px] font-medium text-white/70">
-                    + €{savings.eurc.toFixed(2)} EURC
+                  <p className="text-[12px] font-medium text-[var(--glide-muted)]">
+                    + €{usd(savings.eurc)} EURC
                   </p>
                 ) : null}
               </div>
@@ -272,34 +291,42 @@ export default function AutomationsPage() {
                   setWithdrawOpen((v) => !v);
                   setWithdrawError(null);
                 }}
-                className="glide-tap shrink-0 rounded-full bg-white/15 px-4 py-2 text-[13px] font-bold text-white"
+                aria-expanded={withdrawOpen}
+                className="glide-tap shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold text-[var(--glide-text)]"
+                style={{
+                  background: "var(--glide-surface-container-high)",
+                  border: "1px solid var(--glide-border)",
+                }}
               >
-                Move to Spending
+                Withdraw
               </button>
             </div>
             {withdrawOpen ? (
-              <div className="mt-4 rounded-2xl bg-white/10 p-3">
+              <div
+                className="mt-4 rounded-xl p-3"
+                style={{ background: "var(--glide-input)", border: "1px solid var(--glide-border)" }}
+              >
                 <div className="flex items-center gap-2">
-                  <span className="text-white/80">$</span>
+                  <span className="text-[var(--glide-muted)]">$</span>
                   <input
                     inputMode="decimal"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
                     placeholder="0.00"
-                    className="min-w-0 flex-1 bg-transparent text-[16px] font-semibold text-white outline-none placeholder:text-white/50"
+                    aria-label="Amount to withdraw"
+                    className="min-w-0 flex-1 bg-transparent text-[16px] font-semibold text-[var(--glide-text)] outline-none placeholder:text-[var(--glide-muted)]"
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setWithdrawAmount(String(savings?.usdc ?? 0))
-                    }
-                    className="glide-label-mono rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white"
+                    onClick={() => setWithdrawAmount(String(savings?.usdc ?? 0))}
+                    className="rounded-full px-2.5 py-1 text-[12px] font-semibold text-[var(--glide-text)]"
+                    style={{ background: "var(--glide-surface-container-high)" }}
                   >
-                    MAX
+                    Max
                   </button>
                 </div>
                 {withdrawError ? (
-                  <p className="mt-2 text-[12px] font-semibold text-red-200">
+                  <p className="mt-2 text-[12px] font-semibold" style={{ color: "var(--glide-error)" }}>
                     {withdrawError}
                   </p>
                 ) : null}
@@ -307,10 +334,10 @@ export default function AutomationsPage() {
                   type="button"
                   onClick={() => void withdraw()}
                   disabled={withdrawBusy || !withdrawAmount.trim()}
-                  className="glide-tap mt-3 w-full rounded-full bg-white py-2.5 text-[13px] font-bold disabled:opacity-50"
-                  style={{ color: "var(--glide-primary)" }}
+                  className="glide-tap mt-3 w-full rounded-full py-2.5 text-[14px] font-semibold disabled:opacity-50"
+                  style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
                 >
-                  {withdrawBusy ? "Moving…" : "Withdraw to Spending"}
+                  {withdrawBusy ? "Moving…" : "Move to Spending"}
                 </button>
               </div>
             ) : null}
@@ -399,10 +426,13 @@ export default function AutomationsPage() {
                   type="button"
                   disabled={busyId === r.id}
                   onClick={() => void toggle(r.id, false)}
-                  className="glide-tap glide-label-mono shrink-0 rounded-full px-3 py-1 text-[11px] font-bold text-red-500 disabled:opacity-50"
-                  style={{ background: "color-mix(in srgb, #ef4444 14%, transparent)" }}
+                  className="glide-tap shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold text-[var(--glide-text)] disabled:opacity-50"
+                  style={{
+                    background: "var(--glide-surface-container-high)",
+                    border: "1px solid var(--glide-border)",
+                  }}
                 >
-                  Turn off
+                  Pause
                 </button>
               </li>
             ))}
@@ -441,10 +471,8 @@ export default function AutomationsPage() {
               className="glide-tap flex flex-col items-start gap-1 rounded-2xl border p-3.5 text-left transition-transform active:scale-95 disabled:opacity-50"
               style={cardStyle}
             >
-              <span className="text-xl leading-none" aria-hidden>
-                {t.emoji}
-              </span>
-              <span className="mt-1 text-[14px] font-bold text-[var(--glide-text)]">
+              <TemplateIcon icon={t.icon} />
+              <span className="mt-2 text-[14px] font-semibold text-[var(--glide-text)]">
                 {t.name}
               </span>
               <span className="text-[11px] leading-snug text-[var(--glide-muted)]">
@@ -474,8 +502,8 @@ export default function AutomationsPage() {
                     type="button"
                     disabled={busyId === r.id}
                     onClick={() => void toggle(r.id, true)}
-                    className="glide-tap glide-label-mono shrink-0 rounded-full px-3 py-1 text-[11px] font-bold disabled:opacity-50"
-                    style={{ background: "color-mix(in srgb, var(--glide-accent) 14%, transparent)", color: "var(--glide-accent)" }}
+                    className="glide-tap shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold disabled:opacity-50"
+                    style={{ background: "var(--glide-primary-container)", color: "var(--glide-accent)" }}
                   >
                     Resume
                   </button>
@@ -563,7 +591,7 @@ export default function AutomationsPage() {
                     </span>
                   </span>
                   <span
-                    className="glide-label-mono shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold"
+                    className="glide-label-mono shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold"
                     style={{ background: badge.bg, color: badge.fg }}
                   >
                     {badge.text}
@@ -591,5 +619,18 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="text-2xl font-bold tabular-nums text-[var(--glide-text)]">{value}</p>
       <p className="mt-0.5 text-[11px] font-medium text-[var(--glide-muted)]">{label}</p>
     </div>
+  );
+}
+
+function TemplateIcon({ icon }: { icon: AutomationTemplateIcon }) {
+  const Icon = TEMPLATE_ICONS[icon];
+  return (
+    <span
+      className="flex h-9 w-9 items-center justify-center rounded-full"
+      style={{ background: "var(--glide-primary-container)", color: "var(--glide-accent)" }}
+      aria-hidden
+    >
+      <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+    </span>
   );
 }

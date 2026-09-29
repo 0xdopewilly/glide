@@ -113,7 +113,7 @@ function FilterChip({
       style={
         active
           ? {
-              background: "var(--glide-accent)",
+              background: "var(--glide-primary)",
               borderColor: "var(--glide-accent)",
               color: "var(--glide-on-primary)",
             }

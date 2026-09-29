@@ -236,7 +236,7 @@ function AppearanceRow() {
                 className="glide-tap rounded-full px-2.5 py-1 text-[12px] font-semibold"
                 style={
                   active
-                    ? { background: "var(--glide-accent)", color: "var(--glide-on-primary)" }
+                    ? { background: "var(--glide-primary)", color: "var(--glide-on-primary)" }
                     : { color: "var(--glide-muted)" }
                 }
               >

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatUsd } from "@/lib/format";
 import { ChainIcon } from "@/components/chain-icon";
 import { FlowPage } from "@/components/flow-page";
 import { FlowProcessingOverlay } from "@/components/flow-processing-overlay";
@@ -80,7 +81,7 @@ export default function BridgePage() {
             <div className="slide-up-bouncy flex flex-1 flex-col items-center px-6 pt-10 text-center">
               <div
                 className="glide-pop flex h-24 w-24 items-center justify-center rounded-full"
-                style={{ background: "var(--glide-accent)" }}
+                style={{ background: "var(--glide-primary)" }}
               >
                 <Check
                   className="h-12 w-12"
@@ -88,13 +89,13 @@ export default function BridgePage() {
                   style={{ color: "var(--glide-on-primary)" }}
                 />
               </div>
-              <h1 className="glide-label-mono mt-8 text-[13px] font-bold text-[var(--glide-muted)]">
+              <h1 className="glide-label-mono mt-8 text-[13px] font-semibold text-[var(--glide-muted)]">
                 Bridge started
               </h1>
               <p className="mt-4 text-[32px] font-bold tracking-[-0.02em] text-[var(--glide-text)]">
                 ${parsed.toFixed(2)}
               </p>
-              <p className="glide-label-mono mt-2 text-[11px] font-semibold text-[var(--glide-muted)]">
+              <p className="glide-label-mono mt-2 text-[12px] font-semibold text-[var(--glide-muted)]">
                 USDC → {networkLabel}
               </p>
               <div className="mt-auto mb-8 flex w-full max-w-sm flex-col gap-2">
@@ -107,7 +108,7 @@ export default function BridgePage() {
                     setStep("form");
                     setAmount("");
                   }}
-                  className="glide-tap glide-label-mono rounded-full border py-3 text-[12px] font-bold transition-opacity"
+                  className="glide-tap glide-label-mono rounded-full border py-3 text-[12px] font-semibold transition-opacity"
                   style={{
                     borderColor: "var(--glide-elevated-border)",
                     color: "var(--glide-text)",
@@ -138,7 +139,7 @@ export default function BridgePage() {
                         <span className="text-[16px] font-bold tracking-tight text-[var(--glide-text)]">
                           USDC
                         </span>
-                        <span className="glide-label-mono text-[10px] font-semibold text-[var(--glide-muted)]">
+                        <span className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]">
                           {ARC_NETWORK.label}
                         </span>
                       </div>
@@ -146,7 +147,7 @@ export default function BridgePage() {
                     <button
                       type="button"
                       onClick={useMax}
-                      className="glide-tap glide-label-mono rounded-full border px-3 py-1.5 text-[11px] font-bold"
+                      className="glide-tap glide-label-mono rounded-full border px-3 py-1.5 text-[12px] font-semibold"
                       style={{
                         background: "var(--glide-surface-container)",
                         borderColor: "var(--glide-border)",
@@ -174,8 +175,8 @@ export default function BridgePage() {
                       style={{ color: "var(--glide-text)" }}
                     />
                   </div>
-                  <p className="glide-label-mono mt-3 text-[11px] font-semibold text-[var(--glide-muted)]">
-                    Balance ${balance.toFixed(2)}
+                  <p className="glide-label-mono mt-3 text-[12px] font-semibold text-[var(--glide-muted)]">
+                    Balance ${formatUsd(balance)}
                   </p>
                 </div>
 
@@ -184,7 +185,7 @@ export default function BridgePage() {
                   <span
                     className="flex h-12 w-12 items-center justify-center rounded-full ring-4"
                     style={{
-                      background: "var(--glide-accent)",
+                      background: "var(--glide-primary)",
                       color: "var(--glide-on-primary)",
                       ["--tw-ring-color" as string]: "var(--glide-bg)",
                     }}
@@ -228,12 +229,12 @@ export default function BridgePage() {
                             ))}
                           </select>
                         </div>
-                        <span className="glide-label-mono text-[10px] font-semibold text-[var(--glide-muted)]">
+                        <span className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]">
                           Destination network
                         </span>
                       </div>
                     </div>
-                    <span className="glide-label-mono text-[11px] font-bold text-[var(--glide-muted)]">
+                    <span className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]">
                       Receive
                     </span>
                   </div>
@@ -252,12 +253,12 @@ export default function BridgePage() {
                       {parsed ? parsed.toFixed(2) : "0.00"}
                     </p>
                   </div>
-                  <p className="glide-label-mono mt-3 text-[11px] font-semibold text-[var(--glide-muted)]">
+                  <p className="glide-label-mono mt-3 text-[12px] font-semibold text-[var(--glide-muted)]">
                     USDC on {networkLabel}, minus a small transfer fee
                   </p>
                   <label
                     htmlFor="bridge-destination"
-                    className="glide-label-mono mt-5 block text-[11px] font-semibold text-[var(--glide-muted)]"
+                    className="glide-label-mono mt-5 block text-[12px] font-semibold text-[var(--glide-muted)]"
                   >
                     Send to (wallet address on {networkLabel})
                   </label>

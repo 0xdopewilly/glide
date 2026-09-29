@@ -102,26 +102,20 @@ export function SavingsCard({
 
   if (!savings?.address) return null;
 
+  const usd = (n: number) =>
+    n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   return (
-    <div
-      className={`shrink-0 overflow-hidden rounded-3xl border p-5 ${className}`}
-      style={{
-        background:
-          "var(--glide-hero-gradient)",
-        borderColor: "transparent",
-      }}
-    >
+    <div className={`glide-surface-card shrink-0 overflow-hidden rounded-2xl p-4 ${className}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[12px] font-medium text-white/75">
-            Savings · auto-growing ↑
-          </p>
-          <p className="mt-0.5 text-[28px] font-bold tabular-nums text-white">
-            ${available.toFixed(2)}
+          <p className="text-[13px] font-medium text-[var(--glide-muted)]">Savings</p>
+          <p className="mt-0.5 text-[24px] font-bold tabular-nums tracking-tight text-[var(--glide-text)]">
+            ${usd(available)}
           </p>
           {savings.eurc > 0 ? (
-            <p className="text-[12px] font-medium text-white/70">
-              + €{savings.eurc.toFixed(2)} EURC
+            <p className="text-[12px] font-medium text-[var(--glide-muted)]">
+              + €{usd(savings.eurc)} EURC
             </p>
           ) : null}
         </div>
@@ -131,41 +125,53 @@ export function SavingsCard({
             setOpen((v) => !v);
             setError(null);
           }}
-          className="glide-tap shrink-0 rounded-full bg-white/15 px-4 py-2 text-[13px] font-bold text-white"
+          aria-expanded={open}
+          className="glide-tap shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold text-[var(--glide-text)]"
+          style={{
+            background: "var(--glide-surface-container-high)",
+            border: "1px solid var(--glide-border)",
+          }}
         >
-          Move to Spending
+          Withdraw
         </button>
       </div>
       {open ? (
-        <div className="mt-4 rounded-2xl bg-white/10 p-3">
+        <div
+          className="mt-4 rounded-xl p-3"
+          style={{ background: "var(--glide-input)", border: "1px solid var(--glide-border)" }}
+        >
           <div className="flex items-center gap-2">
-            <span className="text-white/80">$</span>
+            <span className="text-[var(--glide-muted)]">$</span>
             <input
               inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="min-w-0 flex-1 bg-transparent text-[16px] font-semibold text-white outline-none placeholder:text-white/50"
+              aria-label="Amount to withdraw"
+              className="min-w-0 flex-1 bg-transparent text-[16px] font-semibold text-[var(--glide-text)] outline-none placeholder:text-[var(--glide-muted)]"
             />
             <button
               type="button"
               onClick={() => setAmount(String(available))}
-              className="glide-label-mono rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white"
+              className="rounded-full px-2.5 py-1 text-[12px] font-semibold text-[var(--glide-text)]"
+              style={{ background: "var(--glide-surface-container-high)" }}
             >
-              MAX
+              Max
             </button>
           </div>
           {error ? (
-            <p className="mt-2 text-[12px] font-semibold text-red-200">{error}</p>
+            <p className="mt-2 text-[12px] font-semibold" style={{ color: "var(--glide-error)" }}>
+              {error}
+            </p>
           ) : null}
           <button
             type="button"
             onClick={() => void withdraw()}
             disabled={busy || !amount.trim()}
-            className="glide-tap mt-3 w-full rounded-full bg-white py-2.5 text-[13px] font-bold disabled:opacity-50"
-            style={{ color: "var(--glide-primary)" }}
+            className="glide-tap mt-3 w-full rounded-full py-2.5 text-[14px] font-semibold disabled:opacity-50"
+            style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
           >
-            {busy ? "Moving…" : "Withdraw to Spending"}
+            {busy ? "Moving…" : "Move to Spending"}
           </button>
         </div>
       ) : null}

@@ -12,7 +12,7 @@ const QrScannerView = dynamic(
           className="mx-auto aspect-square w-full max-w-[280px] animate-pulse rounded-2xl"
           style={{ background: "var(--glide-surface-container)" }}
         />
-        <p className="glide-label-mono mt-4 text-[11px] font-bold text-[var(--glide-muted)]">
+        <p className="glide-label-mono mt-4 text-[12px] font-semibold text-[var(--glide-muted)]">
           Starting camera…
         </p>
       </div>

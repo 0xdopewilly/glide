@@ -11,11 +11,12 @@ import { usePrivacy } from "@/context/privacy-context";
 import { useProfile, useWallet } from "@/context/wallet-context";
 import {
   ArrowLeftRight,
+  ChevronRight,
   Eye,
   EyeOff,
   LayoutGrid,
+  MessageCircle,
   ScanLine,
-  Sparkles,
   SquareArrowDown,
   SquareArrowOutUpRight,
 } from "lucide-react";
@@ -56,7 +57,7 @@ export default function HomePage() {
   const [sheet, setSheet] = useState<Sheet>(null);
   const closeSheet = useCallback(() => setSheet(null), []);
 
-  const firstName = (profile.displayName ?? "").trim().split(" ")[0] || "there";
+  const firstName = (profile.displayName ?? "").trim().split(" ")[0];
   const recentTransactions = transactions.slice(0, 5);
 
   // Pre-format BEFORE JSX so the number always renders even when totalUsd is
@@ -74,10 +75,10 @@ export default function HomePage() {
       <header className="relative z-10 flex shrink-0 items-center justify-between gap-3 px-5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="min-w-0">
           <p className="truncate text-[13px] font-medium text-[color:var(--glide-on-surface-variant)]">
-            Hey {firstName}!
+            Welcome back
           </p>
           <p className="truncate text-[20px] font-bold tracking-tight text-[color:var(--glide-on-surface)]">
-            Welcome back!
+            {firstName || "glidepay"}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -179,29 +180,27 @@ export default function HomePage() {
 
         {/* LOWER HALF — the light sheet, per the reference */}
         <div className="glide-light-sheet -mx-5 mt-7 flex flex-1 flex-col px-5 pb-6">
-          {/* SMART ASSISTANT — Billy */}
+          {/* BILLY — the in-app assistant */}
           <Link
             href="/ask"
             prefetch
-            className="glide-tap glide-surface-card flex shrink-0 items-center gap-3 overflow-hidden rounded-3xl p-4"
-            style={{ boxShadow: "0 18px 40px -22px rgba(40, 20, 120, 0.55)" }}
+            className="glide-tap glide-surface-card flex shrink-0 items-center gap-3 overflow-hidden rounded-2xl p-4"
           >
+            <span
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+              style={{ background: "var(--glide-primary-container)", color: "var(--glide-accent)" }}
+            >
+              <MessageCircle className="h-5 w-5" strokeWidth={2.25} aria-hidden />
+            </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[16px] font-bold tracking-tight text-[var(--glide-text)]">
-                Smart Assistant
+              <p className="text-[15px] font-semibold tracking-tight text-[var(--glide-text)]">
+                Ask Billy
               </p>
-              <p className="mt-0.5 text-[13px] text-[var(--glide-muted)]">
-                Money made simple with Billy
+              <p className="mt-0.5 truncate text-[13px] text-[var(--glide-muted)]">
+                Send, request, split or swap by chat
               </p>
-              <span
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold"
-                style={{ background: "var(--glide-primary)", color: "var(--glide-on-primary)" }}
-              >
-                <Sparkles className="h-4 w-4" strokeWidth={2.25} aria-hidden />
-                Help with Billy
-              </span>
             </div>
-            <BillyArt />
+            <ChevronRight className="h-5 w-5 shrink-0 text-[var(--glide-muted)]" strokeWidth={2} aria-hidden />
           </Link>
 
           {/* ASSETS */}
@@ -212,18 +211,18 @@ export default function HomePage() {
           {/* SAVINGS — auto-grown, with quick withdraw (hidden until it exists) */}
           <SavingsCard className="mt-6" onChange={() => void refresh()} />
 
-          {/* LAST TRANSACTIONS — each its own card */}
+          {/* RECENT ACTIVITY — each its own card */}
           <section className="mt-6 shrink-0" aria-label="Transactions">
             <div className="mb-3 flex items-center justify-between px-1">
               <h2 className="text-[17px] font-bold tracking-tight text-[var(--glide-text)]">
-                Last Transactions
+                Recent activity
               </h2>
               <Link
                 href="/activity"
                 prefetch
                 className="glide-tap text-[14px] font-medium text-[var(--glide-muted)]"
               >
-                Show all
+                See all
               </Link>
             </div>
             <TransactionList
@@ -258,34 +257,5 @@ function ActionTile({ icon: Icon }: { icon: LucideIcon }) {
     >
       <Icon className="h-[22px] w-[22px]" strokeWidth={2.25} aria-hidden />
     </span>
-  );
-}
-
-/** Billy, a friendly little assistant bot (inline SVG, no image request). */
-function BillyArt() {
-  return (
-    <svg viewBox="0 0 96 96" className="h-[86px] w-[86px] shrink-0" aria-hidden>
-      <defs>
-        <linearGradient id="billy-body" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#F4F1FF" />
-          <stop offset="1" stopColor="#D9D0FF" />
-        </linearGradient>
-        <linearGradient id="billy-face" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#3B2A9C" />
-          <stop offset="1" stopColor="#1E1650" />
-        </linearGradient>
-      </defs>
-      <circle cx="48" cy="52" r="40" fill="#EEE9FF" />
-      <line x1="48" y1="14" x2="48" y2="24" stroke="#8B6CF6" strokeWidth="3" strokeLinecap="round" />
-      <circle cx="48" cy="12" r="4.5" fill="#8B6CF6" />
-      <rect x="20" y="24" width="56" height="44" rx="20" fill="url(#billy-body)" stroke="#C9BDFF" />
-      <rect x="27" y="32" width="42" height="26" rx="13" fill="url(#billy-face)" />
-      <circle cx="39" cy="45" r="4" fill="#7FE7FF" />
-      <circle cx="57" cy="45" r="4" fill="#7FE7FF" />
-      <path d="M42 52 Q48 56 54 52" stroke="#7FE7FF" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      <rect x="14" y="40" width="7" height="14" rx="3.5" fill="#B7A8FF" />
-      <rect x="75" y="40" width="7" height="14" rx="3.5" fill="#B7A8FF" />
-      <rect x="34" y="70" width="28" height="12" rx="6" fill="url(#billy-body)" stroke="#C9BDFF" />
-    </svg>
   );
 }

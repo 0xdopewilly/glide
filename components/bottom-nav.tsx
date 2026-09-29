@@ -8,7 +8,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // Four tabs, per the reference design: Home · Payments · Automate · Profile.
-// Billy lives on Home (Smart Assistant card); other screens are pushed.
+// Billy lives on Home (the Ask Billy card); other screens are pushed.
 const SLOTS: { href: string; label: string; icon?: LucideIcon }[] = [
   { href: "/", icon: House, label: "Home" },
   { href: "/payments", icon: ArrowLeftRight, label: "Payments" },
@@ -25,7 +25,7 @@ export function BottomNav() {
       className="relative z-40 shrink-0 rounded-t-[26px] px-2 pt-1.5 pb-[max(var(--glide-safe-bottom),8px)]"
       style={{
         background: "var(--glide-nav-surface)",
-        boxShadow: "0 -10px 30px rgba(24, 16, 80, 0.14)",
+        boxShadow: "0 -1px 0 var(--glide-border), 0 -8px 24px rgba(6, 36, 72, 0.06)",
       }}
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around">
@@ -43,20 +43,12 @@ export function BottomNav() {
               }}
               className="flex min-h-[50px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 transition-transform active:scale-95"
             >
-              {href === "/payments" ? (
-                // Filled circle with arrows, like the reference's Transfer tab.
-                <span
-                  className="flex h-[23px] w-[23px] items-center justify-center rounded-full"
-                  style={{ background: color }}
-                  aria-hidden
-                >
-                  <ArrowLeftRight className="h-[13px] w-[13px] text-white" strokeWidth={2.75} />
-                </span>
-              ) : Icon ? (
+              {Icon ? (
                 <Icon
                   className="h-[23px] w-[23px]"
                   style={{ color }}
-                  fill={active ? "currentColor" : "none"}
+                  // Only shapes with an inside take a fill (House, Zap).
+                  fill={active && Icon !== ArrowLeftRight ? "currentColor" : "none"}
                   strokeWidth={active ? 2.25 : 2}
                 />
               ) : (
@@ -80,7 +72,7 @@ function ProfileTabIcon({ active }: { active: boolean }) {
     <span
       className="relative flex h-[24px] w-[24px] items-center justify-center overflow-hidden rounded-full text-[11px] font-bold text-white"
       style={{
-        background: "linear-gradient(135deg, #8B6CF6 0%, #5B3DF5 100%)",
+        background: "var(--glide-primary)",
         boxShadow: active
           ? "0 0 0 2px var(--glide-nav-surface), 0 0 0 4px var(--glide-nav-active)"
           : undefined,

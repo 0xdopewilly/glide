@@ -103,7 +103,7 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
               onClick={() => onSaveContact?.(message.id)}
               className="glide-tap inline-flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold disabled:opacity-40"
               style={{
-                background: "var(--glide-accent)",
+                background: "var(--glide-primary)",
                 color: "var(--glide-on-primary)",
               }}
             >
@@ -159,7 +159,7 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
         style={
           isUser
             ? {
-                background: "var(--glide-accent)",
+                background: "var(--glide-primary)",
                 color: "var(--glide-on-primary)",
               }
             : {
@@ -177,7 +177,7 @@ export const ChatMessageBubble = memo(function ChatMessageBubble({
             onClick={() =>
               message.retryPrompt && onRetry?.(message.retryPrompt)
             }
-            className="glide-tap glide-label-mono mt-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold"
+            className="glide-tap glide-label-mono mt-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-semibold"
             style={{
               background: "var(--glide-primary-container)",
               color: "var(--glide-text)",

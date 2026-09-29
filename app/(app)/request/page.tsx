@@ -141,11 +141,11 @@ export default function RequestPage() {
   };
 
   return (
-    <FlowPage title="Request cash" backHref="/">
+    <FlowPage title="Request money" backHref="/">
       <div className="flex flex-col px-5 pb-8">
         {!result ? (
           <>
-            <p className="glide-label-mono mt-1 text-center text-[11px] font-semibold text-[var(--glide-muted)]">
+            <p className="glide-label-mono mt-1 text-center text-[12px] font-semibold text-[var(--glide-muted)]">
               Ask someone to pay you on glidepay
             </p>
 
@@ -157,7 +157,7 @@ export default function RequestPage() {
                 style={
                   mode === "person"
                     ? {
-                        background: "var(--glide-accent)",
+                        background: "var(--glide-primary)",
                         color: "var(--glide-on-primary)",
                       }
                     : { color: "var(--glide-muted)" }
@@ -172,7 +172,7 @@ export default function RequestPage() {
                 style={
                   mode === "link"
                     ? {
-                        background: "var(--glide-accent)",
+                        background: "var(--glide-primary)",
                         color: "var(--glide-on-primary)",
                       }
                     : { color: "var(--glide-muted)" }
@@ -268,7 +268,7 @@ export default function RequestPage() {
           <div className="slide-up-bouncy mt-4 flex flex-col items-center text-center">
             {result.targetGlideTag || result.targetEmail ? (
               <p
-                className="glide-label-mono mb-4 text-[11px] font-semibold"
+                className="glide-label-mono mb-4 text-[12px] font-semibold"
                 style={{ color: "var(--glide-success)" }}
               >
                 {result.targetOnGlide
@@ -315,7 +315,7 @@ export default function RequestPage() {
               <button
                 type="button"
                 onClick={() => void copyLink()}
-                className="glide-tap glide-label-mono flex flex-1 items-center justify-center gap-2 rounded-full border py-3 text-[11px] font-semibold"
+                className="glide-tap glide-label-mono flex flex-1 items-center justify-center gap-2 rounded-full border py-3 text-[12px] font-semibold"
                 style={{
                   background: "var(--glide-surface-container)",
                   borderColor: "var(--glide-border)",
@@ -328,9 +328,9 @@ export default function RequestPage() {
               <button
                 type="button"
                 onClick={() => void shareLink()}
-                className="glide-tap glide-label-mono flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[11px] font-semibold"
+                className="glide-tap glide-label-mono flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-[12px] font-semibold"
                 style={{
-                  background: "var(--glide-accent)",
+                  background: "var(--glide-primary)",
                   color: "var(--glide-on-primary)",
                 }}
               >
@@ -356,7 +356,7 @@ export default function RequestPage() {
                 setGlideTag("");
                 setEmail("");
               }}
-              className="glide-label-mono mt-6 text-[11px] font-semibold text-[var(--glide-muted)] transition-opacity hover:opacity-70"
+              className="glide-label-mono mt-6 text-[12px] font-semibold text-[var(--glide-muted)] transition-opacity hover:opacity-70"
             >
               New request
             </button>

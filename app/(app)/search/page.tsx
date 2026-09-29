@@ -14,7 +14,7 @@ import {
   History,
   Search,
   Settings,
-  Sparkles,
+  MessageCircle,
   User,
   X,
   Zap,
@@ -29,7 +29,7 @@ const ACTIONS: PaymentAction[] = [
   ...PAYMENT_MORE,
   { id: "activity", href: "/activity", title: "Activity", subtitle: "All your transactions", icon: History },
   { id: "automate", href: "/automations", title: "Automations", subtitle: "Rules that run for you", icon: Zap },
-  { id: "billy", href: "/ask", title: "Ask Billy", subtitle: "Your money assistant", icon: Sparkles },
+  { id: "billy", href: "/ask", title: "Ask Billy", subtitle: "Send, request, split or swap by chat", icon: MessageCircle },
   { id: "settings", href: "/profile", title: "Settings", subtitle: "Profile, security, alerts", icon: Settings },
 ];
 

@@ -117,11 +117,11 @@ export default function SetupUsernamePage() {
           <div
             className="h-3 w-3 animate-bounce rounded-full"
             style={{
-              background: "var(--glide-accent)",
+              background: "var(--glide-primary)",
               animationDelay: "0ms",
             }}
           />
-          <p className="glide-label-mono text-[11px] font-semibold text-[var(--glide-muted)]">
+          <p className="glide-label-mono text-[12px] font-semibold text-[var(--glide-muted)]">
             Setting up your account…
           </p>
         </div>

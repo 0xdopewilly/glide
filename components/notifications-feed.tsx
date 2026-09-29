@@ -49,7 +49,7 @@ export function NotificationsFeed({
     <div className="mt-4 space-y-6 pb-4">
       {groups.map(([label, items]) => (
         <section key={label}>
-          <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-neutral-500 dark:text-white/45">
+          <h2 className="mb-2 px-1 text-[13px] font-semibold text-[var(--glide-muted)]">
             {label}
           </h2>
           <ul className="space-y-2">
