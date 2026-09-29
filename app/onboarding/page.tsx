@@ -7,9 +7,8 @@ import { OnboardingHeroVisual } from "@/components/onboarding/onboarding-hero-vi
 import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/context/auth-context";
-import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const SLIDES = [
   {
@@ -31,14 +30,38 @@ const SLIDES = [
 
 const jakarta = "var(--font-jakarta), var(--font-geist-sans), system-ui, sans-serif";
 
+/** The outgoing slide's exit (onb-slide-out-* in globals.css) before the next
+ * one enters. */
+const EXIT_MS = 200;
+
 export default function OnboardingPage() {
   const router = useRouter();
   const { user, ready } = useAuth();
+  // `step` drives the buttons and dots (they update on tap); `shown` is the
+  // slide on screen, which changes once the outgoing one has left.
   const [step, setStep] = useState(0);
+  const [shown, setShown] = useState(0);
+  const [leaving, setLeaving] = useState(false);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
+  const stepRef = useRef(0);
+  const exitTimer = useRef<number | undefined>(undefined);
 
   const isLast = step === SLIDES.length - 1;
-  const slide = SLIDES[step];
+  const slide = SLIDES[shown];
+
+  useEffect(() => () => window.clearTimeout(exitTimer.current), []);
+
+  const goTo = useCallback((next: number, dir: "forward" | "back") => {
+    stepRef.current = next;
+    setDirection(dir);
+    setStep(next);
+    setLeaving(true);
+    window.clearTimeout(exitTimer.current);
+    exitTimer.current = window.setTimeout(() => {
+      setShown(stepRef.current);
+      setLeaving(false);
+    }, EXIT_MS);
+  }, []);
 
   useEffect(() => {
     if (ready && user) router.replace("/");
@@ -68,14 +91,12 @@ export default function OnboardingPage() {
       router.push("/sign-up");
       return;
     }
-    setDirection("forward");
-    setStep((s) => Math.min(s + 1, SLIDES.length - 1));
-  }, [isLast, router]);
+    goTo(Math.min(stepRef.current + 1, SLIDES.length - 1), "forward");
+  }, [isLast, router, goTo]);
 
   const goBack = useCallback(() => {
-    setDirection("back");
-    setStep((s) => Math.max(s - 1, 0));
-  }, []);
+    goTo(Math.max(stepRef.current - 1, 0), "back");
+  }, [goTo]);
 
   return (
     <OnboardingShell>
@@ -83,12 +104,7 @@ export default function OnboardingPage() {
         className="grid h-full min-h-0 flex-1 grid-rows-[auto_1fr_auto] overflow-hidden"
         style={{ fontFamily: jakarta }}
       >
-        <motion.header
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.46, ease: [0.32, 0.72, 0, 1] }}
-          className="flex items-center justify-between px-6 pb-2 pt-[max(1.25rem,env(safe-area-inset-top))]"
-        >
+        <header className="onb-header flex items-center justify-between px-6 pb-2 pt-[max(1.25rem,env(safe-area-inset-top))]">
           <ThemeToggle />
           <button
             type="button"
@@ -97,90 +113,42 @@ export default function OnboardingPage() {
           >
             Login
           </button>
-        </motion.header>
+        </header>
 
         <div className="relative flex min-h-0 flex-col justify-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{
-                opacity: 0,
-                x: direction === "forward" ? 32 : -32,
-              }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{
-                opacity: 0,
-                x: direction === "forward" ? -24 : 24,
-              }}
-              transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
-              className="flex flex-col"
+          <div
+            key={shown}
+            className={`flex flex-col ${
+              leaving ? `onb-slide-out-${direction}` : `onb-slide-in-${direction}`
+            }`}
+          >
+            <div className="onb-hero">
+              <OnboardingHeroVisual step={shown} />
+            </div>
+            <div className="onb-rise px-6 pt-2" style={{ animationDelay: "120ms" }}>
+              <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
+                {slide.tag}
+              </span>
+            </div>
+            <h1
+              className="onb-rise mt-4 px-6 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-[var(--glide-text)]"
+              style={{ animationDelay: "180ms" }}
             >
-              <motion.div
-                initial={{ opacity: 0, y: 24, scale: 0.94 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{
-                  duration: 0.5,
-                  ease: [0.34, 1.4, 0.4, 1],
-                  delay: 0.04,
-                }}
-              >
-                <OnboardingHeroVisual step={step} />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.36,
-                  ease: [0.32, 0.72, 0, 1],
-                  delay: 0.12,
-                }}
-                className="px-6 pt-2"
-              >
-                <span className="inline-flex rounded-full bg-[var(--glide-primary-container)] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--glide-accent)]">
-                  {slide.tag}
-                </span>
-              </motion.div>
-              <motion.h1
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.36,
-                  ease: [0.32, 0.72, 0, 1],
-                  delay: 0.18,
-                }}
-                className="mt-4 px-6 text-[1.7rem] font-bold leading-[1.18] tracking-[-0.025em] text-[var(--glide-text)]"
-              >
-                {slide.title}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.36,
-                  ease: [0.32, 0.72, 0, 1],
-                  delay: 0.24,
-                }}
-                className="mt-3.5 max-w-[19.5rem] px-6 text-[15px] leading-[1.6] text-[var(--glide-muted)]"
-              >
-                {slide.body}
-              </motion.p>
-            </motion.div>
-          </AnimatePresence>
+              {slide.title}
+            </h1>
+            <p
+              className="onb-rise mt-3.5 max-w-[19.5rem] px-6 text-[15px] leading-[1.6] text-[var(--glide-muted)]"
+              style={{ animationDelay: "240ms" }}
+            >
+              {slide.body}
+            </p>
+          </div>
         </div>
 
-        <motion.footer
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.5,
-            ease: [0.32, 0.72, 0, 1],
-            delay: 0.32,
-          }}
-          className="px-6 pb-[max(1.75rem,var(--glide-safe-bottom))] pt-4"
-        >
+        <footer className="onb-footer px-6 pb-[max(1.75rem,var(--glide-safe-bottom))] pt-4">
           <div className="space-y-3">
             <div
-              className={`flex gap-3 transition-[gap] duration-150 ${
+              className={`flex gap-3 ${
                 step === 0 ? "flex-col" : "flex-row items-stretch"
               }`}
             >
@@ -205,7 +173,7 @@ export default function OnboardingPage() {
             ) : null}
           </div>
           <OnboardingDots total={SLIDES.length} current={step} />
-        </motion.footer>
+        </footer>
       </div>
     </OnboardingShell>
   );

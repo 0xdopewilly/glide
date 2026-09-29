@@ -551,6 +551,91 @@ body {
   animation: glide-scale-in 380ms var(--glide-ease-spring) both;
 }
 
+/* ── Onboarding (app/onboarding/page.tsx) ────────────────────────────────
+   CSS, not JS: transform/opacity keyframes run on the compositor, so the
+   slides stay smooth while the main thread is busy (Clerk starting up,
+   hydration, prefetching). Same motion as the original framer version. */
+@keyframes onb-slide-in-forward {
+  from {
+    opacity: 0;
+    transform: translate3d(32px, 0, 0);
+  }
+}
+@keyframes onb-slide-in-back {
+  from {
+    opacity: 0;
+    transform: translate3d(-32px, 0, 0);
+  }
+}
+@keyframes onb-slide-out-forward {
+  to {
+    opacity: 0;
+    transform: translate3d(-24px, 0, 0);
+  }
+}
+@keyframes onb-slide-out-back {
+  to {
+    opacity: 0;
+    transform: translate3d(24px, 0, 0);
+  }
+}
+@keyframes onb-hero-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.94);
+  }
+}
+@keyframes onb-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+}
+@keyframes onb-drop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+.onb-slide-in-forward {
+  animation: onb-slide-in-forward 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.onb-slide-in-back {
+  animation: onb-slide-in-back 320ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.onb-slide-out-forward {
+  animation: onb-slide-out-forward 200ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+.onb-slide-out-back {
+  animation: onb-slide-out-back 200ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+.onb-hero {
+  animation: onb-hero-in 500ms cubic-bezier(0.34, 1.4, 0.4, 1) 40ms both;
+}
+.onb-rise {
+  animation: onb-rise 360ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.onb-header {
+  animation: onb-drop 460ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.onb-footer {
+  animation: onb-rise 500ms cubic-bezier(0.32, 0.72, 0, 1) 320ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onb-slide-in-forward,
+  .onb-slide-in-back,
+  .onb-slide-out-forward,
+  .onb-slide-out-back,
+  .onb-hero,
+  .onb-rise,
+  .onb-header,
+  .onb-footer {
+    animation: none;
+  }
+}
+
 /* Swap / bridge processing overlay */
 .glide-processing-glow {
   background: radial-gradient(
